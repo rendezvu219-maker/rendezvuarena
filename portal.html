@@ -24,11 +24,15 @@
 <div class="gs-language-slot" data-language-slot="true"></div></header>
 <main class="ops-main">
 <section class="ops-auth" id="portal-auth">
+<aside class="public-test-warning public-test-warning--wide" role="alert">
+<strong data-i18n="publicTestWarningTitle">PUBLIC TEST WEBSITE — LIMITED SECURITY</strong>
+<p data-i18n="publicTestWarningBody">Never reuse a password from email, banking, social media, games or any important account. Create a unique password used only on this website.</p>
+</aside>
 <div class="ops-auth-card">
 <h2 data-i18n="playerCaptainLogin">Player / Captain Login</h2>
 <div class="ops-list-meta" id="invite-notice"></div>
 <form id="portal-login-form">
-<label><span data-i18n="usernameEmail">Username or email</span><input autocomplete="username" id="portal-login-identity" required=""/></label>
+<label><span data-i18n="username">Username</span><input autocomplete="username" id="portal-login-identity" required=""/></label>
 <label><span data-i18n="password">Password</span><input autocomplete="current-password" id="portal-login-password" required="" type="password"/></label>
 <button class="btn btn-primary" data-i18n="loginAction">LOGIN</button>
 </form>
@@ -36,20 +40,27 @@
 <div class="ops-auth-card">
 <h2 data-i18n="createAccountTitle">Create Account</h2>
 <form id="portal-register-form">
-<label><span data-i18n="displayName">Display name</span><input id="portal-register-display" required=""/></label>
 <label><span data-i18n="username">Username</span><input autocomplete="username" id="portal-register-username" minlength="3" required=""/></label>
-<label><span data-i18n="email">Email</span><input autocomplete="email" id="portal-register-email" required="" type="email"/></label>
 <label><span data-i18n="password">Password</span><input autocomplete="new-password" id="portal-register-password" minlength="12" required="" type="password"/></label>
+<label><span data-i18n="confirmPassword">Confirm password</span><input autocomplete="new-password" id="portal-register-password-confirm" minlength="12" required="" type="password"/></label>
 <button class="btn btn-primary" data-i18n="createAccount">CREATE ACCOUNT</button>
 </form>
 </div>
 </section>
 <section class="hidden" id="portal-view">
+<aside class="public-test-warning" role="alert">
+<strong data-i18n="publicTestWarningTitle">PUBLIC TEST WEBSITE — LIMITED SECURITY</strong>
+<p data-i18n="publicTestWarningBody">Never reuse a password from email, banking, social media, games or any important account. Create a unique password used only on this website.</p>
+</aside>
 <div class="ops-title-row">
 <div><div class="ops-kicker" data-i18n="tournamentAccess">TOURNAMENT ACCESS</div><h2 data-i18n="yourTeamsMatches">Your Teams &amp; Matches</h2></div>
 <button class="btn btn-ghost btn-sm" data-i18n="refreshMixed" id="portal-refresh">↻ Refresh</button>
 </div>
 <div class="ops-section hidden" id="portal-invite-action"></div>
+<section class="ops-section portal-account-section">
+<div class="ops-section-header"><div><div class="ops-kicker" data-i18n="tournamentProfileLinks">TOURNAMENT PROFILE LINKS</div><h3 data-i18n="linkThreePlatforms">Link your three platforms</h3><div class="ops-list-meta" data-i18n="tournamentProfileLinksDesc">Paste your public start.gg, Tonamel and Challonge profile links. No external account password or OAuth connection is needed.</div></div></div>
+<div class="portal-profile-grid" id="portal-external-profiles"></div>
+</section>
 <section class="ops-section portal-settings-section" id="profile-settings">
 <div class="ops-section-header"><div><div class="ops-kicker" data-i18n="profileAndPrivacy">PROFILE &amp; PRIVACY</div><h3 data-i18n="manageYourProfile">Manage Your Profile</h3><div class="ops-list-meta" data-i18n="manageYourProfileDesc">Choose what other players can see and keep your account details current.</div></div><a class="btn btn-ghost btn-sm" id="portal-view-profile" target="_blank" rel="noopener" data-i18n="viewPublicProfile">VIEW PROFILE</a></div>
 <div class="portal-settings-grid">
@@ -62,13 +73,6 @@
 <label class="ops-check"><input id="portal-show-external-profiles" type="checkbox"> <span data-i18n="showTournamentProfiles">Show linked tournament profiles on my public profile</span></label>
 <button class="btn btn-primary btn-sm" data-i18n="saveProfileSettings">SAVE PROFILE</button>
 </form>
-<form class="ops-form-card portal-settings-card" id="portal-change-email-form">
-<div><b data-i18n="changeEmailTitle">Change email</b><p data-i18n="changeEmailDesc">Enter your password first. A six-digit code will be sent to the new address.</p></div>
-<label><span data-i18n="currentPassword">Current password</span><input id="portal-email-current-password" type="password" autocomplete="current-password" required></label>
-<label><span data-i18n="newEmail">New email</span><input id="portal-new-email" type="email" autocomplete="email" required></label>
-<button class="btn btn-primary btn-sm" data-i18n="sendEmailChangeCode">SEND CODE TO NEW EMAIL</button>
-<div class="portal-email-confirm-row hidden" id="portal-email-confirm-row"><label><span data-i18n="confirmationCode">Confirmation code</span><input id="portal-email-change-code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}"></label><button class="btn btn-primary btn-sm" id="portal-confirm-email-change" type="button" data-i18n="confirmNewEmail">CONFIRM NEW EMAIL</button></div>
-</form>
 <form class="ops-form-card portal-settings-card" id="portal-change-password-form">
 <div><b data-i18n="changePasswordTitle">Change password</b><p data-i18n="changePasswordDesc">Changing your password signs out every other device.</p></div>
 <label><span data-i18n="currentPassword">Current password</span><input id="portal-password-current" type="password" autocomplete="current-password" required></label>
@@ -77,11 +81,6 @@
 <button class="btn btn-primary btn-sm" data-i18n="changePasswordAction">CHANGE PASSWORD</button>
 </form>
 </div>
-</section>
-<section class="ops-section portal-account-section">
-<div class="ops-section-header"><div><div class="ops-kicker" data-i18n="accountSecurity">ACCOUNT SECURITY</div><h3 data-i18n="verifiedProfiles">Verified Email &amp; Tournament Profiles</h3><div class="ops-list-meta" data-i18n="verifiedProfilesDesc">Verify your email, then connect the profile required by each tournament source.</div></div></div>
-<div id="portal-email-verification"></div>
-<div class="portal-profile-grid" id="portal-external-profiles"></div>
 </section>
 <section class="ops-section portal-history-section">
 <div class="ops-section-header"><div><div class="ops-kicker" data-i18n="playerProfile">PLAYER PROFILE</div><h3 data-i18n="tournamentHistory">Tournament History &amp; Achievements</h3><div class="ops-list-meta" data-i18n="tournamentHistoryDesc">Your participated events, placements and organizer totals are calculated from finalized tournament data.</div></div></div>

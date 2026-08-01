@@ -190,9 +190,8 @@ function authRequired(req, res, next) {
 
 function emailVerifiedRequired(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Authentication required.' });
-  if (!req.user.email_verified_at) {
-    return res.status(403).json({ error: 'Verify your email before using this feature.', code: 'EMAIL_VERIFICATION_REQUIRED' });
-  }
+  // Email verification is intentionally not part of the public test-site account flow.
+  // Keep this middleware as an authentication-compatible alias for older routes.
   next();
 }
 

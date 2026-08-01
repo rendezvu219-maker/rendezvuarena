@@ -35,7 +35,7 @@ try{
   const captainTokensByUser=new Map();
   const captainTokensByTeam=new Map();
   for(let i=1;i<=4;i++){
-    const registered=await request('/api/auth/register',{method:'POST',body:{username:`progress_captain_${i}`,email:`progress_captain_${i}@test.local`,displayName:`Progress Captain ${i}`,password:'CaptainPass123!'}});
+    const registered=await request('/api/auth/register',{method:'POST',body:{username:`progress_captain_${i}`,displayName:`Progress Captain ${i}`,password:'CaptainPass123!',passwordConfirmation:'CaptainPass123!'}});
     captainTokensByUser.set(registered.user.username,registered.token);
     const team=(await request(`/api/tournaments/${tournament.id}/teams`,{token:admin,method:'POST',body:{name:`Progress Team ${i}`,tag:`P${i}`}})).team;
     await request(`/api/tournaments/${tournament.id}/teams/${team.id}/captain/assign`,{token:admin,method:'POST',body:{identity:registered.user.username}});

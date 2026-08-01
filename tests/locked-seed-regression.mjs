@@ -74,9 +74,9 @@ try {
     method: 'POST',
     body: {
       username: 'locked_seed_host',
-      email: 'locked-seed-host@test.local',
       displayName: 'Locked Seed Host',
       password: 'HostSecure123!',
+      passwordConfirmation: 'HostSecure123!',
       role: 'host',
     },
   });

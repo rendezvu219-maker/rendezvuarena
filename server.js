@@ -40,9 +40,8 @@ const {
 const { seedRecommendedHeroBuilds } = require('./server/divine-card-recommendations');
 const { consumeDevAccessCode, createTestSuite, listTestSuites, cleanupTestSuite } = require('./server/dev-test-service');
 const { userTournamentHistory } = require('./server/profile-service');
-const { issueEmailVerification, parseStoredTimestamp, verifyEmailCode } = require('./server/email-verification-service');
 const {
-  confirmEmailChange, issueEmailChange, publicAccountSettings, publicUserProfile, updateProfileSettings,
+  publicAccountSettings, publicUserProfile, updateProfileSettings,
 } = require('./server/account-settings-service');
 const {
   completeChallongeAuthorization, completeStartggAuthorization, createChallongeAuthorization, createStartggAuthorization,
@@ -110,7 +109,7 @@ app.use(helmet({
 app.use(express.json({ limit: '5mb', strict: true }));
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));
 
-const RAW_INPUT_KEYS = new Set(['password','currentPassword','newPassword','dataBase64','accessToken','draftTicket','token','code']);
+const RAW_INPUT_KEYS = new Set(['password','passwordConfirmation','currentPassword','newPassword','dataBase64','accessToken','draftTicket','token','code']);
 function sanitizeRequestValue(value,key='',depth=0){
   if(depth>12)return null;
   if(typeof value==='string'){
@@ -151,16 +150,6 @@ const registerLimiter = new SlidingWindowLimiter({
   windowMs: 60 * 60 * 1000,
   max: Number(process.env.REGISTER_RATE_LIMIT_MAX || (process.env.NODE_ENV === 'test' ? 10_000 : 3)),
   name: 'auth-register',
-});
-const verificationSendLimiter = new SlidingWindowLimiter({
-  windowMs: 60 * 60 * 1000,
-  max: Number(process.env.EMAIL_VERIFICATION_SEND_LIMIT || (process.env.NODE_ENV === 'test' ? 10_000 : 6)),
-  name: 'auth-email-verification-send',
-});
-const verificationAttemptLimiter = new SlidingWindowLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: Number(process.env.EMAIL_VERIFICATION_ATTEMPT_LIMIT || (process.env.NODE_ENV === 'test' ? 10_000 : 10)),
-  name: 'auth-email-verification-attempt',
 });
 app.use('/api', rateLimitMiddleware(apiLimiter));
 app.use('/api', (req, res, next) => {
@@ -287,7 +276,8 @@ function divineCardAdminRequired(req,res,next) {
   next();
 }
 function cleanUser(user) {
-  return { id:user.id,username:user.username,email:user.email,displayName:user.display_name,role:user.role,isActive:Boolean(user.is_active),emailVerified:Boolean(user.email_verified_at),emailVerifiedAt:user.email_verified_at||null,gamerTag:user.gamer_tag||'',bio:user.bio||'',profileVisibility:user.profile_visibility==='private'?'private':'public',showExternalProfiles:Boolean(user.show_external_profiles),canOrganize:Boolean(user.email_verified_at),canManageDivineCards:isDivineCardAdmin(user),createdAt:user.created_at };
+  const internalEmail=/@accounts\.rendezvu\.invalid$/i.test(String(user.email||''));
+  return { id:user.id,username:user.username,email:internalEmail?'':user.email,displayName:user.display_name,role:user.role,isActive:Boolean(user.is_active),emailVerified:true,emailVerifiedAt:user.email_verified_at||null,gamerTag:user.gamer_tag||'',bio:user.bio||'',profileVisibility:user.profile_visibility==='private'?'private':'public',showExternalProfiles:Boolean(user.show_external_profiles),canOrganize:true,canManageDivineCards:isDivineCardAdmin(user),createdAt:user.created_at };
 }
 function sourceVerificationFields(tournament) {
   const sourceSyncStatus=String(tournament?.source_sync_status||'');
@@ -374,8 +364,8 @@ app.get('/api/public/site-config', (_req,res) => {
     contactEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) ? contactEmail : '',
     supportUrl: supportUrl && isSafeExternalUrl(supportUrl) ? supportUrl : '',
     accountVerification:{
-      emailEnabled:Boolean(process.env.RESEND_API_KEY)||process.env.EMAIL_DELIVERY_MODE==='memory',
-      startggOAuthEnabled:Boolean(process.env.STARTGG_CLIENT_ID&&process.env.STARTGG_CLIENT_SECRET),
+      emailEnabled:false,
+      startggOAuthEnabled:false,
     },
   });
 });
@@ -409,34 +399,29 @@ app.post('/api/auth/register', async (req,res) => {
   let userId = null;
   try {
     const username=sanitizeText(req.body.username,60);
-    const email=String(req.body.email||'').trim().toLowerCase().slice(0,254);
-    const displayName=sanitizeText(req.body.displayName||username,100);
     const password=String(req.body.password||'');
+    const passwordConfirmation=String(req.body.passwordConfirmation||'');
+    const displayName=sanitizeText(req.body.displayName||username,100);
     const requestedRole=String(req.body.role||'player');
     const role=process.env.ALLOW_DIRECT_HOST_REGISTRATION==='true'&&requestedRole==='host'?'host':'player';
     if(!/^[A-Za-z0-9_.-]{3,60}$/.test(username))return res.status(400).json({error:'Username must be 3-60 characters and use letters, numbers, dot, dash or underscore.'});
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return res.status(400).json({error:'A valid email is required.'});
-    if(!displayName)return res.status(400).json({error:'Display name is required.'});
+    if(password!==passwordConfirmation)return res.status(400).json({error:'The two passwords do not match.'});
     const passwordHash=await hashPassword(password);
-    const autoVerifyForLegacyTests=process.env.NODE_ENV==='test'&&process.env.REQUIRE_EMAIL_VERIFICATION_IN_TEST!=='true';
+    const email=`${crypto.randomUUID()}@accounts.rendezvu.invalid`;
     const result=db.prepare(`INSERT INTO users(username,email,display_name,password_hash,role,password_changed_at,email_verified_at)
-      VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CASE WHEN ? THEN CURRENT_TIMESTAMP ELSE NULL END)`).run(username,email,displayName,passwordHash,role,autoVerifyForLegacyTests?1:0);
+      VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`).run(username,email,displayName,passwordHash,role);
     userId=Number(result.lastInsertRowid);
     const user=db.prepare('SELECT * FROM users WHERE id=?').get(userId);
-    if(!autoVerifyForLegacyTests)await issueEmailVerification({userId:user.id,email:user.email,locale:requestLocale(req),force:true});
     registerLimiter.record(limiterKey);
     const session=createSession(user,req);
     setSessionCookies(res,session);
-    securityLog('auth.register_success',{userId:user.id,ipHash:anonymize(clientIp(req)),emailVerified:Boolean(user.email_verified_at)},'info');
-    res.status(201).json({...developmentTokenResponse(session),user:cleanUser(user),accessExpiresAt:session.accessExpiresAt,verificationRequired:!user.email_verified_at});
+    securityLog('auth.register_success',{userId:user.id,ipHash:anonymize(clientIp(req)),accountMode:'public_test'},'info');
+    res.status(201).json({...developmentTokenResponse(session),user:cleanUser(user),accessExpiresAt:session.accessExpiresAt,verificationRequired:false});
   } catch(error){
-    if(userId){
-      try{db.prepare('DELETE FROM users WHERE id=? AND email_verified_at IS NULL').run(userId);}catch{}
-    }
-    if(String(error.message).includes('UNIQUE'))return res.status(409).json({error:'Username or email already exists.'});
+    if(String(error.message).includes('UNIQUE'))return res.status(409).json({error:'Username already exists.'});
     if (/Password must/.test(error.message)) return res.status(400).json({error:clientErrorMessage(error)});
     securityLog('auth.register_error',{ipHash:anonymize(clientIp(req)),message:error.message},'error');
-    res.status(500).json({error:'Unable to create account or send the verification email.'});
+    res.status(500).json({error:'Unable to create account.'});
   }
 });
 app.post('/api/auth/login',async(req,res)=>{
@@ -457,7 +442,7 @@ app.post('/api/auth/login',async(req,res)=>{
     const accountState=recordFailedLogin(user);
     loginFailureLimiter.record(limiterKey);
     securityLog('auth.login_failed',{userId:user?.id||null,identityHash:anonymize(identity.toLowerCase()),ipHash:anonymize(clientIp(req)),failures:accountState?.failures||null});
-    return res.status(401).json({error:'Incorrect username/email or password.'});
+    return res.status(401).json({error:'Incorrect username or password.'});
   }
   if(needsPasswordRehash(user.password_hash)){
     const passwordHash=await hashPassword(password);
@@ -505,55 +490,9 @@ app.post('/api/auth/sessions/revoke-all',authRequired,(req,res)=>{
 });
 app.get('/api/auth/me',authRequired,(req,res)=>res.json({user:cleanUser(req.user)}));
 
-app.get('/api/auth/email-verification',authRequired,(req,res)=>{
-  const user=db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
-  const latest=db.prepare(`SELECT expires_at,resend_available_at,attempts,used_at FROM email_verification_challenges
-    WHERE user_id=? ORDER BY id DESC LIMIT 1`).get(req.user.id);
-  res.json({
-    verified:Boolean(user?.email_verified_at),
-    verifiedAt:user?.email_verified_at||null,
-    email:user?.email||'',
-    challenge:latest?{
-      expiresAt:latest.expires_at,
-      resendAvailableAt:latest.resend_available_at,
-      attempts:Number(latest.attempts||0),
-      active:!latest.used_at&&parseStoredTimestamp(latest.expires_at)>Date.now(),
-    }:null,
-  });
-});
-app.post('/api/auth/verify-email',authRequired,(req,res)=>{
-  const key=`${req.user.id}:${rateLimitKey(req)}`;
-  const status=verificationAttemptLimiter.status(key);
-  if(!status.allowed)return rejectRateLimited(req,res,verificationAttemptLimiter,status,'auth.email_verification_attempt_rate_limited',{userId:req.user.id});
-  verificationAttemptLimiter.record(key);
-  try{
-    const result=verifyEmailCode({userId:req.user.id,code:req.body.code});
-    const user=db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
-    securityLog('auth.email_verified',{userId:req.user.id,ipHash:anonymize(clientIp(req))},'info');
-    res.json({...result,user:cleanUser(user)});
-  }catch(error){
-    securityLog('auth.email_verification_failed',{userId:req.user.id,ipHash:anonymize(clientIp(req)),code:error.code||'verification_failed'});
-    res.status(error.code==='INVALID_CODE'?400:409).json({error:clientErrorMessage(error),attemptsRemaining:error.attemptsRemaining});
-  }
-});
-app.post('/api/auth/resend-verification',authRequired,async(req,res)=>{
-  const key=`${req.user.id}:${rateLimitKey(req)}`;
-  const status=verificationSendLimiter.status(key);
-  if(!status.allowed)return rejectRateLimited(req,res,verificationSendLimiter,status,'auth.email_verification_send_rate_limited',{userId:req.user.id});
-  try{
-    const user=db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
-    const result=await issueEmailVerification({userId:req.user.id,email:user.email,locale:requestLocale(req)});
-    verificationSendLimiter.record(key);
-    res.json({ok:true,alreadyVerified:Boolean(result.alreadyVerified),expiresAt:result.expiresAt||null,resendAvailableAt:result.resendAvailableAt||null});
-  }catch(error){
-    if(error.code==='RESEND_COOLDOWN'){
-      res.setHeader('Retry-After',String(error.retryAfterSeconds||60));
-      return res.status(429).json({error:clientErrorMessage(error),retryAfterSeconds:error.retryAfterSeconds||60});
-    }
-    securityLog('auth.email_verification_send_failed',{userId:req.user.id,message:error.message},'error');
-    res.status(503).json({error:'Unable to send a verification email right now.'});
-  }
-});
+app.get('/api/auth/email-verification',authRequired,(_req,res)=>res.json({enabled:false,verified:true,verifiedAt:null,email:'',challenge:null}));
+app.post('/api/auth/verify-email',authRequired,(_req,res)=>res.status(410).json({error:'Email verification is disabled for this public test website.'}));
+app.post('/api/auth/resend-verification',authRequired,(_req,res)=>res.status(410).json({error:'Verification email delivery is disabled for this public test website.'}));
 
 // Password changes require the existing password and revoke every other active session.
 app.post('/api/auth/change-password',authRequired,async(req,res)=>{
@@ -735,38 +674,8 @@ app.patch('/api/profile/settings',authRequired,(req,res)=>{
     res.json({profile});
   }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
-app.post('/api/auth/change-email/request',authRequired,async(req,res)=>{
-  const key=`email-change:${req.user.id}:${rateLimitKey(req)}`;
-  const status=verificationSendLimiter.status(key);
-  if(!status.allowed)return rejectRateLimited(req,res,verificationSendLimiter,status,'auth.email_change_send_rate_limited',{userId:req.user.id});
-  try{
-    const currentPassword=String(req.body.currentPassword||'');
-    const user=db.prepare('SELECT id,password_hash FROM users WHERE id=?').get(req.user.id);
-    if(!user)return res.status(404).json({error:'Account not found.'});
-    if(!await verifyPassword(currentPassword,user.password_hash))return res.status(401).json({error:'Current password is incorrect.'});
-    const result=await issueEmailChange({userId:req.user.id,newEmail:req.body.newEmail,locale:requestLocale(req)});
-    verificationSendLimiter.record(key);
-    securityLog('auth.email_change_requested',{userId:req.user.id,ipHash:anonymize(clientIp(req))},'info');
-    res.json(result);
-  }catch(error){
-    securityLog('auth.email_change_request_failed',{userId:req.user.id,message:error.message});
-    res.status(/already in use|valid email|current email/i.test(error.message)?400:503).json({error:clientErrorMessage(error)});
-  }
-});
-app.post('/api/auth/change-email/confirm',authRequired,(req,res)=>{
-  const key=`email-change:${req.user.id}:${rateLimitKey(req)}`;
-  const status=verificationAttemptLimiter.status(key);
-  if(!status.allowed)return rejectRateLimited(req,res,verificationAttemptLimiter,status,'auth.email_change_attempt_rate_limited',{userId:req.user.id});
-  verificationAttemptLimiter.record(key);
-  try{
-    const profile=confirmEmailChange({userId:req.user.id,code:req.body.code,currentSessionId:req.authSessionId});
-    securityLog('auth.email_changed',{userId:req.user.id,ipHash:anonymize(clientIp(req))},'info');
-    res.json({ok:true,profile,user:cleanUser(db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id))});
-  }catch(error){
-    securityLog('auth.email_change_confirm_failed',{userId:req.user.id,code:error.code||'failed'});
-    res.status(error.code==='INVALID_CODE'?400:409).json({error:clientErrorMessage(error),attemptsRemaining:error.attemptsRemaining});
-  }
-});
+app.post('/api/auth/change-email/request',authRequired,(_req,res)=>res.status(410).json({error:'Email addresses are not used by public test accounts.'}));
+app.post('/api/auth/change-email/confirm',authRequired,(_req,res)=>res.status(410).json({error:'Email addresses are not used by public test accounts.'}));
 app.get('/api/profiles/:username',(req,res)=>{
   let viewer=null;
   try{viewer=authenticateAccessToken(accessTokenFromRequest(req)).user;}catch{}
@@ -966,9 +875,11 @@ app.post('/api/tournaments/:slug/join-requests',authRequired,emailVerifiedRequir
       if(teamId&&Number(member.team_id)!==teamId)return res.status(400).json({error:'The roster slot does not belong to the selected team.'});
       if(member.user_id)return res.status(409).json({error:'That roster slot is already linked to another account.'});
       if(String(tournament.source_platform)==='startgg'&&member.external_provider==='startgg'){
-        const idMatches=!member.external_user_id||String(member.external_user_id)===String(requiredProfile?.providerUserId||'');
-        const slugMatches=!member.external_profile_slug||String(member.external_profile_slug).toLowerCase()===String(requiredProfile?.providerSlug||'').toLowerCase();
-        if(!idMatches||!slugMatches)return res.status(403).json({error:'The selected start.gg roster slot belongs to a different start.gg profile.'});
+        const comparableId=Boolean(member.external_user_id&&requiredProfile?.providerUserId);
+        const comparableSlug=Boolean(member.external_profile_slug&&requiredProfile?.providerSlug);
+        const idMatches=comparableId&&String(member.external_user_id)===String(requiredProfile.providerUserId);
+        const slugMatches=comparableSlug&&String(member.external_profile_slug).toLowerCase()===String(requiredProfile.providerSlug).toLowerCase();
+        if((member.external_user_id||member.external_profile_slug)&&!idMatches&&!slugMatches)return res.status(403).json({error:'The selected start.gg roster slot belongs to a different start.gg profile.'});
       }
     }
     if(!teamId&&!requestedTeamName)return res.status(400).json({error:'Choose your team or enter the exact team name used on the external tournament page.'});
@@ -1096,7 +1007,7 @@ app.get('/api/tournaments/:id/audit',authRequired,requireTournamentPermission('t
   const logs=db.prepare(`SELECT a.*,u.display_name user_name FROM audit_logs a LEFT JOIN users u ON u.id=a.user_id WHERE a.tournament_id=? ORDER BY a.id DESC LIMIT 300`).all(req.tournamentId).map(row=>({...row,details:jsonParse(row.details_json)}));res.json({logs});
 });
 app.get('/api/tournaments/:id/staff',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{const staff=db.prepare(`SELECT s.*,u.username,u.email,u.display_name FROM tournament_staff s JOIN users u ON u.id=s.user_id WHERE s.tournament_id=? ORDER BY s.role,u.display_name`).all(req.tournamentId).map(item=>({...item,permissions:jsonParse(item.permissions_json,[])}));res.json({staff});});
-app.post('/api/tournaments/:id/staff',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{const identity=String(req.body.identity||'').trim();const role=String(req.body.role||'');if(!['host','referee','scheduler','scorekeeper','broadcaster'].includes(role))return res.status(400).json({error:'Invalid staff role.'});const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND email_verified_at IS NOT NULL AND (username=? COLLATE NOCASE OR email=? COLLATE NOCASE)`).get(identity,identity);if(!user)return res.status(404).json({error:'Verified staff account not found. Ask the person to register and verify their email first.'});const permissions=Array.isArray(req.body.permissions)?req.body.permissions:[];db.prepare(`INSERT INTO tournament_staff(tournament_id,user_id,role,permissions_json) VALUES (?,?,?,?) ON CONFLICT(tournament_id,user_id,role) DO UPDATE SET permissions_json=excluded.permissions_json`).run(req.tournamentId,user.id,role,JSON.stringify(permissions));logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'staff.assigned',details:{staffUserId:user.id,role,permissions}});res.status(201).json({staff:{userId:user.id,displayName:user.display_name,username:user.username,email:user.email,role,permissions}});});
+app.post('/api/tournaments/:id/staff',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{const identity=String(req.body.identity||'').trim();const role=String(req.body.role||'');if(!['host','referee','scheduler','scorekeeper','broadcaster'].includes(role))return res.status(400).json({error:'Invalid staff role.'});const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND username=? COLLATE NOCASE`).get(identity);if(!user)return res.status(404).json({error:'Staff account not found. Ask the person to register a username first.'});const permissions=Array.isArray(req.body.permissions)?req.body.permissions:[];db.prepare(`INSERT INTO tournament_staff(tournament_id,user_id,role,permissions_json) VALUES (?,?,?,?) ON CONFLICT(tournament_id,user_id,role) DO UPDATE SET permissions_json=excluded.permissions_json`).run(req.tournamentId,user.id,role,JSON.stringify(permissions));logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'staff.assigned',details:{staffUserId:user.id,role,permissions}});res.status(201).json({staff:{userId:user.id,displayName:user.display_name,username:user.username,role,permissions}});});
 app.delete('/api/tournaments/:id/staff/:userId/:role',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{db.prepare('DELETE FROM tournament_staff WHERE tournament_id=? AND user_id=? AND role=?').run(req.tournamentId,Number(req.params.userId),String(req.params.role));logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'staff.removed',details:{staffUserId:Number(req.params.userId),role:req.params.role}});res.json({removed:true});});
 
 // start.gg import
@@ -1159,15 +1070,15 @@ app.delete('/api/tournaments/:id/teams/:teamId/members/:memberId',authRequired,r
 });
 app.post('/api/tournaments/:id/teams/:teamId/captain/assign',authRequired,requireTournamentPermission('team.transfer_captain'),(req,res)=>{
   const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(Number(req.params.teamId),req.tournamentId);if(!team)return res.status(404).json({error:'Team not found.'});
-  const identity=String(req.body.identity||'').trim();const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND email_verified_at IS NOT NULL AND (username=? COLLATE NOCASE OR email=? COLLATE NOCASE)`).get(identity,identity);if(!user)return res.status(404).json({error:'Verified Captain account not found. Ask the Captain to register and verify their email first.'});
+  const identity=String(req.body.identity||'').trim();const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND username=? COLLATE NOCASE`).get(identity);if(!user)return res.status(404).json({error:'Captain account not found. Ask the Captain to register a username first.'});
   transaction(()=>{db.prepare('UPDATE teams SET captain_user_id=?,team_status=\'ready\',status=\'approved\',updated_at=CURRENT_TIMESTAMP WHERE id=?').run(user.id,team.id);db.prepare('UPDATE team_members SET is_captain=0 WHERE team_id=?').run(team.id);const member=db.prepare('SELECT * FROM team_members WHERE team_id=? AND user_id=?').get(team.id,user.id);if(member)db.prepare('UPDATE team_members SET is_captain=1,member_role=\'captain\',membership_status=\'active\' WHERE id=?').run(member.id);else db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,is_captain) VALUES (?,?,?,?, 'captain',1)`).run(team.id,user.id,user.display_name,user.username);});
   logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'team.captain_assigned',details:{teamId:team.id,captainUserId:user.id}});res.json({team:db.prepare('SELECT * FROM teams WHERE id=?').get(team.id),captain:cleanUser(user)});
 });
 app.post('/api/tournaments/:id/teams/:teamId/captain/invite',authRequired,requireTournamentPermission('team.invite_captain'),(req,res)=>{
   const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(Number(req.params.teamId),req.tournamentId);if(!team)return res.status(404).json({error:'Team not found.'});const identity=String(req.body.identity||'').trim();
-  const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND (username=? COLLATE NOCASE OR email=? COLLATE NOCASE)`).get(identity,identity);const email=user?.email||(identity.includes('@')?identity.toLowerCase():'');if(!user&&!email)return res.status(400).json({error:'Enter an existing username or a valid email.'});
+  const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND username=? COLLATE NOCASE`).get(identity);if(!user)return res.status(400).json({error:'Enter an existing username.'});
   const raw=randomCode(48);const hash=crypto.createHash('sha256').update(raw).digest('hex');const expires=new Date(Date.now()+7*86400000).toISOString();
-  db.prepare(`INSERT INTO team_invitations(tournament_id,team_id,invited_user_id,email,role,token_hash,status,expires_at,created_by) VALUES (?,?,?,?, 'captain',?,'pending',?,?)`).run(req.tournamentId,team.id,user?.id||null,email,hash,expires,req.user.id);
+  db.prepare(`INSERT INTO team_invitations(tournament_id,team_id,invited_user_id,email,role,token_hash,status,expires_at,created_by) VALUES (?,?,?,'', 'captain',?,'pending',?,?)`).run(req.tournamentId,team.id,user.id,hash,expires,req.user.id);
   const base=`${req.protocol}://${req.get('host')}/portal.html?invite=${encodeURIComponent(raw)}`;res.status(201).json({inviteLink:base,expiresAt:expires,user:user?cleanUser(user):null});
 });
 app.post('/api/team-invitations/accept',authRequired,emailVerifiedRequired,(req,res)=>{
@@ -1205,9 +1116,11 @@ app.post('/api/tournaments/:id/join-requests/:requestId/review',authRequired,req
     if(memberId){member=db.prepare('SELECT * FROM team_members WHERE id=? AND team_id=?').get(memberId,teamId);if(!member)throw new Error('The selected roster slot does not belong to this team.');if(member.user_id&&Number(member.user_id)!==Number(request.user_id))throw new Error('That roster slot is already linked to another account.');}
     if(!member&&request.gamer_tag){member=db.prepare(`SELECT * FROM team_members WHERE team_id=? AND user_id IS NULL AND gamer_tag=? COLLATE NOCASE ORDER BY id LIMIT 1`).get(teamId,request.gamer_tag);}
     if(member&&tournamentSource&&['startgg','tonamel','challonge'].includes(tournamentSource)){
-      const idMatches=!member.external_user_id||String(member.external_user_id)===String(providerSnapshot.providerUserId||'');
-      const slugMatches=!member.external_profile_slug||String(member.external_profile_slug).toLowerCase()===String(providerSnapshot.providerSlug||'').toLowerCase();
-      if(!idMatches||!slugMatches)throw new Error(`The selected ${tournamentSourceLabel} roster slot belongs to a different linked ${tournamentSourceLabel} profile.`);
+      const comparableId=Boolean(member.external_user_id&&providerSnapshot.providerUserId);
+      const comparableSlug=Boolean(member.external_profile_slug&&providerSnapshot.providerSlug);
+      const idMatches=comparableId&&String(member.external_user_id)===String(providerSnapshot.providerUserId);
+      const slugMatches=comparableSlug&&String(member.external_profile_slug).toLowerCase()===String(providerSnapshot.providerSlug).toLowerCase();
+      if((member.external_user_id||member.external_profile_slug)&&!idMatches&&!slugMatches)throw new Error(`The selected ${tournamentSourceLabel} roster slot belongs to a different linked ${tournamentSourceLabel} profile.`);
     }
     transaction(()=>{
       if(!member){const inserted=db.prepare(`INSERT INTO team_members(

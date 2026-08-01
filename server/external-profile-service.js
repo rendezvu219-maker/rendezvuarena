@@ -58,14 +58,10 @@ function providerOAuthConfiguration(provider, origin = '') {
   return { ...providerCredentials(provider), redirectUri: callbackUri(provider, origin) };
 }
 function providerCapabilities(origin = '') {
-  const configured = provider => {
-    try { providerOAuthConfiguration(provider, origin); return true; }
-    catch { return false; }
-  };
   return {
-    startgg: { oauth: configured('startgg'), manual: false, ownershipVerifiedByOAuth: true },
+    startgg: { oauth: false, manual: true, ownershipVerifiedByOAuth: false },
     tonamel: { oauth: false, manual: true, ownershipVerifiedByOAuth: false },
-    challonge: { oauth: configured('challonge'), manual: true, ownershipVerifiedByOAuth: configured('challonge') },
+    challonge: { oauth: false, manual: true, ownershipVerifiedByOAuth: false },
   };
 }
 function publicProfile(row) {
@@ -93,14 +89,17 @@ function profileForProvider(userId, provider) {
 }
 function normalizeManualProfile(provider, profileUrl, displayName = '') {
   const normalizedProvider = String(provider || '').trim().toLowerCase();
-  if (!['tonamel', 'challonge'].includes(normalizedProvider)) throw new Error('Manual profile links are supported only for Tonamel and Challonge.');
+  if (!SUPPORTED_PROVIDERS.has(normalizedProvider)) throw new Error('Choose start.gg, Tonamel or Challonge.');
   if (!isSafeExternalUrl(profileUrl, { allowEmpty: false })) throw new Error('Enter a valid HTTPS profile URL.');
   const url = new URL(profileUrl);
-  const allowedHost = normalizedProvider === 'tonamel' ? /(^|\.)tonamel\.com$/i : /(^|\.)challonge\.com$/i;
+  const allowedHost = normalizedProvider === 'startgg' ? /(^|\.)start\.gg$/i
+    : normalizedProvider === 'tonamel' ? /(^|\.)tonamel\.com$/i
+      : /(^|\.)challonge\.com$/i;
   if (!allowedHost.test(url.hostname)) throw new Error(`The URL must be a ${normalizedProvider} profile URL.`);
 
   const pathParts = url.pathname.split('/').filter(Boolean);
   let providerSlug = '';
+  if (normalizedProvider === 'startgg' && ['user', 'profile'].includes(pathParts[0]?.toLowerCase())) providerSlug = pathParts[1] || '';
   if (normalizedProvider === 'challonge' && pathParts[0]?.toLowerCase() === 'users') providerSlug = pathParts[1] || '';
   if (normalizedProvider === 'tonamel' && ['player', 'u'].includes(pathParts[0]?.toLowerCase())) providerSlug = pathParts[1] || '';
   providerSlug = decodeURIComponent(providerSlug).trim().slice(0, 120);
@@ -260,12 +259,10 @@ async function completeChallongeAuthorization({ state, code }) {
 function providerRequirement(tournament) {
   const provider = String(tournament?.source_platform || '').toLowerCase();
   if (!SUPPORTED_PROVIDERS.has(provider)) return { provider: '', required: false, verifiedRequired: false };
-  // start.gg ownership must be OAuth verified. Challonge can also be OAuth verified, but a
-  // manually linked profile remains acceptable for events whose organizer reviews entrants.
-  return { provider, required: true, verifiedRequired: provider === 'startgg' };
+  // Public test accounts use pasted profile links. Tournament Hosts still review ownership.
+  return { provider, required: true, verifiedRequired: false };
 }
 function tournamentEligibility(userId, tournament) {
-  const user = db.prepare('SELECT id,email_verified_at FROM users WHERE id=?').get(userId);
   const requirement = providerRequirement(tournament);
   const profile = requirement.provider ? profileForProvider(userId, requirement.provider) : null;
   const providerConnected = Boolean(profile);
@@ -279,8 +276,8 @@ function tournamentEligibility(userId, tournament) {
         (tm.external_provider=? AND tm.external_profile_slug!='' AND tm.external_profile_slug=? COLLATE NOCASE)
       ) ORDER BY tm.id`).all(tournament.id, requirement.provider, String(profile.providerUserId || ''), requirement.provider, String(profile.providerSlug || ''));
   }
-  const emailVerified = Boolean(user?.email_verified_at);
-  const eligible = emailVerified && (!requirement.required || providerVerified);
+  const emailVerified = true;
+  const eligible = !requirement.required || providerVerified;
   return {
     eligible,
     requirements: {
@@ -292,8 +289,7 @@ function tournamentEligibility(userId, tournament) {
     },
     profile,
     matchingMembers,
-    nextAction: !emailVerified ? 'verify_email'
-      : requirement.required && !providerConnected ? `connect_${requirement.provider}`
+    nextAction: requirement.required && !providerConnected ? `connect_${requirement.provider}`
       : requirement.verifiedRequired && !providerVerified ? `verify_${requirement.provider}`
       : 'continue',
   };

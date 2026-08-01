@@ -50,7 +50,7 @@ async function register(index, role = 'player') {
   const name = role === 'host' ? 'smokehost' : `captain${index}`;
   return request('/api/auth/register', {
     method: 'POST',
-    body: { displayName: `Smoke ${name}`, username: name, email: `${name}@example.com`, password: 'Password123!', role },
+    body: { displayName: `Smoke ${name}`, username: name, password: 'Password123!', passwordConfirmation: 'Password123!', role },
   });
 }
 async function connectRoom(roomCode, accessToken) {
@@ -80,11 +80,11 @@ function accessFromFragment(url) {
     for (let i = 1; i <= 6; i++) captains.push(await register(i));
     const referee = await request('/api/auth/register', {
       method: 'POST',
-      body: { displayName: 'Smoke Referee', username: 'smokeref', email: 'smokeref@example.com', password: 'Password123!', role: 'player' },
+      body: { displayName: 'Smoke Referee', username: 'smokeref', password: 'Password123!', passwordConfirmation: 'Password123!', role: 'player' },
     });
     const broadcaster = await request('/api/auth/register', {
       method: 'POST',
-      body: { displayName: 'Smoke Broadcaster', username: 'smokecast', email: 'smokecast@example.com', password: 'Password123!', role: 'player' },
+      body: { displayName: 'Smoke Broadcaster', username: 'smokecast', password: 'Password123!', passwordConfirmation: 'Password123!', role: 'player' },
     });
 
     const created = await request('/api/tournaments', {

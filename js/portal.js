@@ -17,7 +17,7 @@ function readFileBase64(file){return new Promise((resolve,reject)=>{const reader
 async function bootstrap(){bindStatic();const params=new URLSearchParams(location.search);const startggStatus=params.get('startgg');const challongeStatus=params.get('challonge');if(startggStatus==='connected')toast(t('startggConnectedToast'));else if(startggStatus==='error')toast(t('startggConnectionFailedToast'),true);if(challongeStatus==='connected')toast(t('challongeConnectedToast'));else if(challongeStatus==='error')toast(t('challongeConnectionFailedToast'),true);if(!getToken())return showAuth();try{state.user=(await api('/api/auth/me')).user;showPortal();connectRealtime();await loadPortal();}catch(error){setToken('');showAuth();toast(error.message,true);}}
 function bindStatic(){
   $('#portal-login-form').addEventListener('submit',async event=>{event.preventDefault();try{const payload=await api('/api/auth/login',{method:'POST',body:{identity:$('#portal-login-identity').value,password:$('#portal-login-password').value}});setToken('cookie-session');state.user=payload.user;showPortal();connectRealtime();await loadPortal();}catch(error){toast(error.message,true);}});
-  $('#portal-register-form').addEventListener('submit',async event=>{event.preventDefault();try{const payload=await api('/api/auth/register',{method:'POST',body:{displayName:$('#portal-register-display').value,username:$('#portal-register-username').value,email:$('#portal-register-email').value,password:$('#portal-register-password').value,role:'player'}});setToken('cookie-session');state.user=payload.user;showPortal();connectRealtime();await loadPortal();}catch(error){toast(error.message,true);}});
+  $('#portal-register-form').addEventListener('submit',async event=>{event.preventDefault();const password=$('#portal-register-password').value;const passwordConfirmation=$('#portal-register-password-confirm').value;if(password!==passwordConfirmation)return toast(t('registrationPasswordMismatch'),true);try{const payload=await api('/api/auth/register',{method:'POST',body:{username:$('#portal-register-username').value,password,passwordConfirmation,role:'player'}});setToken('cookie-session');state.user=payload.user;showPortal();connectRealtime();await loadPortal();}catch(error){toast(error.message,true);}});
   $('#portal-logout').addEventListener('click',()=>{setToken('');state.socket?.disconnect();state.user=null;showAuth();});
   $('#portal-refresh').addEventListener('click',loadPortal);
   $('#portal-search').addEventListener('input',event=>{state.search=event.target.value;renderMatches();});
@@ -36,8 +36,6 @@ function renderAccountSettings(){
   $('#portal-show-external-profiles').checked=Boolean(profile.showExternalProfiles);
   $('#portal-view-profile').href=`/profile.html?user=${encodeURIComponent(profile.username||state.user.username)}`;
   $('#portal-profile-settings-form').onsubmit=async event=>{event.preventDefault();try{const payload=await api('/api/profile/settings',{method:'PATCH',body:{displayName:$('#portal-profile-display-name').value,gamerTag:$('#portal-profile-gamer-tag').value,bio:$('#portal-profile-bio').value,profileVisibility:$('#portal-profile-visibility').value,showExternalProfiles:$('#portal-show-external-profiles').checked}});state.profileSettings=payload.profile;state.user.displayName=payload.profile.displayName;showPortal();toast(t('profileSettingsSaved'));}catch(error){toast(error.message,true);}};
-  $('#portal-change-email-form').onsubmit=async event=>{event.preventDefault();try{await api('/api/auth/change-email/request',{method:'POST',body:{currentPassword:$('#portal-email-current-password').value,newEmail:$('#portal-new-email').value}});$('#portal-email-confirm-row').classList.remove('hidden');$('#portal-email-change-code').focus();toast(t('emailChangeCodeSent'));}catch(error){toast(error.message,true);}};
-  $('#portal-confirm-email-change').onclick=async()=>{try{const payload=await api('/api/auth/change-email/confirm',{method:'POST',body:{code:$('#portal-email-change-code').value}});state.user=payload.user;state.profileSettings=payload.profile;$('#portal-email-confirm-row').classList.add('hidden');$('#portal-change-email-form').reset();toast(t('emailChangedToast'));await loadPortal({quiet:true});}catch(error){toast(error.message,true);}};
   $('#portal-change-password-form').onsubmit=async event=>{event.preventDefault();const next=$('#portal-password-new').value;if(next!==$('#portal-password-confirm').value)return toast(t('passwordConfirmationMismatch'),true);try{await api('/api/auth/change-password',{method:'POST',body:{currentPassword:$('#portal-password-current').value,newPassword:next}});event.currentTarget.reset();toast(t('passwordChangedToast'));}catch(error){toast(error.message,true);}};
 }
 
@@ -51,56 +49,34 @@ function providerIdentity(profile){
   }catch{return profile.profileUrl||'';}
 }
 function renderAccountConnections(){
-  const emailBox=$('#portal-email-verification');
-  if(state.user.emailVerified){
-    emailBox.innerHTML=`<div class="join-account-status approved"><span>${escapeHtml(t('emailVerifiedBadge'))}</span><h4>${escapeHtml(state.user.email)}</h4><p>${escapeHtml(t('emailVerifiedAccessDesc'))}</p></div>`;
-  }else{
-    emailBox.innerHTML=`<div class="join-account-status pending"><span>${escapeHtml(t('emailVerificationRequiredBadge'))}</span><h4>${escapeHtml(state.user.email)}</h4><p>${escapeHtml(t('emailVerificationPortalDesc'))}</p><form id="portal-verify-email-form" class="ops-toolbar"><input id="portal-email-code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="${escapeHtml(t('sixDigitCodePlaceholder'))}" required><button class="btn btn-primary btn-sm">${escapeHtml(t('verifyEmailAction'))}</button><button class="btn btn-ghost btn-sm" id="portal-resend-email" type="button">${escapeHtml(t('resendCode'))}</button></form></div>`;
-    $('#portal-verify-email-form')?.addEventListener('submit',async event=>{event.preventDefault();try{const payload=await api('/api/auth/verify-email',{method:'POST',body:{code:$('#portal-email-code').value}});state.user=payload.user;toast(t('emailVerifiedToast'));await loadPortal({quiet:true});}catch(error){toast(error.message,true);}});
-    $('#portal-resend-email')?.addEventListener('click',async()=>{try{await api('/api/auth/resend-verification',{method:'POST'});toast(t('newVerificationCodeSent'));}catch(error){toast(error.message,true);}});
-  }
-
   const profiles=new Map(state.externalProfiles.map(profile=>[profile.provider,profile]));
-  const formDisabled=state.user.emailVerified?'':'disabled';
   const statusBadge=profile=>{
     if(!profile)return `<span class="portal-provider-status is-empty">${escapeHtml(t('actionRequired'))}</span>`;
     const verified=profile.verificationStatus==='verified';
     return `<span class="portal-provider-status ${verified?'is-verified':'is-review'}">${escapeHtml(verified?t('profileStatusVerified'):t('profileStatusNeedsReview'))}</span>`;
   };
   const currentProfile=profile=>profile?`<a class="portal-provider-current" href="${escapeHtml(profile.profileUrl)}" target="_blank" rel="noopener noreferrer"><span>${escapeHtml(providerIdentity(profile))}</span><small>${escapeHtml(profile.profileUrl)}</small><b aria-hidden="true">↗</b></a>`:'';
-  const oauthButton=(provider,label,profile,kind='primary')=>`<button class="btn btn-${kind} btn-sm" type="button" data-connect-provider="${provider}" ${formDisabled}>${escapeHtml(profile?t('relinkProvider',{provider:label}):t('connectProvider',{provider:label}))}</button>`;
   const disconnectButton=provider=>`<button class="btn btn-danger btn-sm" type="button" data-disconnect-provider="${provider}">${escapeHtml(t('disconnect'))}</button>`;
 
-  const startgg=profiles.get('startgg');
-  const startggCard=`<article class="ops-form-card portal-provider-card portal-provider-card--startgg">
-    <div class="portal-provider-main">
-      <header class="portal-provider-head"><div class="portal-provider-brand"><span class="portal-provider-mark">S</span><div><b>start.gg</b><small>${escapeHtml(t('startggConnectDesc'))}</small></div></div>${statusBadge(startgg)}</header>
-      ${currentProfile(startgg)}
-    </div>
-    <div class="portal-provider-actions">${startgg?`<a class="btn btn-ghost btn-sm" href="${escapeHtml(startgg.profileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t('openProfileExternal'))}</a>`:''}${oauthButton('startgg','start.gg',startgg)}${startgg?disconnectButton('startgg'):''}</div>
-  </article>`;
-
-  const manualCard=(provider,label,profile,description,{oauth=false}={})=>`<form class="ops-form-card portal-provider-card portal-provider-card--manual portal-provider-card--${provider}" data-manual-provider="${provider}">
+  const manualCard=(provider,label,profile,description)=>`<form class="ops-form-card portal-provider-card portal-provider-card--manual portal-provider-card--${provider}" data-manual-provider="${provider}">
     <header class="portal-provider-head"><div class="portal-provider-brand"><span class="portal-provider-mark">${escapeHtml(label.slice(0,1).toUpperCase())}</span><div><b>${escapeHtml(label)}</b><small>${escapeHtml(description)}</small></div></div>${statusBadge(profile)}</header>
     ${currentProfile(profile)}
     ${profile&&profile.verificationStatus!=='verified'?`<div class="portal-provider-review-note">${escapeHtml(t('manualProfileHostReview'))}</div>`:''}
     <div class="portal-provider-fields">
-      <label><span>${escapeHtml(t('profileUrlPlaceholder'))}</span><input name="profileUrl" type="url" value="${escapeHtml(profile?.profileUrl||'')}" placeholder="${escapeHtml(t('profileUrlPlaceholder'))}" required ${formDisabled}></label>
-      <label><span>${escapeHtml(t('profileDisplayNamePlaceholder'))}</span><input name="displayName" value="${escapeHtml(profile?.displayName||profile?.gamerTag||'')}" placeholder="${escapeHtml(t('profileDisplayNamePlaceholder'))}" ${formDisabled}></label>
+      <label><span>${escapeHtml(t('profileUrlPlaceholder'))}</span><input name="profileUrl" type="url" value="${escapeHtml(profile?.profileUrl||'')}" placeholder="${escapeHtml(t('profileUrlPlaceholder'))}" required></label>
+      <label><span>${escapeHtml(t('profileDisplayNamePlaceholder'))}</span><input name="displayName" value="${escapeHtml(profile?.displayName||profile?.gamerTag||'')}" placeholder="${escapeHtml(t('profileDisplayNamePlaceholder'))}"></label>
     </div>
-    <div class="portal-provider-actions">${profile?`<a class="btn btn-ghost btn-sm" href="${escapeHtml(profile.profileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t('openProfileExternal'))}</a>`:''}${oauth?oauthButton(provider,label,profile,'ghost'):''}<button class="btn btn-primary btn-sm" ${formDisabled}>${escapeHtml(profile?t('updateProfileLink'):t('saveProfile'))}</button>${profile?disconnectButton(provider):''}</div>
+    <div class="portal-provider-actions">${profile?`<a class="btn btn-ghost btn-sm" href="${escapeHtml(profile.profileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t('openProfileExternal'))}</a>`:''}<button class="btn btn-primary btn-sm">${escapeHtml(profile?t('updateProfileLink'):t('saveProfile'))}</button>${profile?disconnectButton(provider):''}</div>
   </form>`;
 
+  const startgg=profiles.get('startgg');
   const tonamel=profiles.get('tonamel');
   const challonge=profiles.get('challonge');
-  const challongeOAuth=Boolean(state.providerCapabilities?.challonge?.oauth);
+  const startggCard=manualCard('startgg','start.gg',startgg,t('startggManualProfileDesc'));
   const tonamelCard=manualCard('tonamel','Tonamel',tonamel,t('tonamelManualProfileDesc'));
-  const challongeCard=challonge?.verificationStatus==='verified'&&challongeOAuth
-    ? `<article class="ops-form-card portal-provider-card portal-provider-card--manual portal-provider-card--challonge"><header class="portal-provider-head"><div class="portal-provider-brand"><span class="portal-provider-mark">C</span><div><b>Challonge</b><small>${escapeHtml(t('challongeOAuthDesc'))}</small></div></div>${statusBadge(challonge)}</header>${currentProfile(challonge)}<div class="portal-provider-actions"><a class="btn btn-ghost btn-sm" href="${escapeHtml(challonge.profileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t('openProfileExternal'))}</a>${oauthButton('challonge','Challonge',challonge)}${disconnectButton('challonge')}</div></article>`
-    : manualCard('challonge','Challonge',challonge,challongeOAuth?t('challongeOAuthDesc'):t('challongeManualProfileDesc'),{oauth:challongeOAuth});
+  const challongeCard=manualCard('challonge','Challonge',challonge,t('challongeManualProfileDesc'));
 
   $('#portal-external-profiles').innerHTML=startggCard+tonamelCard+challongeCard;
-  document.querySelectorAll('[data-connect-provider]').forEach(button=>button.addEventListener('click',()=>{location.href=`/api/connections/${button.dataset.connectProvider}?return=${encodeURIComponent('/portal.html')}`;}));
   document.querySelectorAll('[data-disconnect-provider]').forEach(button=>button.addEventListener('click',async()=>{const provider=button.dataset.disconnectProvider;if(!confirm(t('disconnectProviderConfirm',{provider})))return;try{await api(`/api/profile/external/${provider}`,{method:'DELETE'});toast(t('profileDisconnectedToast'));await loadPortal({quiet:true});}catch(error){toast(error.message,true);}}));
   document.querySelectorAll('[data-manual-provider]').forEach(form=>form.addEventListener('submit',async event=>{event.preventDefault();try{const data=new FormData(form);await api('/api/profile/external/manual',{method:'POST',body:{provider:form.dataset.manualProvider,profileUrl:data.get('profileUrl'),displayName:data.get('displayName')}});toast(t('profileSavedReviewToast'));await loadPortal({quiet:true});}catch(error){toast(error.message,true);}}));
 }

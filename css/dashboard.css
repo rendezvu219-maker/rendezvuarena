@@ -1160,7 +1160,7 @@ body { color: var(--text-primary); background-color: var(--surface-canvas); back
 
 .portal-profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
 .portal-profile-grid .portal-provider-card{display:grid;grid-template-columns:1fr;gap:14px;align-content:start;justify-content:stretch;align-items:stretch;min-height:0;margin:0;padding:16px;border-top:3px solid var(--border-strong)}
-.portal-provider-card--startgg{grid-column:1/-1;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.portal-provider-card--startgg{grid-column:1/-1;grid-template-columns:1fr;align-items:stretch}
 .portal-provider-card--tonamel{border-top-color:rgba(104,189,255,.68)!important}
 .portal-provider-card--challonge{border-top-color:rgba(255,133,87,.72)!important}
 .portal-provider-main{display:grid;gap:12px;min-width:0}
@@ -1432,25 +1432,21 @@ body { color: var(--text-primary); background-color: var(--surface-canvas); back
   box-sizing:border-box;
 }
 .portal-settings-grid{
-  grid-template-areas:
-    "profile email"
-    "profile password";
+  grid-template-areas:"profile password";
 }
 #portal-profile-settings-form{grid-area:profile}
-#portal-change-email-form{grid-area:email}
 #portal-change-password-form{grid-area:password}
 @media(max-width:1100px){
   .portal-settings-grid{
     grid-template-areas:
       "profile profile"
-      "email password";
+      "password password";
   }
 }
 @media(max-width:760px){
   .portal-settings-grid{
     grid-template-areas:
       "profile"
-      "email"
       "password";
   }
 }

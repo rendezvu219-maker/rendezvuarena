@@ -454,7 +454,7 @@ const dynamicCases = {
   dashboard: ['Tournament not found.', 'Start time not announced', 'No matches found.'],
   portal: ['Sign in or register with the invited account, then accept the Captain invitation.', 'No matches found.'],
   public: ['Missing tournament slug.', 'Loading public tournament data…'],
-  auth: ['Account created. Redirecting…', 'Username or email'],
+  auth: ['Account created. Redirecting…', 'Confirm password'],
   broadcast: ['DRAFT COMPLETE', 'FINAL TEAM COMPOSITIONS LOCKED', 'WAITING FOR TEAM RED...'],
 };
 for (const locale of translatedLocales) {

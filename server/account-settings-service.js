@@ -26,7 +26,7 @@ function publicAccountSettings(userId) {
   return {
     id: row.id,
     username: row.username,
-    email: row.email,
+    email: /@accounts\.rendezvu\.invalid$/i.test(String(row.email || '')) ? '' : row.email,
     displayName: row.display_name,
     gamerTag: row.gamer_tag || '',
     bio: row.bio || '',

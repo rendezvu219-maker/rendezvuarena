@@ -72,17 +72,6 @@ function validateEnvironment(port) {
     if (process.env.ALLOW_DIRECT_HOST_REGISTRATION === 'true') {
       throw new Error('ALLOW_DIRECT_HOST_REGISTRATION must be false in production.');
     }
-    const emailCodeSecret = String(process.env.EMAIL_CODE_SECRET || '');
-    if (emailCodeSecret.length < 32 || /replace-with|change-me|example/i.test(emailCodeSecret)) {
-      throw new Error('EMAIL_CODE_SECRET is required in production and must contain at least 32 non-placeholder characters.');
-    }
-    if (!String(process.env.RESEND_API_KEY || '').trim()) {
-      throw new Error('RESEND_API_KEY is required in production for account verification email.');
-    }
-    const emailFrom = String(process.env.EMAIL_FROM || '').trim();
-    if (!/^.+<[^\s@]+@[^\s@]+\.[^\s@]+>$/.test(emailFrom) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailFrom)) {
-      throw new Error('EMAIL_FROM must be a valid verified sender address.');
-    }
     const startggClientId = String(process.env.STARTGG_CLIENT_ID || '').trim();
     const startggClientSecret = String(process.env.STARTGG_CLIENT_SECRET || '').trim();
     if (Boolean(startggClientId) !== Boolean(startggClientSecret)) {

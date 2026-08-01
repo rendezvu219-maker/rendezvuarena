@@ -29,8 +29,8 @@ async function wait() { for(let i=0;i<60;i++){try{await request('/api/health');r
 (async()=>{
   try {
     await wait();
-    const host = await request('/api/auth/register',{method:'POST',body:{displayName:'Join Host',username:'joinhost',email:'joinhost@example.com',password:'Password123!',role:'host'}});
-    const player = await request('/api/auth/register',{method:'POST',body:{displayName:'Join Player',username:'joinplayer',email:'joinplayer@example.com',password:'Password123!'}});
+    const host = await request('/api/auth/register',{method:'POST',body:{displayName:'Join Host',username:'joinhost',password:'Password123!',passwordConfirmation:'Password123!',role:'host'}});
+    const player = await request('/api/auth/register',{method:'POST',body:{displayName:'Join Player',username:'joinplayer',password:'Password123!',passwordConfirmation:'Password123!'}});
     const created = await request('/api/tournaments',{token:host.token,method:'POST',body:{name:'Join Flow Cup',status:'registration_open'}});
     const tournamentId=created.tournament.id, slug=created.tournament.slug;
     await request(`/api/tournaments/${tournamentId}/publish`,{token:host.token,method:'POST'});

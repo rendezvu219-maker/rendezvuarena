@@ -61,7 +61,7 @@ async function waitForServer(){for(let i=0;i<80;i++){try{await request('/api/hea
 
 try{
   await waitForServer();
-  const registered=await request('/api/auth/register',{method:'POST',body:{username:'external_owner',email:'external_owner@test.local',displayName:'External Owner',password:'Password123!'}});
+  const registered=await request('/api/auth/register',{method:'POST',body:{username:'external_owner',displayName:'External Owner',password:'Password123!',passwordConfirmation:'Password123!'}});
   const token=registered.payload.token;
   const preview=await request('/api/tournament-import/preview',{token,method:'POST',body:{url:'https://tonamel.com/competition/UNVERIFIED-TEST'}});
   assert.equal(preview.payload.preview.syncStatus,'url_verified','Failed metadata fetch must remain importable but explicitly unverified.');

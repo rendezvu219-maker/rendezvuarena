@@ -52,13 +52,7 @@ function renderEligibility(){
     return true;
   }
   panel.className='join-account-status pending';
-  if(!requirements.emailVerified){
-    panel.innerHTML=`<span>${escapeHtml(t('actionRequired'))}</span><h2>${escapeHtml(t('verifyYourEmail'))}</h2><p>${escapeHtml(t('verifyEmailBeforeJoinDesc'))}</p><a class="btn btn-primary" href="/portal.html">${escapeHtml(t('openAccountSecurity'))}</a>`;
-  }else if(provider==='startgg'&&!requirements.providerConnected){
-    panel.innerHTML=`<span>${escapeHtml(t('actionRequired'))}</span><h2>${escapeHtml(t('connectStartggTitle'))}</h2><p>${escapeHtml(t('connectStartggJoinDesc'))}</p><a class="btn btn-primary" href="/api/connections/startgg?return=${encodeURIComponent(location.pathname+location.search)}">${escapeHtml(t('connectStartgg'))}</a>`;
-  }else if(provider==='challonge'&&!requirements.providerConnected&&eligibility.providerCapabilities?.challonge?.oauth){
-    panel.innerHTML=`<span>${escapeHtml(t('actionRequired'))}</span><h2>${escapeHtml(t('addProviderProfile',{provider:'CHALLONGE'}))}</h2><p>${escapeHtml(t('challongeOAuthDesc'))}</p><a class="btn btn-primary" href="/api/connections/challonge?return=${encodeURIComponent(location.pathname+location.search)}">${escapeHtml(t('connectProvider',{provider:'Challonge'}))}</a>`;
-  }else if(provider){
+  if(provider){
     panel.innerHTML=`<span>${escapeHtml(t('actionRequired'))}</span><h2>${escapeHtml(t('addProviderProfile',{provider:providerLabel}))}</h2><p>${escapeHtml(t('providerProfileRequiredDesc'))}</p><a class="btn btn-primary" href="/portal.html">${escapeHtml(t('openTournamentProfiles'))}</a>`;
   }
   panel.classList.remove('hidden');

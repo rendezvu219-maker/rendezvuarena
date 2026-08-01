@@ -169,7 +169,7 @@ try {
   for (let index = 1; index <= 4; index += 1) {
     lastRegisterResponse = await request(rateServer, '/api/auth/register', {
       method: 'POST',
-      body: { username: `rate_user_${index}`, email: `rate_user_${index}@test.local`, displayName: `Rate User ${index}`, password: 'RatePassword123!' },
+      body: { username: `rate_user_${index}`, displayName: `Rate User ${index}`, password: 'RatePassword123!', passwordConfirmation: 'RatePassword123!' },
     });
     registerStatuses.push(lastRegisterResponse.response.status);
   }
@@ -256,7 +256,7 @@ try {
   if (refreshedPayload.token) adminToken = refreshedPayload.token;
 
   const registeredPlayer = await request(mainServer, '/api/auth/register', {
-    method: 'POST', body: { username: 'privacy_player', email: 'privacy_player@test.local', displayName: 'Privacy Player', password: 'PrivacyPass123!' },
+    method: 'POST', body: { username: 'privacy_player', displayName: 'Privacy Player', password: 'PrivacyPass123!', passwordConfirmation: 'PrivacyPass123!' },
   });
   assert.equal(registeredPlayer.response.status, 201);
   const playerToken = registeredPlayer.payload.token;
@@ -446,10 +446,6 @@ try {
       ADMIN_PASSWORD: 'ProdAdmin#7391Secure',
       ALLOW_BEARER_TOKEN_RESPONSE: 'true',
       ALLOW_MANUAL_TOURNAMENT_CREATION: 'false',
-      EMAIL_DELIVERY_MODE: 'resend',
-      RESEND_API_KEY: 're_security_regression_test_key',
-      EMAIL_FROM: 'RendezVu Arena <verify@rendezvu.test>',
-      EMAIL_CODE_SECRET: 'production-email-code-secret-2026-very-strong',
     },
   });
   for (let attempt = 0; attempt < 100; attempt += 1) {

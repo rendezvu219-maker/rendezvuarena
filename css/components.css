@@ -796,7 +796,37 @@ select.form-control, select.premium-select {
 #ops-user:has(.gs-global-menu),
 #portal-user:has(.gs-global-menu) { display: inline-flex; align-items: center; }
 
+/* Public test-site credential warning. Keep this visually dominant on every account entry point. */
+.public-test-warning {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 2px solid #ff4f64;
+  border-left-width: 7px;
+  border-radius: var(--radius-md);
+  color: #fff3f5;
+  background: linear-gradient(135deg, rgba(163, 13, 39, .62), rgba(64, 8, 22, .92));
+  box-shadow: 0 0 0 3px rgba(255, 79, 100, .12), 0 16px 36px rgba(0, 0, 0, .28);
+}
+.public-test-warning::before {
+  content: "⚠";
+  color: #ffd54a;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+.public-test-warning strong {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(.78rem, 1.5vw, 1rem);
+  letter-spacing: .08em;
+}
+.public-test-warning p { margin: 0; color: #ffe5e9; font-size: .82rem; font-weight: 750; line-height: 1.6; }
+.public-test-warning--wide { grid-column: 1 / -1; }
+.auth-card > .public-test-warning { margin-bottom: 20px; }
+#portal-view > .public-test-warning { margin-bottom: 20px; }
+
 @media (max-width: 760px) {
+  .public-test-warning { padding: 14px; }
   .gs-ops-home-mark { width: 34px; height: 34px; }
   .gs-ops-home-brand .ops-kicker { display: none; }
   .gs-ops-home-brand h1 { font-size: .88rem; letter-spacing: .12em; }

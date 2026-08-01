@@ -81,8 +81,8 @@ try {
   const registered = await request('/api/auth/register', {
     method: 'POST',
     body: {
-      displayName: 'Quick Host', username: 'quickhost', email: 'quickhost@example.com',
-      password: 'Password123!', role: 'player',
+      displayName: 'Quick Host', username: 'quickhost',
+      password: 'Password123!', passwordConfirmation: 'Password123!', role: 'player',
     },
   });
   const token = registered.payload.token;

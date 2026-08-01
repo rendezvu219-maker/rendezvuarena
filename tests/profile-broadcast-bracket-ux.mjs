@@ -12,6 +12,8 @@ const broadcast=read('js/broadcast-page.js');
 const devTest=read('server/dev-test-service.js');
 const portal=read('portal.html');
 const portalJs=read('js/portal.js');
+const authHtml=read('auth.html');
+const authJs=read('js/auth-page.js');
 const profileJs=read('js/profile.js');
 const server=read('server.js');
 const external=read('server/external-profile-service.js');
@@ -50,28 +52,34 @@ assert.match(broadcast,/SELECT &amp; WAIT/);
 assert.match(broadcast,/broadcast-selector-refresh/);
 assert.match(devTest,/user\.persona==='broadcaster'\)target='\/broadcast\.html'/);
 
-for(const id of ['portal-profile-settings-form','portal-change-email-form','portal-change-password-form','portal-show-external-profiles']){
+for(const id of ['portal-profile-settings-form','portal-change-password-form','portal-show-external-profiles']){
   assert.match(portal,new RegExp(`id="${id}"`));
 }
+assert.doesNotMatch(portal,/id="portal-change-email-form"|id="portal-register-email"/);
+assert.doesNotMatch(authHtml,/id="account-register-email"|id="account-register-display"|id="account-verify"/);
+assert.match(authHtml,/id="account-register-password-confirm"/);
+assert.match(authHtml,/class="public-test-warning"/);
+assert.match(portal,/public-test-warning/);
+assert.match(authJs,/passwordConfirmation/);
 assert.match(server,/\/api\/profile\/settings/);
-assert.match(server,/\/api\/auth\/change-email\/request/);
 assert.match(server,/\/api\/profiles\/:username/);
 assert.match(server,/\/api\/connections\/challonge/);
-assert.match(external,/startgg: \{ oauth:/);
+assert.match(external,/startgg: \{ oauth: false, manual: true/);
 assert.match(external,/tonamel: \{ oauth: false, manual: true/);
-assert.match(external,/challonge: \{ oauth:/);
+assert.match(external,/challonge: \{ oauth: false, manual: true/);
 assert.match(portalJs,/const manualCard=/);
 assert.doesNotMatch(portalJs,/connectedProfileCard/);
+assert.doesNotMatch(portalJs,/data-connect-provider|portal-email-verification/);
 assert.match(dashboardCss,/ACCOUNT PROFILE \+ LINKED PLATFORMS LAYOUT/);
 assert.match(dashboardCss,/#portal-profile-settings-form\{grid-row:span 2\}/);
 assert.match(dashboardCss,/\.portal-settings-card,\.portal-provider-card\{display:grid;grid-template-columns:1fr/);
-assert.match(dashboardCss,/\.portal-provider-card--startgg\{grid-column:1\/-1/);
+assert.match(dashboardCss,/\.portal-provider-card--startgg\{grid-column:1\/-1;grid-template-columns:1fr/);
 assert.match(profileJs,/profile-provider-grid/);
 assert.match(portal,/id="profile-settings"/);
 assert.match(dashboardCss,/v0\.6\.47 PROFILE CARD INNER SPACING/);
 assert.match(dashboardCss,/\.portal-settings-card \{[\s\S]*padding: 18px;/);
 
-const requiredKeys=['profileAndPrivacy','manageYourProfile','changeEmailTitle','changePasswordTitle','profileVisibility','showTournamentProfiles','challongeOAuthDesc','tonamelManualProfileDesc','privateProfileMessage','linkedTournamentProfiles'];
+const requiredKeys=['profileAndPrivacy','manageYourProfile','changePasswordTitle','profileVisibility','showTournamentProfiles','tonamelManualProfileDesc','startggManualProfileDesc','privateProfileMessage','linkedTournamentProfiles','confirmPassword','registrationPasswordMismatch','publicTestWarningTitle','publicTestWarningBody','tournamentProfileLinks','linkThreePlatforms','tournamentProfileLinksDesc'];
 for(const [locale,catalog] of Object.entries(locales)){
   for(const key of requiredKeys)assert.ok(String(catalog[key]||'').trim(),`${locale}.${key} must be translated.`);
 }
