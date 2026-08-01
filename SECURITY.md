@@ -1,6 +1,6 @@
 # Security Policy
 
-Report security issues privately to the email configured as `PUBLIC_CONTACT_EMAIL` for the production operator.
+Report security issues privately to [rendezvous2193@gmail.com](mailto:rendezvous2193@gmail.com). The production deployment should also set `PUBLIC_CONTACT_EMAIL=rendezvous2193@gmail.com`.
 
 Do not post credentials, session cookies, room links, OAuth tokens, private tournament notes, evidence or personal information in a public issue.
 

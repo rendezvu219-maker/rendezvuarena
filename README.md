@@ -15,7 +15,7 @@ This package is cleaned for a **private GitHub repository**:
 - no bundled `node_modules`;
 - no local admin account or personal profile links;
 - development reports and demo databases removed;
-- production legal pages and a monitored-contact requirement added;
+- production legal pages added; public contact: `rendezvous2193@gmail.com`;
 - GitHub Actions CI and Dependabot configuration added.
 
 The project uses character/skill names and gameplay facts as descriptive compatibility data for tournament and reference functions. The repository also contains game-related artwork; public visibility of that artwork on an official site is not, by itself, a redistribution licence. Read `LEGAL_REVIEW_VI.md` and `THIRD_PARTY_NOTICES.md` before publishing a repository that includes the asset files.

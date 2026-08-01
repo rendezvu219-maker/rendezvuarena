@@ -368,7 +368,7 @@ function existingTournamentMembership(userId, tournamentId) {
 
 app.get('/api/health', (_req,res) => res.json({status:'ok',version:appVersion}));
 app.get('/api/public/site-config', (_req,res) => {
-  const contactEmail = String(process.env.PUBLIC_CONTACT_EMAIL || '').trim();
+  const contactEmail = String(process.env.PUBLIC_CONTACT_EMAIL || 'rendezvous2193@gmail.com').trim();
   const supportUrl = String(process.env.PUBLIC_SUPPORT_URL || '').trim();
   res.json({
     contactEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) ? contactEmail : '',

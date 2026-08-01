@@ -43,7 +43,7 @@ Sao chép danh sách từ `.env.railway.example`. Tối thiểu phải cấu hì
 - `UPLOAD_PATH=/data/uploads`
 - `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
 - `DIVINE_CARD_ADMIN_EMAIL`
-- `PUBLIC_CONTACT_EMAIL`
+- `PUBLIC_CONTACT_EMAIL=rendezvous2193@gmail.com`
 - `RESEND_API_KEY`, `EMAIL_FROM`
 
 Giữ `PUBLIC_SUPPORT_URL` trống ở lần phát hành đầu.

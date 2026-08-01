@@ -36,7 +36,7 @@ Ngày kiểm tra: 01/08/2026
 
 ## Việc bắt buộc trước khi mở website
 
-1. Đặt `PUBLIC_CONTACT_EMAIL` thành email thật được theo dõi.
+1. `PUBLIC_CONTACT_EMAIL` đã được đặt thành `rendezvous2193@gmail.com`; cần bảo đảm hộp thư này luôn được theo dõi.
 2. Tạo secret production mới; không tái sử dụng secret/mật khẩu từ bản ZIP cũ.
 3. Gắn persistent volume cho SQLite và upload.
 4. Khai báo đúng `PUBLIC_ORIGIN`, `ALLOWED_ORIGINS`, callback OAuth và domain gửi email.
