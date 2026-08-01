@@ -1,0 +1,348 @@
+Héroes | Sitio oficial de DRAGON BALL GEKISHIN SQUADRA | Bandai Namco Entertainment Inc.
+
+[[IMG:DRAGON BALL GEKISHIN SQUADRA]]
+
+[[IMG:Noticias]]
+
+[[IMG:Noticias]]
+
+[[IMG:¿Qué es GEKISHIN SQUADRA?]]
+
+[[IMG:¿Qué es GEKISHIN SQUADRA?]]
+
+[[IMG:Cómo jugar]]
+
+[[IMG:Cómo jugar]]
+
+[[IMG:Lista de héroes]]
+
+[[IMG:Lista de héroes]]
+
+[[IMG:Número de serie]]
+
+[[IMG:Número de serie]]
+
+[[IMG:Especificaciones]]
+
+[[IMG:Especificaciones]]
+
+ES
+
+日本語
+
+ENGLISH（NA）
+
+ENGLISH（EUW）
+
+FRANÇAIS
+
+DEUTSCH
+
+繁體中文
+
+簡體中文
+
+한국어
+
+ESPAÑOL
+
+PORTUGUÊS
+
+ES
+
+日本語
+
+ENGLISH（NA）
+
+ENGLISH（EUW）
+
+FRANÇAIS
+
+DEUTSCH
+
+繁體中文
+
+簡體中文
+
+한국어
+
+ESPAÑOL
+
+PORTUGUÊS
+
+[[IMG:CLOSE]]
+
+[[IMG:MENU]]
+
+[[IMG:Lista de héroes]]
+
+[[IMG:Daño]]
+
+Bojack
+máximo poder
+
+Bojack
+máximo poder
+
+Dificultad
+
+Héroe especializado en la lucha en grupo que domina el campo de batalla con potentes balas de ki y bombardeos. ¡Nadie en la galaxia podrá resistir los devastadores ataques que lanza con sus cuatro subordinados!
+
+Daño
+instantáneo
+
+Daño
+sostenido
+
+Área de
+ataque
+
+Asistencia
+
+Movilidad
+
+Resistencia
+a ataques de
+onda de ki
+
+Resistencia
+a ataques de
+impacto
+
+Técnica
+
+Pasiva
+
+[[IMG:passive1]]
+
+Arremetida
+
+[[IMG:rush_attack1]]
+
+Técnica
+
+[[IMG:skill1]]
+
+[[IMG:skill2]]
+
+[[IMG:skill3]]
+
+Técnica
+especial
+
+[[IMG:super_attack1]]
+
+Trans- formación Transformación
+
+[[IMG:transformation1]]
+
+Pasiva
+
+[[IMG:passive1]]
+
+Arremetida
+
+[[IMG:rush_attack1]]
+
+Técnica
+
+[[IMG:skill1]]
+
+[[IMG:skill2]]
+
+[[IMG:skill3]]
+
+[[IMG:PASIVA]]
+
+Asesino Estelar
+
+Ejecutar una Arremetida contra héroes enemigos a los que les haya infligido daño con técnicas provoca un ataque adicional por parte de su subordinado.
+
+[[IMG:ARREMETIDA]]
+
+[[IMG:TÉCNICA]]
+
+Destrozo Galáctico
+
+Lanza 2 balas de ki que explotan al impactar.
+
+[[IMG:TÉCNICA]]
+
+Resplandor Cósmico
+
+Lanza balas de ki en la dirección deseada.
+Las balas explotan si las alcanza un ataque de onda de ki de un héroe aliado o enemigo, o después de cierto tiempo.
+Es posible desplazarse y controlar la dirección durante el ataque.
+
+[[IMG:TÉCNICA]]
+
+Psique Carmesí
+
+Ordena a los subordinados que tiendan hilos de ki.
+Inflige daño y Movimiento ralentizado a los enemigos dentro del área.
+Los subordinados se retiran si reciben un ataque, pero al subir el nivel de la técnica, aumenta el número de subordinados.
+Después de infligir Daño continuado, se producirá una explosión adicional en función del número de subordinados restantes.
+
+[[IMG:TÉCNICA ESPECIAL]]
+
+Gigagolpe Aplastante
+
+Llama a sus subordinados para disparar 5 ondas de ki.
+Tras pasar cierto tiempo de activación, las ondas de ki convergen en el centro.
+
+[[IMG:TRANSFORMACIÓN]]
+
+Máximo Poder
+
+Puede transformarse a partir del nivel 7.
+Aumenta el daño de los ataques adicionales por parte de los subordinados de Asesino estelar.
+
+[[IMG:transformation1]]
+
+Técnica
+especial
+
+[[IMG:super_attack1]]
+
+Trans- formación Transformación
+
+[[IMG:transformation1]]
+
+*Las aptitudes indicadas son las aptitudes al momento del lanzamiento del héroe.
+Existe la posibilidad de que difieran de las aptitudes en la versión más reciente, por lo que te pedimos comprobar los detalles dentro del juego.
+
+[[IMG:SELECCIÓN DE HÉROE]]
+
+Goku Oscuro
+
+Beerus
+
+Goku
+supersaiyajin
+
+Vegeta
+supersaiyajin
+
+Krilin
+
+Trunks supersaiyajin
+(Adolescente)
+
+Piccolo
+
+Androide 18
+
+Majin Buu (Bueno)
+
+Zamasu
+
+Son Gohan
+(Chico)
+
+Baby
+(Forma de niño)
+
+Frieza
+(Primera Forma)
+
+Dabura
+
+Cooler (Forma Final)
+
+Súper Uub
+
+Bojack
+máximo poder
+
+Caulifla
+supersaiyajin 2
+
+Goku (Mini)
+
+Cell
+(Forma Perfecta)
+
+Androide 17
+
+Hit
+
+Kale supersaiyajin
+(Enloquecida)
+
+Gamma 1 y
+Gamma 2
+
+Son Goku
+supersaiyajin 3
+
+Gotenks
+Supersaiyajin
+
+Toppo
+(Dios de la Destrucción)
+
+Vegeta
+Supersaiyajin 4
+
+Gohan Definitivo
+
+Broly Supersaiyajin
+legendario
+
+Súper Vegetto
+
+Bardock
+Supersaiyajin
+
+Kefla
+Supersaiyajin 2
+
+Son Goku
+Supersaiyajin Dios
+
+Vegeta
+Supersaiyajin Dios
+
+Majin Buu (Puro)
+
+Frieza
+(Cuarta Forma)
+
+Son Goku (Niño)
+
+Bulma (Niña)
+
+[[IMG:REGRESAR A LISTA]]
+
+[[IMG:REGRESAR A LISTA]]
+
+[[IMG:DRAGON BALL GEKISHIN SQUADRA]]
+
+[[IMG:OFFICIAL X]]
+
+[[IMG:OFFICIAL Discord]]
+
+[[IMG:OFFICIAL Facebook]]
+
+[[IMG:OFFICIAL Instagram]]
+
+[[IMG:DRAGON BALL Z DOKKAN BATTLE]]
+
+[[IMG:DRAGON BALL LEGENDS]]
+
+©BIRD STUDIO/SHUEISHA, TOEI ANIMATION
+©Bandai Namco Entertainment Inc.
+
+*Apple, el logo de Apple y App Store son marcas comerciales de Apple Inc.,   registradas en Estados Unidos y otros países y regiones.
+
+*Google Play es marca registrada de Google LLC.
+
+*©2026 Sony Interactive Entertainment LLC. "PlayStation Family Mark",  "PlayStation",  "PS5 Logo", "PS5", "PS4 Logo", as well as "PS4" are registered trademarks or  trademarks of Sony Interactive Entertainment Inc.
+
+*Nintendo Switch is a trademark of Nintendo.
+
+*©2026 Valve Corporation. Steam y el logotipo de Steam son marcas comerciales o marcas  registradas de Valve Corporation en EE. UU. y otros países.
+
+[[IMG:PAGE TOP]]
+
+[[IMG:ESRB]]

@@ -1,0 +1,265 @@
+// Dragon Ball RendezVu Arena - Hero Database (Season 6.1)
+
+export const ROLES = {
+  Damage:    { name: 'Damage',    color: 'var(--role-damage)', glow: 'var(--role-damage-glow)',   icon: 'DMG', label: 'DMG',  max: 2, iconPath: 'assets/roles/damage.png' },
+  Tank:      { name: 'Tank',      color: 'var(--role-tank)', glow: 'var(--role-tank-glow)',   icon: 'TANK', label: 'TANK', max: 1, iconPath: 'assets/roles/tank.png' },
+  Technical: { name: 'Technical', color: 'var(--role-tech)', glow: 'var(--role-tech-glow)',  icon: 'TECH', label: 'TECH', max: 1, iconPath: 'assets/roles/technical.png' },
+};
+
+export function roleIconMarkup(roleName, className = 'role-icon-image', alt = '') {
+  const role = ROLES[roleName];
+  if (!role) return '';
+  const safeAlt = String(alt || role.name).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  return `<span class="${className} role-icon-mark" role="img" aria-label="${safeAlt}"><img src="${role.iconPath}" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="role-icon-fallback" hidden aria-hidden="true">${role.icon}</span></span>`;
+}
+
+// Cosmetic draft aura accents. These never redefine app surfaces, team-side colors or role colors.
+export const THEMES = {
+  beerus: {
+    name: 'Beerus Aura',
+    accent: 'var(--aura-beerus-accent)',
+    accentGlow: 'var(--aura-beerus-glow)',
+    desc: 'Restrained gold aura for hero previews and cinematic lock-ins.',
+  },
+  'goku-black': {
+    name: 'Goku Black Aura',
+    accent: 'var(--aura-goku-black-accent)',
+    accentGlow: 'var(--aura-goku-black-glow)',
+    desc: 'Rosé aura for hero previews and cinematic lock-ins.',
+  },
+};
+
+const LEGACY_AURA_IDS = Object.freeze({
+  base: 'beerus',
+  blue: 'beerus',
+  mui: 'beerus',
+  gold: 'beerus',
+  'rosé': 'goku-black',
+  rose: 'goku-black',
+  season6: 'beerus',
+});
+
+export function normalizeAuraId(themeId) {
+  const requested = String(themeId || '').trim().toLowerCase();
+  const normalized = LEGACY_AURA_IDS[requested] || requested;
+  return THEMES[normalized] ? normalized : 'beerus';
+}
+
+export function getHeroImg(id) {
+  return `/assets/heroes/${id}/btn_character.webp`;
+}
+export function getHeroImgSp(id) {
+  return `/assets/heroes/${id}/btn_character_sp.webp`;
+}
+export function getHeroImgHover(id) {
+  return `/assets/heroes/${id}/btn_character_hover.webp`;
+}
+const HERO_FULL_IMAGE_VERSIONS = {
+  '0039': '2',
+};
+
+export function getHeroFullImg(id) {
+  const version = HERO_FULL_IMAGE_VERSIONS[id];
+  const query = version ? `?v=${version}` : '';
+  return `/assets/heroes/${id}/image_character.webp${query}`;
+}
+
+export function imageWithFallback(primary, fallback, alt, className = '') {
+  const escapeAttribute = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  }[char]));
+  return `<img class="${escapeAttribute(className)}" src="${escapeAttribute(primary)}" alt="${escapeAttribute(alt)}" loading="lazy" data-fallback-src="${escapeAttribute(fallback)}">`;
+}
+
+
+function normalizeHeroSearch(value = '') {
+  return String(value)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase();
+}
+
+export function getHeroSearchText(hero, localizedName = '', localizedRole = '') {
+  if (!hero) return '';
+  return normalizeHeroSearch(`${localizedName} ${hero.name || ''} ${localizedRole} ${hero.role || ''} ${hero.id || ''}`);
+}
+
+export function heroMatchesSearch(hero, query = '', localizedName = '', localizedRole = '') {
+  const normalizedQuery = normalizeHeroSearch(query);
+  if (!normalizedQuery) return true;
+  const haystack = getHeroSearchText(hero, localizedName, localizedRole);
+  return normalizedQuery.split(/\s+/).filter(Boolean).every(token => haystack.includes(token));
+}
+
+export function getHeroDisplayImage(id, _search = '', variant = 'full') {
+  if (variant === 'sp') return getHeroImgSp(id);
+  if (variant === 'hover') return getHeroImgHover(id);
+  if (variant === 'card') return getHeroImg(id);
+  return getHeroFullImg(id);
+}
+
+export function getHeroDisplayName(_id, fallback = '', _search = '') {
+  return fallback;
+}
+
+export function getHeroDisplayDescription(_id, fallback = '', _search = '', _locale = 'en') {
+  return fallback;
+}
+
+export function getHeroTrailerUrls(id, configuredUrl = '') {
+  const heroId = String(id || '').padStart(4, '0');
+  return [...new Set([
+    configuredUrl,
+    `/assets/trailers/${heroId}.mp4`,
+    `/assets/trailers/${heroId}.webm`,
+    `/assets/trailers/${heroId}.mov`,
+  ].filter(Boolean))];
+}
+
+export function getHeroTrailerPosterUrls(id, configuredUrl = '') {
+  const heroId = String(id || '').padStart(4, '0');
+  return [...new Set([
+    configuredUrl,
+    `/assets/trailers/${heroId}.png`,
+    `/assets/trailers/${heroId}.webp`,
+    `/assets/trailers/${heroId}.jpg`,
+    `/assets/trailers/${heroId}.jpeg`,
+  ].filter(Boolean))];
+}
+export function getHeroSkillIconUrls(heroId, skillId) {
+  const base = `/assets/heroes/${heroId}/skill/icon_${skillId}`;
+  return { primary: `${base}.png`, fallback: `${base}.webp` };
+}
+
+// Full roster - Season 6.1 (scraped from official site July 2026)
+export const HEROES = [
+  { id: '0039', name: 'Goku Black',                     role: 'Technical', isNew: true  },
+  { id: '0038', name: 'Beerus',                        role: 'Damage',    isNew: true  },
+  { id: '0001', name: 'Super Saiyan Son Goku',         role: 'Damage',    isNew: false },
+  { id: '0002', name: 'Super Saiyan Vegeta',           role: 'Tank',      isNew: false },
+  { id: '0003', name: 'Krillin',                       role: 'Technical', isNew: false },
+  { id: '0004', name: 'Super Saiyan Trunks (Teen)',    role: 'Damage',    isNew: false },
+  { id: '0005', name: 'Piccolo',                       role: 'Damage',    isNew: false },
+  { id: '0006', name: 'Android 18',                    role: 'Damage',    isNew: false },
+  { id: '0007', name: 'Majin Buu (Good)',              role: 'Technical', isNew: false },
+  { id: '0008', name: 'Zamasu',                        role: 'Tank',      isNew: false },
+  { id: '0009', name: 'Son Gohan (Kid)',               role: 'Technical', isNew: false },
+  { id: '0010', name: 'Baby (Young Body)',             role: 'Tank',      isNew: false },
+  { id: '0011', name: 'Frieza (First Form)',           role: 'Technical', isNew: false },
+  { id: '0012', name: 'Dabura',                        role: 'Damage',    isNew: false },
+  { id: '0013', name: 'Cooler (Final Form)',           role: 'Tank',      isNew: false },
+  { id: '0014', name: 'Super Uub',                     role: 'Damage',    isNew: false },
+  { id: '0015', name: 'Full Power Bojack',             role: 'Damage',    isNew: false },
+  { id: '0016', name: 'Super Saiyan 2 Caulifla',      role: 'Tank',      isNew: false },
+  { id: '0017', name: 'Son Goku (Mini)',               role: 'Damage',    isNew: false },
+  { id: '0018', name: 'Cell (Perfect Form)',           role: 'Tank',      isNew: false },
+  { id: '0019', name: 'Android 17',                    role: 'Technical', isNew: false },
+  { id: '0020', name: 'Hit',                           role: 'Technical', isNew: false },
+  { id: '0021', name: 'Super Saiyan Kale (Berserk)',   role: 'Damage',    isNew: false },
+  { id: '0022', name: 'Gamma 1 & Gamma 2',            role: 'Damage',    isNew: false },
+  { id: '0023', name: 'Super Saiyan 3 Son Goku',      role: 'Damage',    isNew: false },
+  { id: '0024', name: 'Super Saiyan Gotenks',          role: 'Technical', isNew: false },
+  { id: '0025', name: 'God of Destruction Toppo',      role: 'Damage',    isNew: false },
+  { id: '0026', name: 'Super Saiyan 4 Vegeta',        role: 'Tank',      isNew: false },
+  { id: '0027', name: 'Ultimate Gohan',                role: 'Technical', isNew: false },
+  { id: '0028', name: 'Legendary Super Saiyan Broly',  role: 'Damage',    isNew: false },
+  { id: '0029', name: 'Super Vegito',                  role: 'Damage',    isNew: false },
+  { id: '0030', name: 'Super Saiyan Bardock',          role: 'Tank',      isNew: false },
+  { id: '0031', name: 'Super Saiyan 2 Kefla',         role: 'Damage',    isNew: false },
+  { id: '0032', name: 'Super Saiyan God Son Goku',     role: 'Damage',    isNew: false },
+  { id: '0033', name: 'Super Saiyan God Vegeta',       role: 'Tank',      isNew: false },
+  { id: '0034', name: 'Majin Buu (Pure)',              role: 'Technical', isNew: false },
+  { id: '0035', name: 'Frieza (Fourth Form)',          role: 'Technical', isNew: false },
+  { id: '0036', name: 'Son Goku (Youth)',              role: 'Damage',    isNew: false },
+  { id: '0037', name: 'Bulma (Youth)',                 role: 'Tank',      isNew: false },
+];
+
+// 4 generic slots per team (no forced role order)
+export const PICKS_PER_TEAM = 4;
+
+// Role limits: max heroes of each role per team
+export const ROLE_LIMITS = { Damage: 2, Tank: 1, Technical: 1 };
+
+// Draft sequence generator with divine draw bans
+export function generateDraftSequence(heroBans = 2, _divineBans = 0, picksPerTeam = 4) {
+  const seq = [];
+  const bansPerTeam = Math.min(4, Math.max(0, Math.floor(Number(heroBans) || 0)));
+  const picks = Math.max(1, Math.floor(Number(picksPerTeam) || 4));
+
+  const addTeamActions = (type, team, count) => {
+    for (let i = 0; i < count; i++) seq.push({ type, team });
+  };
+
+  // Divine Draw bans are handled in the separate pre-draft Divine Draw screen.
+  // They must never create extra hero-ban slots or hero-ban turns here.
+  if (bansPerTeam >= 2 && picks === 4) {
+    const openingBans = Math.ceil(bansPerTeam / 2);
+    const secondBans = bansPerTeam - openingBans;
+
+    // Ban phase 1: Team A completes its bans, then Team B.
+    addTeamActions('ban', 'A', openingBans);
+    addTeamActions('ban', 'B', openingBans);
+
+    // Pick phase 1: A1 -> B2 -> A1.
+    ['A', 'B', 'B', 'A'].forEach(team => seq.push({ type: 'pick', team }));
+
+    // Ban phase 2: Team A completes its remaining bans, then Team B.
+    addTeamActions('ban', 'A', secondBans);
+    addTeamActions('ban', 'B', secondBans);
+
+    // Pick phase 2: B1 -> A2 -> B1.
+    ['B', 'A', 'A', 'B'].forEach(team => seq.push({ type: 'pick', team }));
+    return seq;
+  }
+
+  // Zero/one-ban mode keeps a simple opening ban phase.
+  addTeamActions('ban', 'A', bansPerTeam);
+  addTeamActions('ban', 'B', bansPerTeam);
+
+  // Standard snake order. For the normal 4-player team this is A B B A A B B A.
+  const pattern = ['A', 'B', 'B', 'A', 'A', 'B', 'B', 'A'];
+  for (let i = 0; i < picks * 2; i++) {
+    seq.push({ type: 'pick', team: pattern[i] || (i % 4 < 2 ? 'A' : 'B') });
+  }
+  return seq;
+}
+
+export const STAGE_PRESETS = {
+  standard: {
+    name: 'Standard',
+    description: 'Balanced BO3 rules for casual or practice drafts.',
+    format: 'BO3',
+    heroBans: 2,
+    picksPerTeam: 4,
+    config: {
+      format: 'BO3', timerSeconds: 30, heroBans: 2, divineBans: 0,
+      draftStyle: 'standard', mirrorPickMode: 'none', seriesRule: 'normal',
+      enableCoinFlip: true, enableDivineDraw: true, divineDrawMode: 'random',
+      enableProtect: false, protectNewest: false, protectList: [], globalBanList: [], heroRuleScope: 'match',
+      cinematicLockIn: true, flashAndShake: false, theme: 'beerus',
+    },
+  },
+  tournament: {
+    name: 'Tournament',
+    description: 'Longer BO5 series with three hero bans per team and deliberate turn timing.',
+    format: 'BO5',
+    heroBans: 3,
+    picksPerTeam: 4,
+    config: {
+      format: 'BO5', timerSeconds: 45, heroBans: 3, divineBans: 0,
+      draftStyle: 'standard', mirrorPickMode: 'none', seriesRule: 'normal',
+      enableCoinFlip: true, enableDivineDraw: true, divineDrawMode: 'random',
+      enableProtect: false, protectNewest: false, protectList: [], globalBanList: [], heroRuleScope: 'series',
+      cinematicLockIn: true, flashAndShake: false, theme: 'beerus',
+    },
+  },
+};
+
+// Backward-compatible name retained for existing draft config payloads.
+// The implementation now sets one isolated cosmetic data attribute only.
+export function applyTheme(themeId) {
+  const auraId = normalizeAuraId(themeId);
+  document.documentElement.dataset.aura = auraId;
+  return auraId;
+}

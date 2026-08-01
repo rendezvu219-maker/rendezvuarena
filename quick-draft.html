@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="pageTitleQuickDraft">RendezVu Arena — Quick Draft</title>
+<meta content="Create a community pick-and-ban room in seconds." name="description"/>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/host-setup.css" rel="stylesheet"/>
+<link href="css/animations.css" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body class="quick-draft-page">
+<div class="quick-access-gate hidden" id="quick-access-gate">
+<div class="quick-access-card">
+<div class="logo-icon" data-no-i18n="true">RV</div>
+<h1 data-i18n="quickDraftAccount">QUICK DRAFT ACCOUNT</h1>
+<p data-i18n="quickDraftAccountDesc">Create one normal account to configure custom rooms. Shared Team Blue, Team Red and Broadcast links can still open directly.</p>
+<div class="quick-access-actions">
+<a class="btn btn-primary btn-lg quick-access-primary" data-i18n="loginOrCreate" href="/auth.html?return=/quick-draft.html">LOG IN OR CREATE ACCOUNT</a>
+<a class="btn btn-ghost quick-access-back" data-i18n="backHome" href="/">BACK TO HOME</a>
+</div>
+</div>
+</div>
+<main id="app">
+<section class="host-setup" id="setup-view">
+<header class="setup-topbar">
+<div class="setup-logo">
+<div class="logo-icon" data-no-i18n="true">RV</div>
+<div><div class="logo-text" data-no-i18n="true">GEKISHIN</div><div class="logo-sub" data-i18n="quickDraftCaps">QUICK DRAFT</div></div>
+</div>
+<div class="setup-actions">
+<a class="btn btn-ghost btn-sm" data-i18n="home" href="/">⌂ Home</a>
+<a class="btn btn-ghost btn-sm" data-i18n="tournamentOps" href="/dashboard.html">🏆 Tournament Ops</a>
+<button class="btn btn-ghost btn-sm" data-i18n="reset" id="btn-reset-config" type="button">↻ Reset</button>
+<button class="btn btn-primary btn-sm btn-icon" data-i18n="startDraft" id="btn-start-topbar" type="button">▶ START DRAFT</button>
+<div class="gs-language-slot" data-language-slot="true"></div></div>
+</header>
+<div class="quick-setup-scroll">
+<section aria-labelledby="quick-start-title" class="quick-start-card">
+<div class="quick-start-heading">
+<div><span class="eyebrow" data-i18n="playForFun">PLAY FOR FUN</span><h1 data-i18n="startFewClicks" id="quick-start-title">START IN A FEW CLICKS</h1><p data-i18n="quickIntro">Choose a proven preset, name both teams and open the room. Detailed rules stay out of the way until you need them.</p></div>
+<div aria-live="polite" class="quick-config-summary" id="quick-config-summary"></div>
+</div>
+<div class="quick-preset-grid" id="quick-preset-grid">
+<button aria-pressed="true" class="quick-preset-card selected" data-stage-preset="standard" type="button">
+<span class="quick-preset-kicker" data-no-i18n="true">BO3</span><strong data-i18n="standard">STANDARD</strong><span data-i18n="twoBans30">2 hero bans · 30 second turns</span>
+</button>
+<button aria-pressed="false" class="quick-preset-card" data-stage-preset="tournament" type="button">
+<span class="quick-preset-kicker" data-no-i18n="true">BO5</span><strong data-i18n="tournament">TOURNAMENT</strong><span data-i18n="threeBansLonger">3 hero bans · longer series</span>
+</button>
+</div>
+<div class="quick-custom-preset-heading">
+<div><span class="eyebrow" data-i18n="myPresets">MY PRESETS</span><p data-i18n="myPresetsDesc">Save the current Advanced Settings as your own reusable Quick Draft preset.</p></div>
+<button class="btn btn-ghost btn-sm" data-i18n="saveCurrentPreset" id="quick-save-preset" type="button">SAVE CURRENT AS PRESET</button>
+</div>
+<div aria-live="polite" class="quick-custom-preset-grid" id="quick-custom-preset-grid"></div>
+<section aria-live="polite" class="quick-preset-detail" id="quick-preset-detail"></section>
+<div class="quick-team-grid">
+<label class="quick-team-card team-left-field">
+<span data-i18n="teamBlue">TEAM BLUE</span>
+<input autocomplete="off" class="form-control" id="quick-team-a" maxlength="60" value="TEAM BLUE"/>
+<small data-i18n="optionalLogoUrl">Optional logo URL</small>
+<input class="form-control" id="quick-team-a-logo" inputmode="url" data-no-i18n="true" placeholder="https://…/team-blue.png" type="url"/>
+</label>
+<div aria-hidden="true" class="quick-versus" data-no-i18n="true">VS</div>
+<label class="quick-team-card team-right-field">
+<span data-i18n="teamRed">TEAM RED</span>
+<input autocomplete="off" class="form-control" id="quick-team-b" maxlength="60" value="TEAM RED"/>
+<small data-i18n="optionalLogoUrl">Optional logo URL</small>
+<input class="form-control" id="quick-team-b-logo" inputmode="url" data-no-i18n="true" placeholder="https://…/team-red.png" type="url"/>
+</label>
+</div>
+<button class="btn btn-primary btn-lg quick-start-button" data-i18n="startDraftRoom" id="btn-start-draft" type="button">START DRAFT ROOM</button>
+</section>
+<details class="advanced-settings" id="advanced-settings">
+<summary><span><strong data-i18n="advancedSettings">ADVANCED SETTINGS</strong><small data-i18n="advancedSettingsDesc">Draft rules, bans, protection, presentation and share links</small></span><span aria-hidden="true" class="advanced-chevron">⌄</span></summary>
+<div class="setup-main advanced-layout">
+<nav aria-label="Advanced Draft settings" data-i18n-aria-label="advancedDraftSettingsAria" class="setup-sidebar">
+<div class="sidebar-section">
+<div class="sidebar-section-title" data-i18n="configuration">Configuration</div>
+<div class="sidebar-nav" id="sidebar-nav">
+<button class="sidebar-item active" data-tab="picks" type="button"><span data-i18n="draftRules">Draft Rules</span></button>
+<button class="sidebar-item" data-tab="bans" type="button"><span data-i18n="banRules">Ban Rules</span></button>
+<button class="sidebar-item" data-tab="protect" type="button"><span data-i18n="protectionGlobalBan">Protection &amp; Global Ban</span></button>
+<button class="sidebar-item" data-tab="experience" type="button"><span data-i18n="presentationFx">Presentation &amp; FX</span></button>
+<button class="sidebar-item" data-tab="theme" type="button"><span data-i18n="heroAura">Hero Aura</span></button>
+</div>
+</div>
+<div class="sidebar-section">
+<div class="sidebar-section-title" data-i18n="sharing">Sharing</div>
+<div class="sidebar-nav"><button class="sidebar-item" data-tab="sharing" type="button"><span data-i18n="shareLinks">Share Links</span></button></div>
+</div>
+</nav>
+<div class="setup-content" id="setup-content"></div>
+</div>
+</details>
+</div>
+</section>
+</main>
+<dialog class="quick-preset-dialog" id="quick-preset-dialog">
+<form id="quick-preset-form" method="dialog">
+<header><div><span class="eyebrow" data-i18n="customQuickDraft">CUSTOM QUICK DRAFT</span><h2 data-i18n="saveCurrentSettings">SAVE CURRENT SETTINGS</h2></div><button class="btn btn-ghost btn-sm" data-i18n="close" id="quick-close-preset-dialog" type="button">CLOSE</button></header>
+<label><span data-i18n="presetName">Preset name</span><input data-i18n-placeholder="presetNameExample" maxlength="80" name="name" placeholder="e.g. Community BO3" required=""/></label>
+<label><span data-i18n="description">Description</span><textarea data-i18n-placeholder="presetDescHelp" maxlength="300" name="description" placeholder="Explain when this preset should be used." rows="3"></textarea></label>
+<div class="quick-preset-dialog-preview" id="quick-preset-dialog-preview"></div>
+<footer><button class="btn btn-primary" data-i18n="savePreset" id="quick-confirm-save-preset" type="button" value="default">SAVE PRESET</button><span class="form-message" data-custom-preset-message=""></span></footer>
+</form>
+</dialog>
+<script src="js/quick-access.js" type="module"></script>
+<script src="js/quick-draft-page.js?v=0.6.36-vi-skill-master-1" type="module"></script>
+<script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
+</body>
+</html>

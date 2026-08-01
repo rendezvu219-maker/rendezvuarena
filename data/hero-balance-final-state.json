@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "verifiedThrough": "2026-07-22",
+  "generatedAt": "2026-07-29",
+  "notes": "Final-state numerical values kept separate from display descriptions.",
+  "heroes": {
+    "0006": {
+      "name": "Android 18",
+      "skill1": {
+        "fixedDamageByLevel": [
+          600,
+          680,
+          840
+        ],
+        "removedMechanic": "Damage scaling with lower enemy total HP"
+      }
+    },
+    "0022": {
+      "name": "Gamma 1 & Gamma 2",
+      "passive1": {
+        "gamma2MovementSpeedUpPercent": 25
+      },
+      "skill1": {
+        "damageByLevel": [
+          500,
+          550,
+          650
+        ]
+      },
+      "skill2": {
+        "maximumRangeMeters": [
+          6,
+          8,
+          12
+        ],
+        "shockwaveAoEMeters": [
+          3,
+          3.5,
+          5.5
+        ],
+        "explosionAoEMeters": [
+          0,
+          0,
+          5.5
+        ],
+        "additionalHPOnActivationPercent": [
+          5,
+          7.5,
+          10
+        ],
+        "damageDuringSpecialPose": [
+          760,
+          840,
+          1000
+        ]
+      },
+      "super_attack1": {
+        "staggerRemoved": true,
+        "immuneToAllSeconds": 1.5,
+        "rushAttackRangeMeters": 5,
+        "totalHPRecoveryPercent": [
+          40,
+          40,
+          40
+        ],
+        "explosionAoEMeters": [
+          5,
+          6,
+          8
+        ]
+      }
+    },
+    "0025": {
+      "name": "God of Destruction Toppo",
+      "skill2": {
+        "baseHPRecoveryPercentOfDamageDealt": 60
+      }
+    },
+    "0028": {
+      "name": "Legendary Super Saiyan Broly",
+      "passive1": {
+        "despairGaugeDepletionDelaySeconds": 2,
+        "maximumRushAttackScalingPercent": 125
+      },
+      "skill1": {
+        "despairGaugeGainByEnemiesHit": [
+          3,
+          8,
+          9,
+          10
+        ]
+      },
+      "skill2": {
+        "damageByLevel": [
+          360,
+          400,
+          480
+        ]
+      },
+      "skill3": {
+        "baseCooldownSeconds": 7,
+        "despairGaugeGainByEnemiesHit": [
+          20,
+          30,
+          36,
+          40
+        ]
+      },
+      "super_attack1": {
+        "releaseDelaySeconds": 0.33,
+        "movementSpeedDownPercent": [
+          50,
+          60,
+          80
+        ],
+        "energyCloakDamage": 300,
+        "consecutiveExplosionDamageFalloffPercent": 15
+      }
+    }
+  }
+}

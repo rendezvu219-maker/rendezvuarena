@@ -1,0 +1,661 @@
+body.heroes-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 5%, color-mix(in srgb, var(--team-left-primary) 12%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--team-right-primary) 10%, transparent), transparent 28%),
+    var(--surface-canvas);
+  color: var(--text-primary);
+}
+.content-nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-6);
+  padding: 0 max(22px, calc((100vw - 1500px) / 2));
+  border-bottom: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-canvas) 88%, transparent);
+  backdrop-filter: blur(18px);
+}
+.content-brand { display:flex; align-items:center; gap:10px; color:var(--text-primary); text-decoration:none; font-family:var(--font-display); letter-spacing:.12em; }
+.content-brand-mark { width:38px; height:38px; display:grid; place-items:center; border-radius:var(--radius-sm); background:var(--interactive-primary); color:var(--interactive-primary-ink); font-weight:900; letter-spacing:0; }
+.content-brand b,.content-brand small { display:block; }.content-brand b { font-size:.95rem; }.content-brand small { margin-top:2px; color:var(--text-muted); font-size:.5rem; letter-spacing:.24em; }
+.content-nav nav { display:flex; justify-content:center; gap:24px; }.content-nav nav a { color:var(--text-secondary); text-decoration:none; font-size:.74rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }.content-nav nav a:hover,.content-nav nav a.active { color:var(--text-primary); }
+.content-account { display:flex; align-items:center; gap:8px; }.content-user { display:grid; text-align:right; line-height:1.2; }.content-user b { font-size:.76rem; }.content-user small { color:var(--text-muted); font-size:.64rem; text-transform:uppercase; }
+.heroes-shell { width:min(1500px, calc(100% - 36px)); margin:0 auto; padding:56px 0 90px; }
+.heroes-intro { display:flex; justify-content:space-between; align-items:end; gap:28px; margin-bottom:30px; }.heroes-intro > div { max-width:900px; }
+.content-kicker { color:var(--interactive-primary); font-family:var(--font-display); font-size:.68rem; font-weight:900; letter-spacing:.22em; text-transform:uppercase; }
+.heroes-intro h1,.section-heading h2 { margin:8px 0 10px; font-family:var(--font-display); font-size:clamp(2.2rem,4vw,4.4rem); line-height:.95; letter-spacing:.015em; }.heroes-intro p,.section-heading p { color:var(--text-secondary); line-height:1.65; }
+.heroes-browser { min-height:720px; display:grid; grid-template-columns:360px minmax(0,1fr); border:1px solid var(--border-subtle); border-radius:var(--radius-xl); overflow:hidden; background:var(--surface-base); box-shadow:var(--shadow-2); }
+.hero-roster-panel { min-width:0; display:grid; grid-template-rows:auto 1fr; border-right:1px solid var(--border-subtle); background:var(--surface-raised); }
+.hero-roster-tools { display:grid; gap:12px; padding:18px; border-bottom:1px solid var(--border-subtle); }.hero-roster-tools input { width:100%; min-height:42px; padding:0 13px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--surface-sunken); color:var(--text-primary); }
+.hero-role-filters { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }.hero-role-filters button { min-width:0; padding:8px 4px; border:1px solid transparent; border-radius:var(--radius-sm); background:transparent; color:var(--text-muted); font-size:.64rem; font-weight:800; cursor:pointer; }.hero-role-filters button.active { border-color:var(--border-strong); background:var(--surface-base); color:var(--text-primary); }
+.hero-roster-list { min-height:0; max-height:calc(100vh - 230px); overflow:auto; padding:10px; display:grid; align-content:start; gap:6px; }
+.hero-roster-item { width:100%; min-width:0; display:grid; grid-template-columns:62px minmax(0,1fr); align-items:center; gap:11px; padding:7px; border:1px solid transparent; border-radius:var(--radius-md); background:transparent; color:var(--text-primary); text-align:left; cursor:pointer; }.hero-roster-item:hover { background:var(--surface-base); }.hero-roster-item.active { border-color:var(--role-color); background:color-mix(in srgb,var(--role-color) 9%,var(--surface-base)); }
+.hero-roster-thumb { width:62px; height:48px; overflow:hidden; border-radius:var(--radius-sm); background:var(--surface-sunken); }.hero-roster-thumb img { width:100%; height:100%; object-fit:cover; object-position:center top; display:block; }.hero-roster-copy { min-width:0; display:grid; gap:4px; }.hero-roster-copy b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.77rem; }.hero-roster-meta { display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:.62rem; text-transform:uppercase; }.hero-roster-meta .inline-role-icon { width:14px; height:14px; }.hero-roster-meta .role-dot { width:7px; height:7px; border-radius:50%; background:var(--role-color); }
+.hero-detail-panel { min-width:0; background:var(--surface-base); }
+.hero-detail-hero { position:relative; min-height:360px; display:grid; grid-template-columns:minmax(330px,.8fr) minmax(0,1.2fr); border-bottom:1px solid var(--border-subtle); overflow:hidden; }.hero-detail-hero::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg,transparent 35%,var(--surface-base) 78%); }
+.hero-detail-art { position:relative; min-height:360px; overflow:hidden; background:radial-gradient(circle at 48% 45%,color-mix(in srgb,var(--role-color) 20%,transparent),transparent 56%); }.hero-detail-art img { position:absolute; left:0; top:0; width:100%; height:100%; object-fit:contain; object-position:center bottom; filter:drop-shadow(0 20px 25px rgba(0,0,0,.36)); }.hero-detail-art.is-framed img { max-width:none; max-height:none; object-fit:fill; }
+.hero-detail-copy { position:relative; z-index:2; min-width:0; align-self:center; padding:42px 42px 42px 8px; }.hero-detail-copy h2 { max-width:100%; margin:10px 0 14px; font-family:var(--font-display); font-size:clamp(2.25rem,3.8vw,4.55rem); line-height:.98; letter-spacing:-.025em; overflow-wrap:normal; word-break:normal; hyphens:none; text-wrap:balance; }.hero-detail-copy h2.is-super-saiyan { line-height:1.02; }.hero-detail-copy h2.is-long { font-size:clamp(2.15rem,3.35vw,4rem); }.hero-detail-copy h2.is-extra-long { font-size:clamp(2rem,3vw,3.65rem); line-height:1.03; }.hero-detail-copy p { max-width:720px; color:var(--text-secondary); line-height:1.7; white-space:pre-line; }.hero-detail-tags { display:flex; flex-wrap:wrap; gap:8px; }.hero-detail-tag { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:7px 10px; border:1px solid var(--border-subtle); border-radius:999px; color:var(--text-secondary); font-size:.67rem; font-weight:800; text-transform:uppercase; }.hero-detail-tag .inline-role-icon { width:18px; height:18px; }.hero-detail-tag.role { border-color:color-mix(in srgb,var(--role-color) 55%,var(--border-subtle)); color:var(--role-color); }
+.hero-detail-content { padding:28px; display:grid; gap:34px; }.hero-detail-section-head { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:16px; }.hero-detail-section-head h3 { font-family:var(--font-display); font-size:1.55rem; letter-spacing:.04em; }.hero-detail-section-head p { color:var(--text-muted); font-size:.76rem; }
+.hero-skills-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }.hero-skill-card { min-width:0; padding:18px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-raised); }.hero-skill-card header { display:flex; justify-content:space-between; gap:14px; margin-bottom:10px; }.hero-skill-card h4 { font-size:.9rem; }.hero-skill-type { color:var(--role-color); font-size:.58rem; font-weight:900; letter-spacing:.1em; text-transform:uppercase; }.hero-skill-card p { color:var(--text-secondary); font-size:.78rem; line-height:1.65; white-space:pre-line; }
+.hero-build-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }.hero-build-tabs button { padding:8px 12px; border:1px solid var(--border-subtle); border-radius:999px; background:var(--surface-raised); color:var(--text-secondary); font-weight:800; cursor:pointer; }.hero-build-tabs button.active { border-color:var(--interactive-primary); color:var(--text-primary); background:var(--interactive-primary-soft); }
+.hero-build-summary { padding:16px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-raised); }.hero-build-meta { display:flex; justify-content:space-between; gap:18px; margin-bottom:16px; }.hero-build-meta h4 { font-family:var(--font-display); font-size:1.25rem; }.hero-build-meta p { margin-top:5px; color:var(--text-secondary); font-size:.76rem; }.energy-rule { flex:0 0 auto; display:flex; gap:8px; }.energy-rule span { padding:7px 9px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); color:var(--text-muted); font-size:.64rem; }.hero-build-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }.divine-build-card { min-width:0; display:grid; grid-template-columns:88px minmax(0,1fr); gap:12px; align-items:center; padding:10px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--surface-sunken); }.divine-build-card img { width:88px; aspect-ratio:288/352; object-fit:contain; }.divine-build-card b { display:block; font-size:.78rem; }.divine-build-card small { display:block; margin-top:5px; color:var(--text-muted); line-height:1.45; }.divine-slot-label { color:var(--interactive-primary); font-size:.58rem; font-weight:900; text-transform:uppercase; }
+.divine-library-section { margin-top:54px; }.section-heading { display:flex; justify-content:space-between; gap:20px; margin-bottom:20px; }.section-heading h2 { font-size:2.5rem; }.divine-public-library { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; }.divine-library-card { min-width:0; padding:10px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-base); }.divine-library-card img { width:100%; aspect-ratio:288/352; object-fit:contain; display:block; }.divine-library-card h3 { margin:10px 0 5px; font-size:.76rem; }.divine-library-card p { color:var(--text-muted); font-size:.66rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }.divine-library-card .slot-badge { display:inline-block; margin-top:8px; color:var(--interactive-primary); font-size:.58rem; font-weight:900; text-transform:uppercase; }
+.build-admin-backdrop { position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.65); backdrop-filter:blur(4px); }.build-admin-drawer { position:fixed; inset:18px; z-index:100; display:grid; grid-template-rows:auto auto 1fr; border:1px solid var(--border-strong); border-radius:var(--radius-xl); background:var(--surface-base); box-shadow:var(--shadow-modal); overflow:hidden; }.build-admin-head { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:18px 22px; border-bottom:1px solid var(--border-subtle); }.build-admin-head h2 { margin-top:4px; font-family:var(--font-display); font-size:1.5rem; }.build-admin-tabs { display:flex; gap:6px; padding:10px 18px; border-bottom:1px solid var(--border-subtle); background:var(--surface-raised); }.build-admin-tabs button { padding:10px 14px; border:1px solid transparent; border-radius:var(--radius-sm); background:transparent; color:var(--text-muted); font-weight:800; cursor:pointer; }.build-admin-tabs button.active { border-color:var(--border-strong); background:var(--surface-base); color:var(--text-primary); }.build-admin-content { min-height:0; overflow:auto; overflow-anchor:none; scrollbar-gutter:stable; }.admin-pane { display:none; padding:22px; }.admin-pane.active { display:block; }.admin-pane-head { display:flex; justify-content:space-between; align-items:start; gap:20px; margin-bottom:18px; }.admin-pane h3 { font-family:var(--font-display); font-size:1.2rem; }.admin-pane p { color:var(--text-secondary); line-height:1.55; font-size:.78rem; }
+.card-upload-form { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; padding:16px; margin-bottom:18px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-raised); }.card-upload-form label,.preset-builder label,.assignment-controls label { display:grid; gap:7px; color:var(--text-secondary); font-size:.7rem; font-weight:800; }.card-upload-form input,.card-upload-form select,.card-upload-form textarea,.preset-builder input,.preset-builder select,.preset-builder textarea,.assignment-controls select { width:100%; min-height:40px; padding:9px 11px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-primary); }.card-upload-form .wide,.preset-builder-fields .wide { grid-column:1/-1; }.form-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }.form-message { color:var(--text-secondary); font-size:.72rem; }.form-message.error { color:var(--status-danger); }.form-message.success { color:var(--status-success); }
+.card-catalog-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }.catalog-card { min-width:0; display:grid; grid-template-columns:110px minmax(0,1fr); gap:12px; padding:12px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-raised); }.catalog-card.uncataloged { border-color:color-mix(in srgb,var(--status-warning) 45%,var(--border-subtle)); }.catalog-card img { width:110px; aspect-ratio:288/352; object-fit:contain; }.catalog-card-fields { min-width:0; display:grid; gap:8px; align-content:start; }.catalog-card-fields input,.catalog-card-fields select,.catalog-card-fields textarea { width:100%; min-width:0; padding:8px 9px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-primary); font-size:.7rem; }.catalog-card-fields textarea { resize:vertical; }.catalog-card-status { display:flex; justify-content:space-between; align-items:center; gap:8px; }.catalog-card-status label { display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:.64rem; }
+.preset-admin-layout { min-height:650px; display:grid; grid-template-columns:270px minmax(0,1fr); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); overflow:hidden; }.preset-list-panel { min-width:0; border-right:1px solid var(--border-subtle); background:var(--surface-raised); }.preset-list-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px; border-bottom:1px solid var(--border-subtle); }.preset-admin-list { display:grid; gap:6px; padding:8px; }.preset-list-item { padding:11px; border:1px solid transparent; border-radius:var(--radius-sm); background:transparent; color:var(--text-primary); text-align:left; cursor:pointer; }.preset-list-item.active { border-color:var(--interactive-primary); background:var(--interactive-primary-soft); }.preset-list-item b,.preset-list-item small { display:block; }.preset-list-item small { margin-top:4px; color:var(--text-muted); }.preset-builder { min-width:0; padding:20px; overflow:auto; overflow-anchor:none; scrollbar-gutter:stable; }.preset-builder-fields { display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; }.preset-builder-help { margin:15px 0 12px; color:var(--text-muted); font-size:.72rem; }.preset-drop-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }.preset-drop-slot { min-height:250px; display:grid; grid-template-rows:auto 1fr; padding:10px; border:1px dashed var(--border-strong); border-radius:var(--radius-lg); background:var(--surface-sunken); }.preset-drop-slot.drag-over { border-color:var(--interactive-primary); background:var(--interactive-primary-soft); }.preset-drop-slot > span { color:var(--interactive-primary); font-size:.62rem; font-weight:900; text-transform:uppercase; }.preset-drop-content { display:grid; place-items:center; color:var(--text-muted); font-size:.72rem; text-align:center; }.preset-drop-card { width:min(180px,100%); display:grid; gap:8px; justify-items:center; }.preset-drop-card img { width:100%; max-height:185px; object-fit:contain; }.preset-drop-card b { font-size:.76rem; }.preset-drop-card button { border:0; background:transparent; color:var(--status-danger); cursor:pointer; font-size:.66rem; }.preset-card-source { margin:16px 0; display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); gap:8px; }.preset-source-card { min-width:0; padding:6px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--surface-raised); cursor:grab; }.preset-source-card img { width:100%; aspect-ratio:288/352; object-fit:contain; }.preset-source-card b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.6rem; }.preset-source-card small { color:var(--interactive-primary); font-size:.55rem; }.preset-source-card[aria-disabled="true"] { opacity:.45; cursor:not-allowed; }
+.assignment-layout { display:grid; grid-template-columns:320px minmax(0,1fr); gap:20px; }.assignment-controls { display:grid; align-content:start; gap:14px; padding:16px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-raised); }.check-row { grid-template-columns:auto 1fr !important; align-items:start; }.check-row input { margin-top:2px; }.assignment-actions { display:grid; gap:8px; }.assignment-note { padding:12px; border-left:2px solid var(--interactive-primary); background:var(--interactive-primary-soft); }.assignment-heroes { min-width:0; }.assignment-hero-head { display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:12px; }.assignment-hero-head > div { display:flex; flex-wrap:wrap; gap:6px; }.assignment-hero-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }.assignment-hero-card { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px; padding:7px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--surface-raised); }.assignment-hero-card.assigned { border-color:color-mix(in srgb,var(--status-success) 55%,var(--border-subtle)); }.assignment-hero-card.default { box-shadow:inset 3px 0 0 var(--interactive-primary); }.assignment-hero-select { min-width:0; display:grid; grid-template-columns:auto 34px minmax(0,1fr); align-items:center; gap:8px; cursor:pointer; }.assignment-hero-copy { min-width:0; }.assignment-hero-card b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.7rem; }.assignment-hero-card small { display:block; margin-top:3px; color:var(--text-muted); font-size:.58rem; line-height:1.35; }.assignment-remove-one { padding:6px 7px; border:1px solid color-mix(in srgb,var(--status-danger) 60%,var(--border-subtle)); border-radius:var(--radius-sm); background:transparent; color:var(--status-danger); font-size:.55rem; font-weight:900; letter-spacing:.05em; cursor:pointer; }.assignment-remove-one:hover { background:color-mix(in srgb,var(--status-danger) 12%,transparent); }.assignment-actions button:disabled { opacity:.45; cursor:not-allowed; }
+.loading-state { min-height:420px; display:grid; place-items:center; align-content:center; gap:12px; color:var(--text-muted); }.loading-spinner { width:28px; height:28px; border:3px solid var(--border-subtle); border-top-color:var(--interactive-primary); border-radius:50%; animation:content-spin .8s linear infinite; }@keyframes content-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.loading-spinner{animation:none}}
+@media(max-width:1250px){.heroes-browser{grid-template-columns:300px minmax(0,1fr)}.divine-public-library{grid-template-columns:repeat(4,1fr)}.card-catalog-grid{grid-template-columns:repeat(2,1fr)}.assignment-hero-grid{grid-template-columns:repeat(3,1fr)}.preset-card-source{grid-template-columns:repeat(6,1fr)}}
+@media(max-width:920px){.content-nav{grid-template-columns:auto 1fr}.content-nav nav{display:none}.content-account{justify-self:end}.heroes-intro{align-items:start}.heroes-browser{display:block}.hero-roster-panel{border-right:0;border-bottom:1px solid var(--border-subtle)}.hero-roster-list{max-height:280px;grid-template-columns:repeat(2,minmax(0,1fr))}.hero-detail-hero{grid-template-columns:1fr;min-height:auto}.hero-detail-hero::after{background:linear-gradient(180deg,transparent 30%,var(--surface-base) 72%)}.hero-detail-art{min-height:330px}.hero-detail-copy{margin-top:-80px;padding:30px;}.hero-skills-grid{grid-template-columns:1fr}.hero-build-cards{grid-template-columns:1fr}.divine-public-library{grid-template-columns:repeat(3,1fr)}.build-admin-drawer{inset:8px}.card-upload-form{grid-template-columns:1fr 1fr}.preset-admin-layout{display:block}.preset-list-panel{border-right:0;border-bottom:1px solid var(--border-subtle)}.preset-admin-list{grid-template-columns:repeat(3,1fr)}.assignment-layout{grid-template-columns:1fr}.assignment-hero-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.heroes-shell{width:min(100% - 20px,1500px);padding-top:30px}.content-nav{padding:0 10px}.content-brand small{display:none}.content-account .content-user{display:none}.heroes-intro{display:grid}.hero-roster-list{grid-template-columns:1fr}.hero-role-filters{grid-template-columns:repeat(2,1fr)}.hero-detail-copy{padding:22px}.hero-detail-content{padding:18px}.hero-build-meta{display:grid}.divine-public-library{grid-template-columns:repeat(2,1fr)}.card-catalog-grid{grid-template-columns:1fr}.catalog-card{grid-template-columns:92px minmax(0,1fr)}.catalog-card img{width:92px}.card-upload-form,.preset-builder-fields{grid-template-columns:1fr}.preset-drop-grid{grid-template-columns:1fr}.preset-drop-slot{min-height:200px}.preset-card-source{grid-template-columns:repeat(3,1fr)}.preset-admin-list{grid-template-columns:1fr}.assignment-hero-grid{grid-template-columns:1fr}.build-admin-tabs{overflow:auto}.admin-pane{padding:14px}}
+
+/* Hero combat profile reuses the same official stat polygon and skill artwork as the Draft Room Character Pool. */
+.hero-detail-hero {
+  grid-template-columns: minmax(300px,.72fr) minmax(360px,1fr) minmax(300px,.72fr);
+  min-height: 430px;
+}
+.hero-detail-hero::after {
+  background: linear-gradient(90deg,transparent 25%,var(--surface-base) 56%,transparent 84%);
+}
+.hero-detail-copy { padding:42px 18px; }
+.hero-detail-identity { display:flex; flex-wrap:wrap; gap:8px; }
+.hero-difficulty { max-width:520px; margin-top:22px; }
+.hero-difficulty-head { display:flex; align-items:center; justify-content:space-between; gap:14px; color:var(--text-secondary); font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+.hero-difficulty-head b { color:var(--role-color); }
+.hero-difficulty-track { height:8px; margin-top:8px; overflow:hidden; border:1px solid var(--border-subtle); border-radius:999px; background:var(--surface-sunken); }
+.hero-difficulty-track span { display:block; height:100%; border-radius:inherit; background:var(--role-color); box-shadow:0 0 12px color-mix(in srgb,var(--role-color) 38%,transparent); }
+.hero-stat-radar { position:relative; z-index:2; align-self:center; min-width:0; padding:34px 28px 28px 8px; text-align:center; }
+.hero-radar-svg { width:min(100%,330px); height:auto; overflow:visible; margin-top:10px; }
+.hero-radar-grid polygon,.hero-radar-grid line { fill:none; stroke:var(--border-subtle); stroke-width:1; }
+.hero-radar-grid polygon:first-child { stroke:var(--border-strong); }
+.hero-radar-value { fill:color-mix(in srgb,var(--role-color) 30%,transparent); stroke:var(--role-color); stroke-width:2.2; filter:drop-shadow(0 0 6px color-mix(in srgb,var(--role-color) 35%,transparent)); }
+.hero-radar-labels { fill:var(--text-muted); font-family:var(--font-body); font-size:8px; font-weight:700; text-transform:uppercase; }
+.hero-radar-labels text { text-anchor:middle; }
+.hero-radar-empty { padding:80px 20px; color:var(--text-muted); font-size:.75rem; }
+.hero-skill-browser { display:grid; gap:14px; }
+.hero-skill-icon-rail { display:flex; flex-wrap:wrap; gap:9px; padding:11px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-sunken); }
+.hero-skill-icon-button { position:relative; width:70px; min-height:76px; display:grid; place-items:center; align-content:center; gap:4px; padding:6px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--surface-raised); color:var(--text-muted); cursor:pointer; }
+.hero-skill-icon-button:hover,.hero-skill-icon-button.active { border-color:var(--role-color); color:var(--text-primary); background:color-mix(in srgb,var(--role-color) 10%,var(--surface-raised)); }
+.hero-skill-icon-button > span:last-child { font-size:.54rem; font-weight:900; letter-spacing:.08em; }
+.hero-skill-icon { position:relative; width:52px; height:52px; display:grid; place-items:center; overflow:hidden; border-radius:10px; background:var(--surface-base); }
+.hero-skill-icon.large { width:104px; height:104px; border-radius:16px; }
+.hero-skill-icon img { position:relative; z-index:2; width:100%; height:100%; object-fit:contain; display:block; }
+.hero-skill-icon-fallback { position:absolute; inset:0; display:grid; place-items:center; color:var(--role-color); font-family:var(--font-display); font-size:.9rem; font-weight:900; }
+.hero-skill-icon:not(.fallback-only) .hero-skill-icon-fallback { opacity:.32; }
+.hero-active-skill { display:grid; grid-template-columns:120px minmax(0,1fr); align-items:center; gap:20px; min-height:160px; padding:20px; border:1px solid color-mix(in srgb,var(--role-color) 46%,var(--border-subtle)); border-radius:var(--radius-lg); background:linear-gradient(110deg,color-mix(in srgb,var(--role-color) 10%,var(--surface-raised)),var(--surface-raised)); }
+.hero-active-skill-icon { display:grid; place-items:center; }
+.hero-active-skill header { margin-bottom:9px; }
+.hero-active-skill h4 { margin-top:4px; font-family:var(--font-display); font-size:1.5rem; }
+.hero-active-skill p { color:var(--text-secondary); font-size:.8rem; line-height:1.7; white-space:pre-line; }
+.hero-skills-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.hero-skill-card { width:100%; display:grid; grid-template-columns:62px minmax(0,1fr); align-items:start; gap:13px; padding:12px; text-align:left; color:var(--text-primary); cursor:pointer; }
+.hero-skill-card:hover,.hero-skill-card.active { border-color:color-mix(in srgb,var(--role-color) 55%,var(--border-subtle)); background:color-mix(in srgb,var(--role-color) 7%,var(--surface-raised)); }
+.hero-skill-card-icon { display:grid; place-items:center; }
+.hero-skill-card-copy { min-width:0; display:grid; gap:4px; }
+.hero-skill-card-copy b { font-size:.84rem; }
+.hero-skill-card-copy small { color:var(--text-secondary); font-size:.7rem; line-height:1.5; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; white-space:pre-line; }
+@media(max-width:1250px){
+  .hero-detail-hero{grid-template-columns:minmax(270px,.7fr) minmax(0,1fr)}
+  .hero-stat-radar{grid-column:1/-1; display:grid; grid-template-columns:auto minmax(0,420px); align-items:center; justify-content:center; gap:30px; padding:18px 30px 30px; border-top:1px solid var(--border-subtle)}
+  .hero-radar-svg{margin-top:0}
+}
+@media(max-width:920px){
+  .hero-detail-hero{grid-template-columns:1fr}
+  .hero-stat-radar{grid-template-columns:1fr; padding:24px}
+  .hero-detail-copy{margin-top:-70px;padding:28px}
+}
+@media(max-width:640px){
+  .hero-active-skill{grid-template-columns:1fr; text-align:center}
+  .hero-skill-icon-rail{justify-content:center}
+  .hero-skills-grid{grid-template-columns:1fr}
+  .hero-skill-card{grid-template-columns:54px minmax(0,1fr)}
+  .hero-skill-icon{width:46px;height:46px}
+}
+
+/* Divine Card catalog and preset builder follow the in-game 3-row card board. */
+.card-type-attack { --card-type-color:#ef4f57; }
+.card-type-defense { --card-type-color:#3fd06f; }
+.card-type-technical { --card-type-color:#4d8eff; }
+.card-type-unassigned { --card-type-color:var(--border-strong); }
+
+.divine-build-card { border-top:3px solid var(--card-type-color,var(--border-subtle)); }
+.divine-build-card em { display:block; margin-top:7px; color:var(--text-secondary); font-size:.64rem; line-height:1.45; font-style:normal; }
+
+.divine-public-library { display:grid; grid-template-columns:1fr; gap:16px; }
+.divine-library-row { min-width:0; display:grid; grid-template-columns:128px minmax(0,1fr); gap:12px; padding:12px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-raised); }
+.divine-library-row > header { display:grid; align-content:center; justify-items:center; gap:5px; padding:14px 8px; border-right:1px solid var(--border-subtle); color:var(--interactive-primary); text-align:center; }
+.divine-library-row > header span { font-family:var(--font-display); font-size:1.35rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.divine-library-row > header small { color:var(--text-muted); font-size:.58rem; line-height:1.4; text-transform:uppercase; }
+.divine-library-row-cards { min-width:0; display:grid; grid-template-columns:repeat(6,minmax(130px,1fr)); gap:9px; overflow-x:auto; padding-bottom:3px; }
+.divine-library-card { position:relative; display:grid; grid-template-rows:auto 1fr; padding:7px; border-top:3px solid var(--card-type-color,var(--border-subtle)); }
+.divine-library-card > div { min-width:0; padding:2px 4px 5px; }
+.divine-library-card > div > span { color:var(--card-type-color,var(--text-muted)); font-size:.55rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.divine-library-card h3 { margin:4px 0 5px; font-size:.72rem; }
+.divine-library-card p { -webkit-line-clamp:4; }
+.divine-library-card small { display:block; margin-top:7px; color:var(--text-secondary); font-size:.57rem; line-height:1.45; }
+
+.card-catalog-grid { display:grid; grid-template-columns:1fr; gap:18px; }
+.catalog-slot-group { min-width:0; padding:14px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:var(--surface-base); }
+.catalog-slot-group > header { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.catalog-slot-group > header h4 { font-family:var(--font-display); font-size:1.2rem; text-transform:uppercase; }
+.catalog-slot-group > header small { color:var(--text-muted); font-size:.62rem; text-transform:uppercase; }
+.catalog-slot-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.catalog-card { grid-template-columns:104px minmax(0,1fr); border-top:3px solid var(--card-type-color,var(--border-subtle)); }
+.catalog-card img { width:104px; }
+.catalog-card-classification { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.catalog-card-fields label { display:grid; gap:5px; }
+.catalog-card-fields label > span { color:var(--text-muted); font-size:.58rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+
+
+.preset-admin-layout { min-height:760px; }
+.preset-builder { padding:18px; }
+.preset-builder-help { margin-bottom:14px; }
+.preset-card-inspector { min-height:220px; display:grid; grid-template-columns:170px minmax(0,1fr); gap:16px; margin-bottom:14px; padding:12px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:linear-gradient(120deg,color-mix(in srgb,var(--team-left-primary) 12%,var(--surface-sunken)),var(--surface-sunken)); }
+.preset-inspector-art { position:relative; display:grid; place-items:center; padding:5px; border:1px solid color-mix(in srgb,var(--card-type-color,var(--border-strong)) 70%,var(--border-subtle)); border-radius:var(--radius-md); background:var(--surface-base); }
+.preset-inspector-art img { width:100%; max-height:190px; object-fit:contain; }
+.preset-inspector-art span { position:absolute; left:7px; right:7px; bottom:7px; padding:5px 7px; border-radius:var(--radius-sm); background:color-mix(in srgb,var(--surface-canvas) 84%,transparent); color:var(--card-type-color,var(--text-primary)); font-size:.57rem; font-weight:900; text-align:center; text-transform:uppercase; }
+.preset-inspector-copy { min-width:0; padding:5px 4px; }
+.preset-inspector-copy h3 { margin-bottom:10px; font-family:var(--font-display); font-size:2rem; line-height:1; }
+.preset-inspector-section + .preset-inspector-section { margin-top:10px; padding-top:10px; border-top:1px solid var(--border-subtle); }
+.preset-inspector-section b { color:var(--interactive-primary); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; }
+.preset-inspector-section p { margin-top:4px; color:var(--text-secondary); font-size:.76rem; line-height:1.55; }
+
+.preset-game-board { overflow-anchor:none; display:grid; gap:8px; margin-bottom:16px; padding:10px; border:1px solid var(--border-subtle); border-radius:var(--radius-lg); background:linear-gradient(135deg,color-mix(in srgb,var(--team-left-primary) 17%,var(--surface-raised)),color-mix(in srgb,var(--team-left-primary) 5%,var(--surface-sunken))); overflow-x:auto; }
+.preset-slot-row { min-width:850px; display:grid; grid-template-columns:132px minmax(0,1fr); gap:10px; padding:7px; border:1px solid color-mix(in srgb,var(--text-primary) 12%,transparent); background:color-mix(in srgb,var(--surface-base) 72%,transparent); }
+.preset-selected-tile { position:relative; min-height:154px; display:grid; place-items:center; align-content:center; gap:4px; padding:7px; border:2px dashed var(--border-strong); border-radius:var(--radius-md); background:color-mix(in srgb,var(--surface-sunken) 82%,transparent); text-align:center; }
+.preset-selected-tile.filled { border-style:solid; border-color:var(--interactive-primary); }
+.preset-selected-tile.drag-over { border-color:var(--status-success); background:color-mix(in srgb,var(--status-success) 13%,var(--surface-sunken)); }
+.preset-selected-label { color:var(--text-primary); font-size:.65rem; font-weight:900; text-transform:uppercase; }
+.preset-selected-tile img { width:88px; height:108px; object-fit:contain; }
+.preset-selected-tile b { max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.62rem; }
+.preset-selected-tile button { border:0; background:transparent; color:var(--status-danger); font-size:.52rem; font-weight:900; cursor:pointer; }
+.preset-empty-card { display:grid; place-items:center; gap:6px; color:var(--text-muted); }
+.preset-empty-card strong { width:58px; height:70px; display:grid; place-items:center; border:1px solid var(--border-strong); border-radius:var(--radius-sm); font-family:var(--font-display); font-size:2rem; }
+.preset-empty-card small { max-width:100px; font-size:.56rem; line-height:1.35; }
+.preset-slot-options { min-width:0; display:grid; grid-template-columns:repeat(6,minmax(105px,1fr)); gap:8px; align-items:center; }
+.preset-game-card { position:relative; min-width:0; display:grid; grid-template-rows:128px auto; gap:5px; padding:5px; border:2px solid color-mix(in srgb,var(--card-type-color,var(--border-strong)) 50%,var(--border-subtle)); border-radius:var(--radius-sm); background:var(--surface-raised); color:var(--text-primary); cursor:grab; }
+.preset-game-card:hover,.preset-game-card:focus-visible { border-color:var(--card-type-color,var(--interactive-primary)); transform:translateY(-2px); }
+.preset-game-card.selected { border-color:var(--interactive-primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--interactive-primary) 25%,transparent); }
+.preset-game-card img { width:100%; height:128px; object-fit:contain; }
+.preset-game-card span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.58rem; font-weight:800; text-align:center; }
+
+@media(max-width:1250px){
+  .catalog-slot-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .divine-library-row-cards{grid-template-columns:repeat(6,minmax(120px,1fr))}
+}
+@media(max-width:920px){
+  .divine-library-row{grid-template-columns:1fr}
+  .divine-library-row>header{border-right:0;border-bottom:1px solid var(--border-subtle)}
+  .catalog-slot-cards{grid-template-columns:1fr}
+  .preset-card-inspector{grid-template-columns:140px minmax(0,1fr)}
+}
+@media(max-width:640px){
+  .divine-public-library{grid-template-columns:1fr}
+  .catalog-card{grid-template-columns:82px minmax(0,1fr)}
+  .catalog-card img{width:82px}
+  .catalog-card-classification{grid-template-columns:1fr}
+  .preset-card-inspector{grid-template-columns:1fr}
+  .preset-inspector-art{max-width:180px;margin:auto}
+  .preset-slot-row{min-width:760px;grid-template-columns:116px minmax(0,1fr)}
+  .preset-game-card{grid-template-rows:112px auto}
+  .preset-game-card img{height:112px}
+}
+
+/* Divine build scenarios, same-Slot swap plans, and compact role-filter assignment. */
+.hero-roster-thumb { display:grid; place-items:end center; background:linear-gradient(180deg,var(--surface-raised),var(--surface-sunken)); }
+.hero-roster-thumb img { width:100%; height:100%; object-fit:cover; object-position:center top; }
+
+.hero-build-tabs button { display:grid; gap:2px; text-align:left; }
+.hero-build-tabs button > span { color:var(--text-muted); font-size:.52rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+.hero-build-tabs button.active > span { color:var(--interactive-primary-ink); }
+.build-scenario { display:inline-block; margin-bottom:5px; color:var(--interactive-primary); font-size:.58rem; font-weight:900; letter-spacing:.1em; text-transform:uppercase; }
+.card-swap-rule { display:grid; grid-template-columns:auto repeat(3,minmax(0,1fr)); gap:8px; align-items:center; margin:0 0 14px; padding:10px 12px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--surface-sunken); }
+.card-swap-rule b { color:var(--interactive-primary); font-size:.6rem; letter-spacing:.09em; }
+.card-swap-rule span { color:var(--text-secondary); font-size:.64rem; line-height:1.4; }
+.hero-build-cards { align-items:start; }
+.divine-build-lane { min-width:0; display:grid; gap:8px; padding:10px; border-top:3px solid var(--card-type-color,var(--border-subtle)); border-radius:var(--radius-md); background:var(--surface-sunken); }
+.divine-build-lane > header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.divine-build-lane > header small { color:var(--text-muted); font-size:.52rem; font-weight:900; letter-spacing:.08em; }
+.divine-build-lane .divine-build-card { padding:0; border:0; background:transparent; }
+.divine-swap-plan { min-height:78px; padding-top:8px; border-top:1px solid var(--border-subtle); }
+.divine-swap-plan > b { display:block; margin-bottom:7px; color:var(--text-muted); font-size:.52rem; letter-spacing:.08em; }
+.divine-swap-plan > small { color:var(--text-muted); font-size:.58rem; line-height:1.4; }
+.divine-swap-cards { display:flex; flex-wrap:wrap; gap:7px; }
+.divine-swap-cards figure { width:48px; margin:0; }
+.divine-swap-cards img { width:48px; aspect-ratio:288/352; object-fit:contain; border:1px solid var(--border-strong); border-radius:5px; background:var(--surface-base); }
+.divine-swap-cards figcaption { margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-size:.46rem; text-align:center; }
+
+.preset-slot-options { grid-template-columns:repeat(6,minmax(94px,1fr)); }
+.preset-game-card-wrap { min-width:0; display:grid; gap:5px; align-content:start; }
+.preset-game-card { display:block; position:relative; padding:4px; border-radius:var(--radius-sm); }
+.preset-game-card img { display:block; width:100%; height:138px; object-fit:contain; }
+.preset-card-state { position:absolute; top:6px; right:6px; min-width:42px; padding:4px 6px; border-radius:999px; background:rgba(3,6,13,.9); color:#fff; font-size:.5rem; font-weight:900; letter-spacing:.08em; text-align:center; }
+.preset-card-state:empty { display:none; }
+.preset-game-card-wrap.is-start .preset-card-state { background:var(--interactive-primary); color:var(--interactive-primary-ink); }
+.preset-game-card-wrap.is-swap:not(.is-start) .preset-game-card { border-color:var(--status-info); box-shadow:0 0 0 2px color-mix(in srgb,var(--status-info) 22%,transparent); }
+.preset-swap-toggle { display:flex; justify-content:center; align-items:center; gap:5px; min-height:26px; padding:4px 6px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--surface-raised); cursor:pointer; }
+.preset-swap-toggle input { width:14px; height:14px; margin:0; accent-color:var(--status-info); }
+.preset-swap-toggle span { color:var(--text-secondary); font-size:.52rem; font-weight:800; text-transform:uppercase; }
+.preset-swap-toggle.disabled { opacity:.38; cursor:not-allowed; }
+.preset-selected-tile b { display:none; }
+.preset-selected-tile img { width:96px; height:118px; }
+.preset-list-item > span { color:var(--interactive-primary); font-size:.52rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+
+.assignment-hero-head > div:first-child { display:grid; gap:3px; }
+.assignment-hero-head small { color:var(--text-muted); font-size:.56rem; font-weight:800; letter-spacing:.08em; }
+.assignment-filterbar { display:grid; grid-template-columns:minmax(220px,1fr) auto; gap:10px; margin-bottom:12px; }
+.assignment-filterbar input { width:100%; }
+.assignment-role-filters { display:flex; gap:6px; padding:4px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--surface-sunken); }
+.assignment-role-filters button { min-height:32px; padding:0 11px; border:0; border-radius:var(--radius-sm); background:transparent; color:var(--text-secondary); font-size:.62rem; font-weight:800; cursor:pointer; }
+.assignment-role-filters button.active { background:var(--surface-overlay); color:var(--text-primary); box-shadow:var(--shadow-1); }
+.assignment-hero-card { grid-template-columns:auto 30px minmax(0,1fr); min-height:55px; }
+.assignment-role-mark { width:30px; height:30px; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--role-color) 55%,var(--border-subtle)); border-radius:50%; background:color-mix(in srgb,var(--role-color) 13%,var(--surface-sunken)); }
+.assignment-role-mark img { width:20px; height:20px; object-fit:contain; }
+.assignment-hero-card > span:nth-of-type(2) { min-width:0; }
+.assignment-hero-card b { font-size:.74rem; }
+.assignment-hero-card small { font-size:.56rem; }
+
+@media(max-width:1000px){
+  .card-swap-rule{grid-template-columns:1fr;}
+  .assignment-filterbar{grid-template-columns:1fr;}
+  .assignment-role-filters{overflow-x:auto;}
+}
+@media(max-width:640px){
+  .preset-slot-options{grid-template-columns:repeat(6,minmax(88px,1fr));}
+  .preset-game-card img{height:118px;}
+  .assignment-role-filters button{padding:0 9px;}
+}
+
+/* Six-card situational plan: Cards 1–3 are core, Cards 4–6 are one-to-one alternates. */
+.preset-slot-row {
+  min-width: 1050px;
+  grid-template-columns: 286px minmax(0,1fr);
+  align-items: center;
+}
+.preset-loadout-pair {
+  display: grid;
+  grid-template-columns: 122px 22px 122px;
+  align-items: center;
+  gap: 8px;
+}
+.preset-loadout-arrow {
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-align: center;
+}
+.preset-loadout-target {
+  position: relative;
+  min-height: 168px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 5px;
+  padding: 7px;
+  overflow: hidden;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb,var(--surface-sunken) 85%,transparent);
+  text-align: center;
+  cursor: pointer;
+}
+.preset-loadout-target.armed {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb,var(--interactive-primary) 18%,transparent);
+}
+.preset-loadout-target.filled { border-style: solid; }
+.preset-loadout-target.drag-over {
+  border-color: var(--status-success);
+  background: color-mix(in srgb,var(--status-success) 12%,var(--surface-sunken));
+}
+.preset-loadout-target-label {
+  width: 100%;
+  overflow: hidden;
+  color: var(--interactive-primary);
+  font-size: .53rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.preset-loadout-target img {
+  width: 92px;
+  height: 112px;
+  object-fit: contain;
+}
+.preset-loadout-target > small {
+  max-width: 104px;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: .53rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.preset-loadout-target [data-remove-card] {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 3px 5px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: color-mix(in srgb,var(--surface-canvas) 88%,transparent);
+  color: var(--status-danger);
+  font-size: .45rem;
+  font-weight: 900;
+}
+.preset-loadout-target .preset-empty-card strong { width: 54px; height: 66px; }
+.preset-loadout-target .preset-empty-card small { max-width: 96px; }
+.preset-game-card.is-core {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb,var(--interactive-primary) 22%,transparent);
+}
+.preset-game-card.is-alternate {
+  border-color: var(--status-info);
+  box-shadow: 0 0 0 2px color-mix(in srgb,var(--status-info) 22%,transparent);
+}
+
+.divine-build-pair {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 24px minmax(0,1fr);
+  align-items: center;
+  gap: 8px;
+}
+.divine-build-pair-card {
+  min-width: 0;
+  min-height: 180px;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+.divine-build-pair-card > span {
+  width: 100%;
+  color: var(--text-muted);
+  font-size: .48rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-align: center;
+}
+.divine-build-pair-card img {
+  width: 100%;
+  max-width: 106px;
+  height: 130px;
+  object-fit: contain;
+}
+.divine-build-pair-card figcaption {
+  width: 100%;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: .58rem;
+  font-weight: 800;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.divine-build-pair-card.is-situation { border-color: color-mix(in srgb,var(--status-info) 55%,var(--border-subtle)); }
+.divine-build-pair-card.is-empty { place-content: center; color: var(--text-muted); }
+.divine-build-pair-card.is-empty b { font-family: var(--font-display); font-size: 1rem; }
+.divine-build-pair-card.is-empty small { font-size: .54rem; }
+.divine-build-pair-arrow { color: var(--text-muted); font-size: 1.2rem; font-weight: 900; text-align: center; }
+.divine-build-effect { padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+.divine-build-effect b { font-size: .65rem; }
+.divine-build-effect p { margin-top: 4px; color: var(--text-secondary); font-size: .58rem; line-height: 1.45; }
+.divine-build-effect small { display: block; margin-top: 6px; color: var(--text-muted); font-size: .53rem; line-height: 1.4; }
+
+@media (max-width: 640px) {
+  .preset-slot-row { min-width: 930px; grid-template-columns: 270px minmax(0,1fr); }
+  .preset-loadout-pair { grid-template-columns: 114px 18px 114px; }
+  .divine-build-pair { grid-template-columns: 1fr; }
+  .divine-build-pair-arrow { transform: rotate(90deg); }
+}
+
+/* Nine-card build plan: Cards 1–3 core, 4–6 option set A, 7–9 option set B. */
+.preset-slot-row {
+  min-width: 1240px;
+  grid-template-columns: 438px minmax(0,1fr);
+}
+.preset-loadout-pair.preset-loadout-triple {
+  grid-template-columns: 122px 18px 122px 18px 122px;
+  gap: 7px;
+}
+.preset-game-card.is-alternate.priority-1 {
+  border-color: var(--status-info);
+  box-shadow: 0 0 0 2px color-mix(in srgb,var(--status-info) 22%,transparent);
+}
+.preset-game-card.is-alternate.priority-2 {
+  border-color: var(--faction-divine-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb,var(--faction-divine-primary) 22%,transparent);
+}
+.preset-loadout-target[data-target-kind="alternate2"].armed {
+  border-color: var(--faction-divine-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb,var(--faction-divine-primary) 24%,transparent);
+}
+.divine-build-pair.divine-build-triple {
+  grid-template-columns: minmax(0,1fr) 22px minmax(0,1fr) minmax(0,1fr);
+}
+.divine-build-pair-card.priority-2 {
+  border-color: color-mix(in srgb,var(--faction-divine-primary) 60%,var(--border-subtle));
+}
+@media (max-width: 640px) {
+  .preset-slot-row { min-width: 1160px; grid-template-columns: 420px minmax(0,1fr); }
+  .preset-loadout-pair.preset-loadout-triple { grid-template-columns: 114px 16px 114px 16px 114px; }
+  .divine-build-pair.divine-build-triple { grid-template-columns: 1fr; }
+}
+
+/* Image-first Divine Card surfaces with one shared floating detail preview. */
+.divine-library-card {
+  display:block;
+  position:relative;
+  min-width:0;
+  padding:6px;
+  border:1px solid var(--border-subtle);
+  border-top:3px solid var(--card-type-color,var(--border-subtle));
+  border-radius:var(--radius-md);
+  background:var(--surface-base);
+  cursor:zoom-in;
+  transform-origin:center;
+  transition:transform var(--duration-fast) ease,border-color var(--duration-fast) ease,box-shadow var(--duration-fast) ease;
+}
+.divine-library-card img {
+  display:block;
+  width:100%;
+  aspect-ratio:288/352;
+  object-fit:contain;
+}
+.divine-library-card-type {
+  position:absolute;
+  right:7px;
+  bottom:7px;
+  padding:4px 6px;
+  border:1px solid color-mix(in srgb,var(--card-type-color,var(--border-strong)) 58%,var(--border-subtle));
+  border-radius:var(--radius-pill);
+  background:color-mix(in srgb,var(--surface-overlay) 88%,transparent);
+  color:var(--card-type-color,var(--text-secondary));
+  font-size:.54rem;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  box-shadow:var(--shadow-1);
+}
+.divine-library-card:hover,
+.divine-library-card:focus-visible,
+.divine-library-card.is-card-preview-active,
+.divine-build-pair-card[data-card-tooltip]:hover,
+.divine-build-pair-card[data-card-tooltip]:focus-visible,
+.divine-build-pair-card.is-card-preview-active,
+.preset-loadout-target[data-card-tooltip]:hover,
+.preset-loadout-target[data-card-tooltip]:focus-visible,
+.preset-loadout-target.is-card-preview-active,
+.preset-game-card[data-card-tooltip]:hover,
+.preset-game-card[data-card-tooltip]:focus-visible,
+.preset-game-card.is-card-preview-active {
+  border-color:var(--card-type-color,var(--interactive-primary));
+  outline:none;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--card-type-color,var(--interactive-primary)) 24%,transparent),var(--shadow-2);
+}
+.divine-library-card.is-card-preview-active,
+.divine-build-pair-card.is-card-preview-active,
+.preset-loadout-target.is-card-preview-active,
+.preset-game-card.is-card-preview-active {
+  transform:translateY(-3px) scale(1.055);
+  z-index:20;
+}
+.divine-build-pair-card[data-card-tooltip],
+.preset-loadout-target[data-card-tooltip],
+.preset-game-card[data-card-tooltip] {
+  cursor:zoom-in;
+  transform-origin:center;
+  transition:transform var(--duration-fast) ease,border-color var(--duration-fast) ease,box-shadow var(--duration-fast) ease;
+}
+.divine-build-pair-card[data-card-tooltip] figcaption,
+.divine-build-effect {
+  display:none;
+}
+.preset-loadout-target.filled > small {
+  display:none;
+}
+
+.divine-card-tooltip {
+  position:fixed;
+  z-index:10050;
+  display:grid;
+  grid-template-columns:minmax(190px,230px) minmax(270px,1fr);
+  gap:20px;
+  width:min(650px,calc(100vw - 28px));
+  max-height:min(680px,calc(100vh - 28px));
+  overflow:auto;
+  padding:18px;
+  border:1px solid var(--border-strong);
+  border-top:4px solid var(--interactive-primary);
+  border-radius:var(--radius-lg);
+  background:color-mix(in srgb,var(--surface-overlay) 98%,transparent);
+  color:var(--text-primary);
+  box-shadow:var(--shadow-modal);
+  pointer-events:none;
+  opacity:1;
+  transform:translateY(0);
+  transition:opacity var(--duration-fast) ease,transform var(--duration-fast) ease;
+  backdrop-filter:blur(14px);
+}
+.divine-card-tooltip.is-pinned {
+  pointer-events:auto;
+  border-color:var(--interactive-primary);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--interactive-primary) 20%,transparent),var(--shadow-modal);
+}
+.divine-card-tooltip[hidden] { display:none; }
+.divine-card-tooltip-media {
+  display:grid;
+  place-items:center;
+  align-self:start;
+  min-width:0;
+  padding:8px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md);
+  background:var(--surface-sunken);
+}
+.divine-card-tooltip-media img {
+  display:block;
+  width:100%;
+  max-height:370px;
+  aspect-ratio:288/352;
+  object-fit:contain;
+}
+.divine-card-tooltip-content {
+  min-width:0;
+  align-self:center;
+}
+.divine-card-tooltip-head {
+  display:grid;
+  gap:7px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--border-subtle);
+}
+.divine-card-tooltip-head > span:first-child {
+  color:var(--interactive-primary);
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.divine-card-tooltip-head h3 {
+  margin:0;
+  font-family:var(--font-display);
+  font-size:clamp(1.55rem,3vw,2.1rem);
+  line-height:1.05;
+}
+.divine-card-tooltip-hint,
+.divine-card-tooltip-pin {
+  width:max-content;
+  max-width:100%;
+  padding:5px 8px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-pill);
+  color:var(--text-muted);
+  background:var(--surface-raised);
+  font-size:.62rem;
+  font-weight:800;
+  letter-spacing:.06em;
+}
+.divine-card-tooltip-pin {
+  color:var(--interactive-primary);
+  border-color:color-mix(in srgb,var(--interactive-primary) 55%,var(--border-subtle));
+}
+.divine-card-tooltip-section {
+  display:grid;
+  gap:6px;
+  margin-top:14px;
+}
+.divine-card-tooltip-section b {
+  color:var(--text-secondary);
+  font-size:.72rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.divine-card-tooltip-section p {
+  margin:0;
+  color:var(--text-primary);
+  font-size:.94rem;
+  line-height:1.62;
+  white-space:pre-line;
+}
+.divine-card-tooltip-section.note p { color:var(--text-secondary); }
+
+[data-motion="reduced"] .divine-card-tooltip,
+[data-motion="reduced"] [data-card-tooltip] { transition:none; backdrop-filter:none; }
+@media (max-width:760px) {
+  .divine-card-tooltip {
+    grid-template-columns:132px minmax(0,1fr);
+    gap:13px;
+    width:calc(100vw - 20px);
+    padding:12px;
+  }
+  .divine-card-tooltip-media img { max-height:230px; }
+  .divine-card-tooltip-section p { font-size:.84rem; }
+  .divine-library-card-type { font-size:.48rem; }
+}
+@media (max-width:500px) {
+  .divine-card-tooltip {
+    grid-template-columns:1fr;
+    max-height:calc(100vh - 20px);
+  }
+  .divine-card-tooltip-media img { width:min(180px,58vw); }
+}
+
+/* Keep full-body art away from the upper frame and prevent long Super Saiyan names from colliding. */
+.hero-detail-art{box-sizing:border-box}
+.hero-detail-name{position:relative; z-index:1}
+@media(max-width:920px){.hero-detail-copy h2{font-size:clamp(2.2rem,8vw,4rem);line-height:1}.hero-detail-copy h2.is-extra-long{font-size:clamp(2rem,7vw,3.45rem)}}

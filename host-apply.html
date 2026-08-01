@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title data-i18n="pageTitleImport">RendezVu Arena — Import Tournament</title>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/home.css" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body class="account-page"><header class="gs-standalone-nav"><a class="auth-back" data-i18n="backHomeArrow" href="/">← BACK TO HOME</a><div class="gs-language-slot" data-language-slot="true"></div></header>
+<main class="host-apply-shell tournament-import-shell">
+<section class="host-apply-copy">
+<span class="home-eyebrow" data-i18n="organizeTournament">ORGANIZE A TOURNAMENT</span>
+<h1><span data-i18n="importYour">IMPORT YOUR</span><br/><span data-i18n="tournamentDot">TOURNAMENT.</span></h1>
+<p data-i18n="importIntro">Create the event on a supported tournament platform first, then paste its public link here. Your normal account becomes the Owner of that tournament only.</p>
+<div aria-label="Supported platforms" data-i18n-aria-label="supportedPlatformsAria" class="import-platforms">
+<span data-no-i18n="true">start.gg</span><span data-no-i18n="true">TONAMEL</span><span data-no-i18n="true">CHALLONGE</span>
+</div>
+<div class="host-checklist">
+<span><b>1.</b><span data-i18n="pastePublicUrl">Paste the public tournament page URL.</span></span>
+<span><b>2.</b><span data-i18n="reviewDetected">Review the information detected from the source.</span></span>
+<span><b>3.</b><span data-i18n="confirmAuthorized">Confirm that you are authorized to manage the event.</span></span>
+</div>
+<div class="import-safety-note">
+<strong data-i18n="oneAccountOwnership">ONE ACCOUNT · PER-EVENT OWNERSHIP</strong>
+<p data-i18n="noHostApproval">You do not need a separate Host account or administrator approval. Importing one event does not grant access to anyone else's tournament.</p>
+</div>
+</section>
+<section class="auth-card host-form-card tournament-import-card">
+<div class="auth-message hidden" id="host-application-status"></div>
+<form id="tournament-import-form">
+<div class="import-form-heading">
+<span class="home-eyebrow" data-i18n="externalEventLink">EXTERNAL EVENT LINK</span>
+<h2 data-i18n="checkTournament">CHECK TOURNAMENT</h2>
+<p data-i18n="platformDetected">The platform is detected automatically.</p>
+</div>
+<label><span data-i18n="tournamentUrl">Tournament URL</span><input id="tournament-source-url" data-no-i18n="true" placeholder="https://www.start.gg/tournament/..." required="" type="url"/>
+<small data-i18n="supportedPlatformsHelp">Supported: start.gg tournament pages, Tonamel competition pages and Challonge tournament pages.</small>
+</label>
+<label class="host-agreement">
+<input id="tournament-owner-confirm" required="" type="checkbox"/>
+<span data-i18n="ownerConfirm">I confirm that I am authorized to manage this tournament and understand that ownership claims are logged.</span>
+</label>
+<button class="btn btn-primary btn-lg" data-i18n="checkPreview" id="check-tournament-button" type="submit">CHECK &amp; PREVIEW</button>
+</form>
+<section aria-live="polite" class="import-preview hidden" id="tournament-import-preview"></section>
+<div class="hidden" id="host-login-required">
+<h2 data-i18n="accountRequired">ACCOUNT REQUIRED</h2>
+<p data-i18n="loginBeforeImport">Log in with your normal account before importing a tournament.</p>
+<a class="btn btn-primary" data-i18n="loginRegister" href="/auth.html?return=/host-apply.html">LOG IN OR REGISTER</a>
+</div>
+</section>
+</main>
+<script src="js/host-apply.js" type="module"></script>
+<script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
+</body>
+</html>

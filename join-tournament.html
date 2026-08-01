@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="pageTitleJoin">RendezVu Arena — Join Tournament</title>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/home.css" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body class="account-page join-page"><header class="gs-standalone-nav"><a class="auth-back" data-i18n="backHomeArrow" href="/">← BACK TO HOME</a><div class="gs-language-slot" data-language-slot="true"></div></header>
+<main class="join-shell">
+<section class="join-copy">
+<span class="home-eyebrow" data-i18n="joinExisting">JOIN AN EXISTING EVENT</span>
+<h1 data-i18n="linkTournamentAccount" id="join-title">LINK YOUR TOURNAMENT ACCOUNT</h1>
+<p data-i18n="joinIntro" id="join-description">Register on the external tournament platform first, then link this website account to the same team and gamer tag.</p>
+<div class="join-steps">
+<article><b>1</b><span data-i18n="joinStep1">Register on start.gg, Tonamel or Challonge.</span></article>
+<article><b>2</b><span data-i18n="joinStep2">Select the same team and roster name used there.</span></article>
+<article><b>3</b><span data-i18n="joinStep3">The tournament Host confirms the account link.</span></article>
+</div>
+<div class="join-source" id="join-source"></div>
+</section>
+<section class="auth-card join-card">
+<div class="home-event-empty" data-i18n="loadingTournament" id="join-loading">Loading tournament…</div>
+<div class="hidden" id="join-auth-required">
+<span class="home-eyebrow" data-i18n="accountRequired">ACCOUNT REQUIRED</span>
+<h2 data-i18n="loginContinue">LOG IN TO CONTINUE</h2>
+<p class="join-muted" data-i18n="joinAccountDesc">One normal account can be linked as a player, substitute, coach or Captain.</p>
+<a class="btn btn-primary" data-i18n="loginOrCreate" href="/auth.html" id="join-login-link">LOG IN OR CREATE ACCOUNT</a>
+</div>
+<div class="hidden" id="join-status"></div>
+<div class="hidden" id="join-requirements"></div>
+<form class="hidden" id="join-form">
+<label><span data-i18n="yourRole">Your role</span><select id="join-role">
+<option data-i18n="player" value="player">Player</option>
+<option data-i18n="captain" value="captain">Captain</option>
+<option data-i18n="substitute" value="substitute">Substitute</option>
+<option data-i18n="coach" value="coach">Coach</option>
+</select>
+<small data-i18n="captainAccessHelp">Captain requests grant result confirmation and team check-in access after approval.</small>
+</label>
+<label><span data-i18n="singularTeam">Team</span><select id="join-team"></select>
+<small data-i18n="exactTeamHelp">Select the exact team used on the external tournament page.</small>
+</label>
+<label class="hidden" id="join-custom-team-wrap"><span data-i18n="exactTeamName">Exact team name</span><input id="join-custom-team" maxlength="160" data-i18n-placeholder="externalTeamNamePlaceholder" placeholder="Team name shown on the external platform"/>
+</label>
+<label><span data-i18n="rosterSlot">Roster slot</span><select id="join-member"></select>
+<small data-i18n="rosterHelp">Choose your imported roster name when it is available.</small>
+</label>
+<label id="join-gamer-tag-wrap"><span data-i18n="externalGamerTag">External gamer tag</span><input id="join-gamer-tag" maxlength="80" data-i18n-placeholder="registrationGamerTagPlaceholder" placeholder="The same gamer tag used for registration"/>
+</label>
+<label><span data-i18n="messageHost">Message to Host</span><span class="ops-field-hint" data-i18n="optional">optional</span>
+<textarea id="join-message" maxlength="1000" data-i18n-placeholder="joinMessageExample" placeholder="Example: I am the player listed as Majin Vu on Team Rush GO." rows="4"></textarea>
+</label>
+<button class="btn btn-primary" data-i18n="requestJoin" type="submit">REQUEST TO JOIN</button>
+</form>
+<div class="auth-message error hidden" id="join-error"></div>
+</section>
+</main>
+<script src="js/join-tournament.js" type="module"></script>
+<script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
+</body>
+</html>

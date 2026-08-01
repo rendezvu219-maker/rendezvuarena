@@ -1,0 +1,1459 @@
+{
+  "schemaVersion": 1,
+  "locale": "vi",
+  "status": "user-approved",
+  "approvedAt": "2026-07-30",
+  "sourceWorkbook": "Master_207_ky_nang_Viet_hoa_da_chot.xlsx",
+  "policy": "The 207 unique Vietnamese skill names approved by the user. English and Japanese keys are retained for validation and future maintenance.",
+  "skills": [
+    {
+      "stt": 1,
+      "english": "A Hard-Knuckled Fight",
+      "japanese": "ためさせてもらうぜっ！",
+      "previousVietnamese": "Để Ta Thử Xem!",
+      "vietnamese": "Cho Ta Thử Sức Nào!"
+    },
+    {
+      "stt": 2,
+      "english": "Accel Dash",
+      "japanese": "アクセルダッシュ",
+      "previousVietnamese": "Gia Tốc Xung",
+      "vietnamese": "Gia Tốc Xung"
+    },
+    {
+      "stt": 3,
+      "english": "Android Barrier",
+      "japanese": "アンドロイドバリア",
+      "previousVietnamese": "Nhân Tạo Nhân Lực Trường",
+      "vietnamese": "Lực Trường Android"
+    },
+    {
+      "stt": 4,
+      "english": "Arcane Shot",
+      "japanese": "アーケインショット",
+      "previousVietnamese": "Thần Bí Xạ Kích",
+      "vietnamese": "Thần Bí Xạ Kích"
+    },
+    {
+      "stt": 5,
+      "english": "Arm Ball",
+      "japanese": "アームボール",
+      "previousVietnamese": "Thủ Tý Nhục Đạn",
+      "vietnamese": "Cầu Thịt Ma Nhân"
+    },
+    {
+      "stt": 6,
+      "english": "Assassin's Domain",
+      "japanese": "殺し屋の領域",
+      "previousVietnamese": "Sát Thủ Lĩnh Vực",
+      "vietnamese": "Sát Thủ Lĩnh Vực"
+    },
+    {
+      "stt": 7,
+      "english": "Assault Rush",
+      "japanese": "アサルトラッシュ",
+      "previousVietnamese": "Đột Tập Liên Kích",
+      "vietnamese": "Đột Tập Liên Kích"
+    },
+    {
+      "stt": 8,
+      "english": "Atomic Supernova",
+      "japanese": "アトミックスーパーノヴァ",
+      "previousVietnamese": "Nguyên Tử Siêu Tân Tinh",
+      "vietnamese": "Siêu Tân Tinh Nguyên Tử"
+    },
+    {
+      "stt": 9,
+      "english": "Barrier Ball",
+      "japanese": "バリアボール",
+      "previousVietnamese": "Lực Trường Đạn",
+      "vietnamese": "Cầu Lực Trường"
+    },
+    {
+      "stt": 10,
+      "english": "Barrier Knuckle",
+      "japanese": "バリアナックル",
+      "previousVietnamese": "Lực Trường Quyền",
+      "vietnamese": "Lực Trường Quyền"
+    },
+    {
+      "stt": 11,
+      "english": "Barrier Wall",
+      "japanese": "バリアウォール",
+      "previousVietnamese": "Lực Trường Tường",
+      "vietnamese": "Tường Lực Trường"
+    },
+    {
+      "stt": 12,
+      "english": "Battle Gear",
+      "japanese": "闘いのギア",
+      "previousVietnamese": "Đấu Tranh Khu Động Lực",
+      "vietnamese": "Nhịp Chiến Đấu"
+    },
+    {
+      "stt": 13,
+      "english": "Big Bang Attack",
+      "japanese": "ビッグバンアタック",
+      "previousVietnamese": "Đại Bạo Tạc Công Kích",
+      "vietnamese": "Big Bang Attack"
+    },
+    {
+      "stt": 14,
+      "english": "Big Bang Crash",
+      "japanese": "ビッグバンクラッシュ",
+      "previousVietnamese": "Đại Bạo Tạc Trọng Kích",
+      "vietnamese": "Đại Bạo Trọng Kích"
+    },
+    {
+      "stt": 15,
+      "english": "Bioenergy",
+      "japanese": "生体エネルギー",
+      "previousVietnamese": "Sinh Vật Năng Lượng",
+      "vietnamese": "Năng Lượng Sinh Học"
+    },
+    {
+      "stt": 16,
+      "english": "Black Bind",
+      "japanese": "ブラックバインド",
+      "previousVietnamese": "Hắc Thúc Phược",
+      "vietnamese": "Hắc Ám Trói Buộc"
+    },
+    {
+      "stt": 17,
+      "english": "Black Break",
+      "japanese": "ブラックブレイク",
+      "previousVietnamese": "Hắc Phá Hoại",
+      "vietnamese": "Hắc Phá Kích"
+    },
+    {
+      "stt": 18,
+      "english": "Black Kamehameha",
+      "japanese": "ブラックかめはめ波",
+      "previousVietnamese": "Hắc Quy Phái Thần Công",
+      "vietnamese": "Hắc Thuật Kamehameha"
+    },
+    {
+      "stt": 19,
+      "english": "Black Power Ball",
+      "japanese": "ブラックパワーボール",
+      "previousVietnamese": "Hắc Ám Năng Lượng Cầu",
+      "vietnamese": "Cầu Năng Lượng Hắc Ám"
+    },
+    {
+      "stt": 20,
+      "english": "Blast Jump",
+      "japanese": "ブラストジャンプ",
+      "previousVietnamese": "Bạo Phát Đột Tập",
+      "vietnamese": "Bật Nhảy Bạo Phá"
+    },
+    {
+      "stt": 21,
+      "english": "Blaster Ball",
+      "japanese": "ブラスターボール",
+      "previousVietnamese": "Oanh Tạc Liên Đạn",
+      "vietnamese": "Bạo Liệt Quang Đạn"
+    },
+    {
+      "stt": 22,
+      "english": "Blaster Meteor",
+      "japanese": "ブラスターメテオ",
+      "previousVietnamese": "Đại Tai Biến",
+      "vietnamese": "Bạo Liệt Lưu Tinh"
+    },
+    {
+      "stt": 23,
+      "english": "Blaster Shot",
+      "japanese": "ブラスターショット",
+      "previousVietnamese": "Bạo Liệt Xạ Kích",
+      "vietnamese": "Bạo Liệt Xạ Kích"
+    },
+    {
+      "stt": 24,
+      "english": "Blaze Dive",
+      "japanese": "ブレイズダイブ",
+      "previousVietnamese": "Băng Liệt Bôn Tập",
+      "vietnamese": "Liệt Diễm Lao Kích"
+    },
+    {
+      "stt": 25,
+      "english": "Body Regeneration",
+      "japanese": "肉体再生",
+      "previousVietnamese": "Nhục Thể Tái Sinh",
+      "vietnamese": "Tái Sinh Cơ Thể"
+    },
+    {
+      "stt": 26,
+      "english": "Bring It On",
+      "japanese": "喧嘩上等",
+      "previousVietnamese": "Võ Đấu Cao Thủ",
+      "vietnamese": "Lại Đây Nào!"
+    },
+    {
+      "stt": 27,
+      "english": "Broken Evolution",
+      "japanese": "エボリューションブレイク",
+      "previousVietnamese": "Tiến Hóa Phá Hoại",
+      "vietnamese": "Phá Vỡ Tiến Hóa"
+    },
+    {
+      "stt": 28,
+      "english": "Brutal Buster",
+      "japanese": "インサイドバスター",
+      "previousVietnamese": "Nội Bộ Bạo Phá",
+      "vietnamese": "Tàn Bạo Phá Kích"
+    },
+    {
+      "stt": 29,
+      "english": "Burning Attack",
+      "japanese": "バーニングアタック",
+      "previousVietnamese": "Liệt Diễm Công Kích",
+      "vietnamese": "Liệt Diễm Công Kích"
+    },
+    {
+      "stt": 30,
+      "english": "Burst Sword",
+      "japanese": "バーストスラッシュ",
+      "previousVietnamese": "Bạo Liệt Phách Trảm",
+      "vietnamese": "Bạo Liệt Kiếm Trảm"
+    },
+    {
+      "stt": 31,
+      "english": "Candy Ray",
+      "japanese": "おかし光線",
+      "previousVietnamese": "Biến Điểm Tâm Quang Tuyến",
+      "vietnamese": "Tia Biến Thành Kẹo"
+    },
+    {
+      "stt": 32,
+      "english": "Capsule Shelter",
+      "japanese": "カプセルシェルター",
+      "previousVietnamese": "Giao Nang Tị Nan Sở",
+      "vietnamese": "Nơi Trú Ẩn Capsule"
+    },
+    {
+      "stt": 33,
+      "english": "Charge Force",
+      "japanese": "チャージフォース",
+      "previousVietnamese": "Lực Lượng Sung Năng",
+      "vietnamese": "Tích Tụ Sức Mạnh"
+    },
+    {
+      "stt": 34,
+      "english": "Core Breaker",
+      "japanese": "コアブレイカー",
+      "previousVietnamese": "Hạch Tâm Phấn Toái",
+      "vietnamese": "Hạch Tâm Phá Kích"
+    },
+    {
+      "stt": 35,
+      "english": "Cosmic Bloom",
+      "japanese": "コズミックブルーム",
+      "previousVietnamese": "Vũ Trụ Quỷ Lôi Trận",
+      "vietnamese": "Vũ Trụ Khai Hoa"
+    },
+    {
+      "stt": 36,
+      "english": "Counter Barrier",
+      "japanese": "カウンターバリア",
+      "previousVietnamese": "Đê Ngự Lực Trường",
+      "vietnamese": "Lực Trường Phản Kích"
+    },
+    {
+      "stt": 37,
+      "english": "Courage for Comrades",
+      "japanese": "仲間のための奮起",
+      "previousVietnamese": "Vì Đồng Đội Đứng Lên",
+      "vietnamese": "Dũng Khí Đồng Đội"
+    },
+    {
+      "stt": 38,
+      "english": "Crush Cannon",
+      "japanese": "クラッシュキャノン",
+      "previousVietnamese": "Phấn Toái Gia Nông Pháo",
+      "vietnamese": "Phấn Toái Pháo"
+    },
+    {
+      "stt": 39,
+      "english": "Crush Them, Dodoria!",
+      "japanese": "ドドリアさん、",
+      "previousVietnamese": "Dodoria, Hãy Nghiền Nát Chúng!",
+      "vietnamese": "Dodoria, Nghiền Nát Chúng!"
+    },
+    {
+      "stt": 40,
+      "english": "Cyclone Burst",
+      "japanese": "サイクロンバースト",
+      "previousVietnamese": "Khí Toàn Bạo Phát",
+      "vietnamese": "Lốc Xoáy Bùng Nổ"
+    },
+    {
+      "stt": 41,
+      "english": "Cyclone Stream",
+      "japanese": "サイクロンストリーム",
+      "previousVietnamese": "Khí Toàn Phong Bạo",
+      "vietnamese": "Luồng Xoáy Cuồng Phong"
+    },
+    {
+      "stt": 42,
+      "english": "Darkness Spear",
+      "japanese": "ダークネススピア",
+      "previousVietnamese": "Ám Hắc Chi Mâu",
+      "vietnamese": "Hắc Ám Ma Thương"
+    },
+    {
+      "stt": 43,
+      "english": "Death Beam",
+      "japanese": "デスビーム",
+      "previousVietnamese": "Tử Vong Kích Quang Thúc",
+      "vietnamese": "Death Beam"
+    },
+    {
+      "stt": 44,
+      "english": "Death Chaser",
+      "japanese": "デスチェイサー",
+      "previousVietnamese": "Tử Vong Truy Kích",
+      "vietnamese": "Tử Quang Truy Kích"
+    },
+    {
+      "stt": 45,
+      "english": "Death Stopper",
+      "japanese": "デスストッパー",
+      "previousVietnamese": "Tử Vong Trở Kích",
+      "vietnamese": "Tử Quang Phong Tỏa"
+    },
+    {
+      "stt": 46,
+      "english": "Deathblow",
+      "japanese": "殺しの一撃",
+      "previousVietnamese": "Trí Mệnh Nhất Kích",
+      "vietnamese": "Đòn Kết Liễu"
+    },
+    {
+      "stt": 47,
+      "english": "Demolition Tornado",
+      "japanese": "デモリッショントルネード",
+      "previousVietnamese": "Tuyệt Diệt Phong Bạo",
+      "vietnamese": "Lốc Hủy Diệt"
+    },
+    {
+      "stt": 48,
+      "english": "Demon Whip",
+      "japanese": "魔鞭拳",
+      "previousVietnamese": "Ma Tiên Quyền",
+      "vietnamese": "Ma Tiên Quyền"
+    },
+    {
+      "stt": 49,
+      "english": "Demon's Domain",
+      "japanese": "魔王の領域",
+      "previousVietnamese": "Ma Vương Lĩnh Vực",
+      "vietnamese": "Ma Vương Lĩnh Vực"
+    },
+    {
+      "stt": 50,
+      "english": "Destruction Decree",
+      "japanese": "破壊の宣告",
+      "previousVietnamese": "Phá Hoại Tuyên Cáo",
+      "vietnamese": "Lệnh Hủy Diệt"
+    },
+    {
+      "stt": 51,
+      "english": "Destruction Ray",
+      "japanese": "デストラクションレイ",
+      "previousVietnamese": "Diệt Tuyệt Quang Tuyến",
+      "vietnamese": "Tia Hủy Diệt"
+    },
+    {
+      "stt": 52,
+      "english": "Destructive Flash",
+      "japanese": "デストロイフラッシュ",
+      "previousVietnamese": "Phá Diệt Thiểm Quang",
+      "vietnamese": "Thiểm Quang Hủy Diệt"
+    },
+    {
+      "stt": 53,
+      "english": "Destructo-Disc",
+      "japanese": "気円斬",
+      "previousVietnamese": "Khí Viên Trảm",
+      "vietnamese": "Khí Viên Trảm"
+    },
+    {
+      "stt": 54,
+      "english": "Dimensional Infiltration",
+      "japanese": "時空潜行",
+      "previousVietnamese": "Thời Không Tiềm Hành",
+      "vietnamese": "Xâm Nhập Thời Không"
+    },
+    {
+      "stt": 55,
+      "english": "Divine Blitz",
+      "japanese": "神の急襲",
+      "previousVietnamese": "Thần Chi Đột Tập",
+      "vietnamese": "Thần Tốc Đột Kích"
+    },
+    {
+      "stt": 56,
+      "english": "Divine Rush",
+      "japanese": "瞬神斬",
+      "previousVietnamese": "Thuấn Thần Trảm",
+      "vietnamese": "Thần Tốc Trảm"
+    },
+    {
+      "stt": 57,
+      "english": "Divine Zone",
+      "japanese": "ディバインゾーン",
+      "previousVietnamese": "Thần Thánh Lĩnh Vực",
+      "vietnamese": "Thần Thánh Lĩnh Vực"
+    },
+    {
+      "stt": 58,
+      "english": "Doom's Ray",
+      "japanese": "ドゥームズレイ",
+      "previousVietnamese": "Hủy Diệt Quang Tuyến",
+      "vietnamese": "Tận Thế Quang Tuyến"
+    },
+    {
+      "stt": 59,
+      "english": "Dragon Enhance",
+      "japanese": "ドラゴン・エンハンス",
+      "previousVietnamese": "Thần Long Cường Hóa",
+      "vietnamese": "Long Lực Cường Hóa"
+    },
+    {
+      "stt": 60,
+      "english": "Dragon Fist",
+      "japanese": "龍拳",
+      "previousVietnamese": "Long Quyền",
+      "vietnamese": "Long Quyền"
+    },
+    {
+      "stt": 61,
+      "english": "Earth Breaker",
+      "japanese": "アースブレイカー",
+      "previousVietnamese": "Địa Cầu Phá Hoại Giả",
+      "vietnamese": "Đại Địa Phá Kích"
+    },
+    {
+      "stt": 62,
+      "english": "Earth Splitter",
+      "japanese": "大地裂斬",
+      "previousVietnamese": "Đại Địa Liệt Trảm",
+      "vietnamese": "Đại Địa Liệt Trảm"
+    },
+    {
+      "stt": 63,
+      "english": "Energy Blast Volley",
+      "japanese": "連続エネルギー弾",
+      "previousVietnamese": "Liên Hoàn Năng Lượng Đạn",
+      "vietnamese": "Mưa Đạn Năng Lượng"
+    },
+    {
+      "stt": 64,
+      "english": "Energy Explosion",
+      "japanese": "気爆破",
+      "previousVietnamese": "Khí Bạo Phá",
+      "vietnamese": "Năng Lượng Bùng Nổ"
+    },
+    {
+      "stt": 65,
+      "english": "Energy Field",
+      "japanese": "エネルギーフィールド",
+      "previousVietnamese": "Năng Lượng Trường",
+      "vietnamese": "Trường Năng Lượng"
+    },
+    {
+      "stt": 66,
+      "english": "Energy Field: Duel",
+      "japanese": "エネルギーフィールド・デュエル",
+      "previousVietnamese": "Năng Lượng Trường · Tranh Đấu",
+      "vietnamese": "Trường Năng Lượng: Quyết Đấu"
+    },
+    {
+      "stt": 67,
+      "english": "Energy Mine",
+      "japanese": "設置気弾",
+      "previousVietnamese": "Khí Đạn Bố Trí",
+      "vietnamese": "Mìn Năng Lượng"
+    },
+    {
+      "stt": 68,
+      "english": "Energy Release",
+      "japanese": "エナジーリリース",
+      "previousVietnamese": "Năng Lượng Giải Phóng",
+      "vietnamese": "Giải Phóng Năng Lượng"
+    },
+    {
+      "stt": 69,
+      "english": "Energy Sphere",
+      "japanese": "エナジースフィア",
+      "previousVietnamese": "Năng Lượng Cầu",
+      "vietnamese": "Cầu Năng Lượng"
+    },
+    {
+      "stt": 70,
+      "english": "Evil Blast",
+      "japanese": "エビルブラスト",
+      "previousVietnamese": "Ác Ma Bạo Phát",
+      "vietnamese": "Ma Quang Bạo Kích"
+    },
+    {
+      "stt": 71,
+      "english": "Evil Flame",
+      "japanese": "エビルフレイム",
+      "previousVietnamese": "Ác Ma Hỏa Diễm",
+      "vietnamese": "Ma Giới Hỏa Diễm"
+    },
+    {
+      "stt": 72,
+      "english": "Exaltation",
+      "japanese": "有頂天",
+      "previousVietnamese": "Hữu Đỉnh Thiên",
+      "vietnamese": "Hưng Phấn Tột Độ"
+    },
+    {
+      "stt": 73,
+      "english": "Exploding Rage",
+      "japanese": "怒り爆発",
+      "previousVietnamese": "Phẫn Nộ Bạo Phát",
+      "vietnamese": "Cơn Giận Bùng Nổ"
+    },
+    {
+      "stt": 74,
+      "english": "Explosive Strike",
+      "japanese": "爆撃掌",
+      "previousVietnamese": "Bạo Kích Chưởng",
+      "vietnamese": "Bạo Kích Chưởng"
+    },
+    {
+      "stt": 75,
+      "english": "Explosive Wave",
+      "japanese": "爆発波",
+      "previousVietnamese": "Bạo Phát Ba Động",
+      "vietnamese": "Bạo Liệt Ba Động"
+    },
+    {
+      "stt": 76,
+      "english": "Fear of Death",
+      "japanese": "死の恐怖",
+      "previousVietnamese": "Tử Vong Khủng Cụ",
+      "vietnamese": "Nỗi Sợ Cái Chết"
+    },
+    {
+      "stt": 77,
+      "english": "Fearsome Emperor",
+      "japanese": "恐怖の帝王",
+      "previousVietnamese": "Khủng Bố Đế Vương",
+      "vietnamese": "Bạo Chúa Kinh Hoàng"
+    },
+    {
+      "stt": 78,
+      "english": "Fiendish Tenacity",
+      "japanese": "悪魔の執念",
+      "previousVietnamese": "Ác Ma Chấp Niệm",
+      "vietnamese": "Ma Quỷ Chấp Niệm"
+    },
+    {
+      "stt": 79,
+      "english": "Fierce God Slicer",
+      "japanese": "神裂斬",
+      "previousVietnamese": "Thần Liệt Trảm",
+      "vietnamese": "Thần Liệt Trảm"
+    },
+    {
+      "stt": 80,
+      "english": "Final Form",
+      "japanese": "最終形態",
+      "previousVietnamese": "Tối Chung Hình Thái",
+      "vietnamese": "Dạng Cuối"
+    },
+    {
+      "stt": 81,
+      "english": "Final Shine Attack",
+      "japanese": "ファイナルシャインアタック",
+      "previousVietnamese": "Chung Cực Thiểm Quang Công Kích",
+      "vietnamese": "Final Shine Attack"
+    },
+    {
+      "stt": 82,
+      "english": "Finger Blitz Barrage",
+      "japanese": "連続フィンガーブリッツ",
+      "previousVietnamese": "Liên Hoàn Chỉ Tiêm Cấp Tập Đạn",
+      "vietnamese": "Mưa Đạn Đầu Ngón Tay"
+    },
+    {
+      "stt": 83,
+      "english": "Finger Shot",
+      "japanese": "フィンガーショット",
+      "previousVietnamese": "Thủ Chỉ Quang Đạn",
+      "vietnamese": "Chỉ Quang Đạn"
+    },
+    {
+      "stt": 84,
+      "english": "Flash Dodge",
+      "japanese": "フラッシュスルー",
+      "previousVietnamese": "Tật Thiểm Xuyên Thứ",
+      "vietnamese": "Né Chớp Nhoáng"
+    },
+    {
+      "stt": 85,
+      "english": "Friendship Boost",
+      "japanese": "友情ブースト",
+      "previousVietnamese": "Hữu Tình Bạo Phát",
+      "vietnamese": "Sức Mạnh Tình Bạn"
+    },
+    {
+      "stt": 86,
+      "english": "Full Power",
+      "japanese": "フルパワー",
+      "previousVietnamese": "Toàn Lực Giải Phóng",
+      "vietnamese": "Toàn Lực"
+    },
+    {
+      "stt": 87,
+      "english": "Full Voltage",
+      "japanese": "フルボルテージ",
+      "previousVietnamese": "Cao Năng Mãn Tải",
+      "vietnamese": "Toàn Công Suất"
+    },
+    {
+      "stt": 88,
+      "english": "Galactic Assassin",
+      "japanese": "銀河からの刺客",
+      "previousVietnamese": "Ngân Hà Thứ Khách",
+      "vietnamese": "Sát Thủ Ngân Hà"
+    },
+    {
+      "stt": 89,
+      "english": "Galactic Buster",
+      "japanese": "ギャラクティックバスター",
+      "previousVietnamese": "Ngân Hà Phá Hoại Pháo",
+      "vietnamese": "Ngân Hà Bạo Phá"
+    },
+    {
+      "stt": 90,
+      "english": "Galactic Donut",
+      "japanese": "ギャラクティカドーナツ",
+      "previousVietnamese": "Kim Quang Thiểm Diệu Siêu Cấp Điềm Điềm Quyển",
+      "vietnamese": "Ngân Hà Quang Hoàn"
+    },
+    {
+      "stt": 91,
+      "english": "Gamma Blaster / Full Burst",
+      "japanese": "ガンマブラスター・フルバースト",
+      "previousVietnamese": "Gamma Bạo Kích · Tối Đại Xuất Lực",
+      "vietnamese": "Gamma Bạo Liệt / Toàn Xạ"
+    },
+    {
+      "stt": 92,
+      "english": "Gamma Impact",
+      "japanese": "ガンマインパクト",
+      "previousVietnamese": "Gamma Xung Kích",
+      "vietnamese": "Gamma Xung Kích"
+    },
+    {
+      "stt": 93,
+      "english": "Gamma Strike",
+      "japanese": "ガンマストライク",
+      "previousVietnamese": "Gamma Đột Kích",
+      "vietnamese": "Gamma Đột Kích"
+    },
+    {
+      "stt": 94,
+      "english": "Gamma Switch",
+      "japanese": "ガンマチェンジ",
+      "previousVietnamese": "Gamma Hoán Đổi",
+      "vietnamese": "Hoán Đổi Gamma"
+    },
+    {
+      "stt": 95,
+      "english": "Giga Grand Smasher",
+      "japanese": "ギガグランドスマッシャー",
+      "previousVietnamese": "Triệu Vạn Chí Cao Toái Nghiền",
+      "vietnamese": "Cự Đại Phấn Toái"
+    },
+    {
+      "stt": 96,
+      "english": "Gigantic Breaker",
+      "japanese": "ギガンティックブレイカー",
+      "previousVietnamese": "Cự Hình Phá Hoại Giả",
+      "vietnamese": "Cự Hình Phá Kích"
+    },
+    {
+      "stt": 97,
+      "english": "Gigantic Knuckle",
+      "japanese": "ギガンティックナックル",
+      "previousVietnamese": "Cự Lực Quyền Kích",
+      "vietnamese": "Cự Lực Quyền"
+    },
+    {
+      "stt": 98,
+      "english": "Gigantic Stomp",
+      "japanese": "ギガンティックスタンプ",
+      "previousVietnamese": "Cự Lực Tiễn Đạp",
+      "vietnamese": "Cự Lực Giẫm Nát"
+    },
+    {
+      "stt": 99,
+      "english": "Gigantic Twin Blast",
+      "japanese": "ギガンティックツインブラスト",
+      "previousVietnamese": "Cự Hình Song Trọng Năng Lượng Pháo",
+      "vietnamese": "Cự Hình Song Pháo"
+    },
+    {
+      "stt": 100,
+      "english": "Glorio: Lightning Bolt",
+      "japanese": "グロリオ：ライトニングボルト",
+      "previousVietnamese": "Glorio: Thiểm Điện",
+      "vietnamese": "Glorio: Thiểm Điện"
+    },
+    {
+      "stt": 101,
+      "english": "God Kamehameha",
+      "japanese": "神域かめはめ波",
+      "previousVietnamese": "Thần Vực Quy Phái Thần Công",
+      "vietnamese": "Thần Kamehameha"
+    },
+    {
+      "stt": 102,
+      "english": "God Shine Attack",
+      "japanese": "ゴッドシャインアタック",
+      "previousVietnamese": "Thần Thiểm Quang Công Kích",
+      "vietnamese": "Thần Quang Công Kích"
+    },
+    {
+      "stt": 103,
+      "english": "God Shoot",
+      "japanese": "ゴッドシューティング",
+      "previousVietnamese": "Thần Chi Xạ Kích",
+      "vietnamese": "Thần Quang Xạ Kích"
+    },
+    {
+      "stt": 104,
+      "english": "Great Ape Strike",
+      "japanese": "大猿の一撃",
+      "previousVietnamese": "Đại Viên Nhất Kích",
+      "vietnamese": "Đại Viên Nhất Kích"
+    },
+    {
+      "stt": 105,
+      "english": "Healing Ray",
+      "japanese": "回復光線",
+      "previousVietnamese": "Hồi Phục Quang Tuyến",
+      "vietnamese": "Tia Hồi Phục"
+    },
+    {
+      "stt": 106,
+      "english": "Heart Breaker",
+      "japanese": "ハートブレイカー",
+      "previousVietnamese": "Tâm Linh Phá Hoại",
+      "vietnamese": "Tâm Phá Kích"
+    },
+    {
+      "stt": 107,
+      "english": "Heavenly Arrow",
+      "japanese": "神裂降矢",
+      "previousVietnamese": "Thần Liệt Giáng Thỉ",
+      "vietnamese": "Thần Liệt Giáng Tiễn"
+    },
+    {
+      "stt": 108,
+      "english": "Hellbound",
+      "japanese": "地獄行き",
+      "previousVietnamese": "Đưa Xuống Địa Ngục",
+      "vietnamese": "Đày Xuống Địa Ngục"
+    },
+    {
+      "stt": 109,
+      "english": "Hellzone Trap",
+      "japanese": "魔空浮遊弾",
+      "previousVietnamese": "Ma Không Phù Du Đạn",
+      "vietnamese": "Ma Không Trận Đạn"
+    },
+    {
+      "stt": 110,
+      "english": "Hovercar",
+      "japanese": "エアカー",
+      "previousVietnamese": "Phi Hành Xa",
+      "vietnamese": "Xe Bay"
+    },
+    {
+      "stt": 111,
+      "english": "Hyper Ultra Super Combo",
+      "japanese": "ハイパーウルトラスーパーコンボ",
+      "previousVietnamese": "Cứu Cực Vô Địch Siêu Cường Liên Kích",
+      "vietnamese": "Combo Siêu Cấp VJP Pro"
+    },
+    {
+      "stt": 112,
+      "english": "I Won't Be Fighting for Justice Any Longer...",
+      "japanese": "覚悟は決めた…",
+      "previousVietnamese": "Quyết Tâm Đã Định…",
+      "vietnamese": "Ta Không Còn Chiến Đấu Vì Chính Nghĩa..."
+    },
+    {
+      "stt": 113,
+      "english": "I'll Destroy You",
+      "japanese": "破壊しちゃうよ",
+      "previousVietnamese": "Sắp Phá Hoại Rồi Đấy",
+      "vietnamese": "Ta Sẽ Hủy Diệt Ngươi"
+    },
+    {
+      "stt": 114,
+      "english": "If I Won't Do It, Who Will?!",
+      "japanese": "俺がやらなきゃ誰がやる",
+      "previousVietnamese": "Ngoài Ta Còn Ai",
+      "vietnamese": "Nếu Không Phải Ta Thì Còn Ai?!"
+    },
+    {
+      "stt": 115,
+      "english": "Imperial Decree",
+      "japanese": "帝王の号令",
+      "previousVietnamese": "Đế Vương Hiệu Lệnh",
+      "vietnamese": "Đế Vương Hiệu Lệnh"
+    },
+    {
+      "stt": 116,
+      "english": "Imperial Retaliation",
+      "japanese": "帝王の報復",
+      "previousVietnamese": "Đế Vương Báo Phục",
+      "vietnamese": "Đế Vương Báo Thù"
+    },
+    {
+      "stt": 117,
+      "english": "Infinite Energy Reactor",
+      "japanese": "永久エネルギー炉",
+      "previousVietnamese": "Vĩnh Động Năng Lượng Lô",
+      "vietnamese": "Lò Năng Lượng Vĩnh Cửu"
+    },
+    {
+      "stt": 118,
+      "english": "Instant Transmission",
+      "japanese": "瞬間移動",
+      "previousVietnamese": "Thuấn Gian Di Động",
+      "vietnamese": "Dịch Chuyển Tức Thời"
+    },
+    {
+      "stt": 119,
+      "english": "Jack Blast",
+      "japanese": "ジャックブラスト",
+      "previousVietnamese": "Thiên Quân Bạo Phát",
+      "vietnamese": "Thiên Quân Bạo Phá"
+    },
+    {
+      "stt": 120,
+      "english": "Kaioken",
+      "japanese": "界王拳",
+      "previousVietnamese": "Giới Vương Quyền",
+      "vietnamese": "Giới Vương Quyền"
+    },
+    {
+      "stt": 121,
+      "english": "Kamehameha",
+      "japanese": "かめはめ波",
+      "previousVietnamese": "Quy Phái Thần Công",
+      "vietnamese": "Kamehameha"
+    },
+    {
+      "stt": 122,
+      "english": "Kamehameha (Youth)",
+      "japanese": "かめはめ波（少年期）",
+      "previousVietnamese": "Thiếu Niên Quy Phái Thần Công",
+      "vietnamese": "Kamehameha Thời Niên Thiếu"
+    },
+    {
+      "stt": 123,
+      "english": "Kintoun Dash",
+      "japanese": "筋斗雲ダッシュ",
+      "previousVietnamese": "Cân Đẩu Vân Xung Thứ",
+      "vietnamese": "Lướt Cân Đẩu Vân"
+    },
+    {
+      "stt": 124,
+      "english": "Leave This to Me!",
+      "japanese": "ここはボクにまかせてください！",
+      "previousVietnamese": "Chỗ Này Cứ Giao Cho Tôi!",
+      "vietnamese": "Cứ Để Tôi Lo!"
+    },
+    {
+      "stt": 125,
+      "english": "Leg Hook",
+      "japanese": "レッグフック",
+      "previousVietnamese": "Câu Cước Suất Kích",
+      "vietnamese": "Móc Chân"
+    },
+    {
+      "stt": 126,
+      "english": "Legendary Super Saiyan",
+      "japanese": "伝説の超サイヤ人",
+      "previousVietnamese": "Truyền Thuyết Siêu Saiyan",
+      "vietnamese": "Siêu Saiya Huyền Thoại"
+    },
+    {
+      "stt": 127,
+      "english": "Let's Drive!",
+      "japanese": "Let's ドライブ！",
+      "previousVietnamese": "Cùng Đi Du Ngoạn!",
+      "vietnamese": "Lên Xe Nào!"
+    },
+    {
+      "stt": 128,
+      "english": "Light Grenade",
+      "japanese": "激烈光弾",
+      "previousVietnamese": "Kích Liệt Quang Đạn",
+      "vietnamese": "Kích Liệt Quang Đạn"
+    },
+    {
+      "stt": 129,
+      "english": "Lightning Step",
+      "japanese": "ライトニングステップ",
+      "previousVietnamese": "Oanh Lôi Bộ",
+      "vietnamese": "Bước Chớp"
+    },
+    {
+      "stt": 130,
+      "english": "Mach Break",
+      "japanese": "マッハブレイク",
+      "previousVietnamese": "Âm Tốc Phá Kích",
+      "vietnamese": "Âm Tốc Phá Kích"
+    },
+    {
+      "stt": 131,
+      "english": "Majin Menace",
+      "japanese": "魔人の脅威",
+      "previousVietnamese": "Ma Nhân Uy Hiếp",
+      "vietnamese": "Ma Nhân Uy Hiếp"
+    },
+    {
+      "stt": 132,
+      "english": "Masenko",
+      "japanese": "魔閃光",
+      "previousVietnamese": "Ma Thiểm Quang",
+      "vietnamese": "Ma Thiểm Quang"
+    },
+    {
+      "stt": 133,
+      "english": "Masenkyaku",
+      "japanese": "魔閃脚",
+      "previousVietnamese": "Ma Thiểm Cước",
+      "vietnamese": "Ma Thiểm Cước"
+    },
+    {
+      "stt": 134,
+      "english": "Massive Sphere of Destruction",
+      "japanese": "特大破壊玉",
+      "previousVietnamese": "Đặc Đại Phá Hoại Đạn",
+      "vietnamese": "Cầu Hủy Diệt Khổng Lồ"
+    },
+    {
+      "stt": 135,
+      "english": "Meteor Extrusion",
+      "japanese": "メテオエクストルージョン",
+      "previousVietnamese": "Trụy Tinh Xung Chàng",
+      "vietnamese": "Lưu Tinh Xung Kích"
+    },
+    {
+      "stt": 136,
+      "english": "Meteor Hammer",
+      "japanese": "メテオハンマー",
+      "previousVietnamese": "Lưu Tinh Chùy",
+      "vietnamese": "Lưu Tinh Chùy"
+    },
+    {
+      "stt": 137,
+      "english": "Mystic Body",
+      "japanese": "ミスティックボディ",
+      "previousVietnamese": "Thần Bí Chi Khu",
+      "vietnamese": "Cơ Thể Huyền Bí"
+    },
+    {
+      "stt": 138,
+      "english": "Noisy Chest Drumming",
+      "japanese": "ノイジードラミング",
+      "previousVietnamese": "Hống Náo Chùy Hung",
+      "vietnamese": "Vỗ Ngực Gầm Vang"
+    },
+    {
+      "stt": 139,
+      "english": "Nyoibo Dance",
+      "japanese": "如意棒演舞",
+      "previousVietnamese": "Như Ý Bổng Loạn Vũ",
+      "vietnamese": "Vũ Điệu Gậy Như Ý"
+    },
+    {
+      "stt": 140,
+      "english": "Nyoibo Extend",
+      "japanese": "のびろ如意棒",
+      "previousVietnamese": "Duỗi Dài Đi! Như Ý Bổng",
+      "vietnamese": "Dài Ra, Gậy Như Ý!"
+    },
+    {
+      "stt": 141,
+      "english": "Opening Move Toward Victory",
+      "japanese": "勝利への布石",
+      "previousVietnamese": "Bố Cục Thắng Lợi",
+      "vietnamese": "Bước Đệm Chiến Thắng"
+    },
+    {
+      "stt": 142,
+      "english": "Overcharge",
+      "japanese": "オーバーチャージ",
+      "previousVietnamese": "Siêu Tải Sung Năng",
+      "vietnamese": "Quá Tải Năng Lượng"
+    },
+    {
+      "stt": 143,
+      "english": "Panzy: Wasabi Bomb",
+      "japanese": "パンジ：ワサビ爆弾",
+      "previousVietnamese": "Panzy: Giới Mạt Tạc Đạn",
+      "vietnamese": "Panzy: Bom Wasabi"
+    },
+    {
+      "stt": 144,
+      "english": "Path to the Divine",
+      "japanese": "神に至る道",
+      "previousVietnamese": "Thành Thần Chi Lộ",
+      "vietnamese": "Con Đường Thành Thần"
+    },
+    {
+      "stt": 145,
+      "english": "Perfect Form",
+      "japanese": "完全体",
+      "previousVietnamese": "Hoàn Toàn Thể",
+      "vietnamese": "Dạng Hoàn Thiện"
+    },
+    {
+      "stt": 146,
+      "english": "Photon Bomber",
+      "japanese": "フォトンボンバー",
+      "previousVietnamese": "Quang Tử Bạo Phát",
+      "vietnamese": "Quang Tử Bạo Phá"
+    },
+    {
+      "stt": 147,
+      "english": "Possession (Allies) / Cover Fire",
+      "japanese": "寄生（味方）/ 援護射撃",
+      "previousVietnamese": "Ký Sinh (Đồng Minh) / Yểm Hộ Xạ Kích",
+      "vietnamese": "Ký Sinh Đồng Minh / Bắn Yểm Trợ"
+    },
+    {
+      "stt": 148,
+      "english": "Possession (Enemies)",
+      "japanese": "寄生（敵）",
+      "previousVietnamese": "Ký Sinh (Địch)",
+      "vietnamese": "Ký Sinh Kẻ Địch"
+    },
+    {
+      "stt": 149,
+      "english": "Power Unleashed",
+      "japanese": "力の解放",
+      "previousVietnamese": "Lực Lượng Giải Phóng",
+      "vietnamese": "Khai Mở Sức Mạnh"
+    },
+    {
+      "stt": 150,
+      "english": "Prince's Pride",
+      "japanese": "王子のプライド",
+      "previousVietnamese": "Vương Tử Tự Tôn",
+      "vietnamese": "Niềm Kiêu Hãnh Hoàng Tử"
+    },
+    {
+      "stt": 151,
+      "english": "Project Zero Mortals",
+      "japanese": "人間0計画",
+      "previousVietnamese": "Nhân Loại Linh Kế Hoạch",
+      "vietnamese": "Kế Hoạch Vô Nhân"
+    },
+    {
+      "stt": 152,
+      "english": "Prominence Blow",
+      "japanese": "プロミネンスブロウ",
+      "previousVietnamese": "Hồng Viêm Bạo Kích",
+      "vietnamese": "Nhật Viêm Bạo Kích"
+    },
+    {
+      "stt": 153,
+      "english": "Psycho Thread",
+      "japanese": "サイコスレッド",
+      "previousVietnamese": "Tinh Thần Thúc Phược",
+      "vietnamese": "Sợi Chỉ Tâm Linh"
+    },
+    {
+      "stt": 154,
+      "english": "Psychokinetic Grasp",
+      "japanese": "サイコキネシス・グラスプ",
+      "previousVietnamese": "Niệm Động Lực · Trảo",
+      "vietnamese": "Tâm Lực Khống Chế"
+    },
+    {
+      "stt": 155,
+      "english": "Psychokinetic Rock",
+      "japanese": "サイコキネシス・ロック",
+      "previousVietnamese": "Niệm Động Lực · Tỏa",
+      "vietnamese": "Tâm Lực Nham Thạch"
+    },
+    {
+      "stt": 156,
+      "english": "Rage Barrage",
+      "japanese": "レイジ・バレッジ",
+      "previousVietnamese": "Kích Nộ Đạn Mạc",
+      "vietnamese": "Mưa Đạn Cuồng Nộ"
+    },
+    {
+      "stt": 157,
+      "english": "Raging Charge",
+      "japanese": "レイジングチャージ",
+      "previousVietnamese": "Hoàn Kích Năng Lượng",
+      "vietnamese": "Cuồng Nộ Xung Kích"
+    },
+    {
+      "stt": 158,
+      "english": "Raid Smash",
+      "japanese": "レイドスマッシュ",
+      "previousVietnamese": "Mãnh Tập",
+      "vietnamese": "Mãnh Tập Phá Kích"
+    },
+    {
+      "stt": 159,
+      "english": "Ready, Go!",
+      "japanese": "ヨーイドンッ",
+      "previousVietnamese": "Đại Bạo Xung",
+      "vietnamese": "Sẵn Sàng, Chạy!"
+    },
+    {
+      "stt": 160,
+      "english": "Rebel Warrior",
+      "japanese": "叛逆の戦士",
+      "previousVietnamese": "Phản Nghịch Chiến Sĩ",
+      "vietnamese": "Chiến Binh Phản Kháng"
+    },
+    {
+      "stt": 161,
+      "english": "Rebellion Smash",
+      "japanese": "リベリオンスマッシュ",
+      "previousVietnamese": "Phản Kháng Mãnh Kích",
+      "vietnamese": "Phản Kháng Mãnh Kích"
+    },
+    {
+      "stt": 162,
+      "english": "Red Bind Shot",
+      "japanese": "レッドバインドショット",
+      "previousVietnamese": "Phi Hồng Thúc Phược Xạ Kích",
+      "vietnamese": "Hồng Quang Trói Buộc"
+    },
+    {
+      "stt": 163,
+      "english": "Red Fury",
+      "japanese": "赤い闘気",
+      "previousVietnamese": "Hồng Sắc Đấu Khí",
+      "vietnamese": "Hồng Sắc Đấu Khí"
+    },
+    {
+      "stt": 164,
+      "english": "Regeneration",
+      "japanese": "リジェネレーション",
+      "previousVietnamese": "Tái Sinh",
+      "vietnamese": "Tái Sinh"
+    },
+    {
+      "stt": 165,
+      "english": "Revenge Blast",
+      "japanese": "リベンジブラスト",
+      "previousVietnamese": "Phục Thù Bạo Phát",
+      "vietnamese": "Phục Thù Bạo Phá"
+    },
+    {
+      "stt": 166,
+      "english": "Riot Javelin",
+      "japanese": "ライオットジャベリン",
+      "previousVietnamese": "Man Bạo Chấn Ba",
+      "vietnamese": "Bạo Loạn Phi Thương"
+    },
+    {
+      "stt": 167,
+      "english": "Roar",
+      "japanese": "咆哮",
+      "previousVietnamese": "Bào Hao",
+      "vietnamese": "Gầm Thét"
+    },
+    {
+      "stt": 168,
+      "english": "Rock-Paper-Scissors",
+      "japanese": "ジャン拳",
+      "previousVietnamese": "Sai Quyền",
+      "vietnamese": "Oẳn Tù Tì Quyền"
+    },
+    {
+      "stt": 169,
+      "english": "Rolling Hammer",
+      "japanese": "ローリングハンマー",
+      "previousVietnamese": "Hồi Toàn Trọng Chùy",
+      "vietnamese": "Búa Xoay Liên Hoàn"
+    },
+    {
+      "stt": 170,
+      "english": "Rush Attack",
+      "japanese": "ラッシュ攻撃",
+      "previousVietnamese": "Đột Kích",
+      "vietnamese": "Liên Kích"
+    },
+    {
+      "stt": 171,
+      "english": "Scattering Energy Wave",
+      "japanese": "拡散エネルギー波",
+      "previousVietnamese": "Khuếch Tán Năng Lượng Ba",
+      "vietnamese": "Sóng Năng Lượng Khuếch Tán"
+    },
+    {
+      "stt": 172,
+      "english": "Shattering Beam",
+      "japanese": "爆砕魔光弾",
+      "previousVietnamese": "Bạo Toái Ma Quang Đạn",
+      "vietnamese": "Bạo Toái Ma Quang Đạn"
+    },
+    {
+      "stt": 173,
+      "english": "Shining Fusion (Merged Warrior)",
+      "japanese": "閃光の合体戦士",
+      "previousVietnamese": "Thiểm Quang Hợp Thể Chiến Sĩ",
+      "vietnamese": "Hợp Thể Thiểm Quang"
+    },
+    {
+      "stt": 174,
+      "english": "Shining Slash",
+      "japanese": "シャイニングスラッシュ",
+      "previousVietnamese": "Thiểm Diệu Trảm Kích",
+      "vietnamese": "Thiểm Quang Trảm"
+    },
+    {
+      "stt": 175,
+      "english": "Shooting Chaser",
+      "japanese": "シューティングチェイサー",
+      "previousVietnamese": "Truy Tung Xạ Kích",
+      "vietnamese": "Truy Kích Quang Đạn"
+    },
+    {
+      "stt": 176,
+      "english": "Show Them, Zarbon!",
+      "japanese": "ザーボンさん、",
+      "previousVietnamese": "Zarbon, Hãy Phô Diễn Thực Lực!",
+      "vietnamese": "Zarbon, Cho Chúng Thấy Đi!"
+    },
+    {
+      "stt": 177,
+      "english": "Smash Shot",
+      "japanese": "スマッシュショット",
+      "previousVietnamese": "Mãnh Liệt Pháo Kích",
+      "vietnamese": "Pháo Kích Nghiền Nát"
+    },
+    {
+      "stt": 178,
+      "english": "Solar Flare",
+      "japanese": "太陽拳",
+      "previousVietnamese": "Thái Dương Quyền",
+      "vietnamese": "Thái Dương Hạ San"
+    },
+    {
+      "stt": 179,
+      "english": "Solitary Guardian",
+      "japanese": "孤高の守護者",
+      "previousVietnamese": "Cao Ngạo Thủ Hộ Giả",
+      "vietnamese": "Thủ Hộ Giả Cô Độc"
+    },
+    {
+      "stt": 180,
+      "english": "Special Beam Cannon",
+      "japanese": "魔貫光殺砲",
+      "previousVietnamese": "Ma Quán Quang Sát Pháo",
+      "vietnamese": "Ma Quang Sát Pháo"
+    },
+    {
+      "stt": 181,
+      "english": "Special Pose",
+      "japanese": "スペシャルポーズ",
+      "previousVietnamese": "Đặc Thù Tạo Hình",
+      "vietnamese": "Tư Thế Đặc Biệt"
+    },
+    {
+      "stt": 182,
+      "english": "Sphere of Destruction Barrage",
+      "japanese": "多重破壊玉",
+      "previousVietnamese": "Đa Trọng Phá Hoại Đạn",
+      "vietnamese": "Mưa Cầu Hủy Diệt"
+    },
+    {
+      "stt": 183,
+      "english": "Sphere of Destruction Shoot",
+      "japanese": "破壊玉シュート",
+      "previousVietnamese": "Phá Hoại Đạn Trừu Xạ",
+      "vietnamese": "Sút Cầu Hủy Diệt"
+    },
+    {
+      "stt": 184,
+      "english": "Sphere of Destruction: Tempered",
+      "japanese": "破壊玉・凝",
+      "previousVietnamese": "Phá Hoại Đạn · Ngưng",
+      "vietnamese": "Cầu Hủy Diệt: Ngưng Tụ"
+    },
+    {
+      "stt": 185,
+      "english": "Spin Attack",
+      "japanese": "スピンアタック",
+      "previousVietnamese": "Hồi Toàn Công Kích",
+      "vietnamese": "Hồi Toàn Công Kích"
+    },
+    {
+      "stt": 186,
+      "english": "Spirit Bomb",
+      "japanese": "元気玉",
+      "previousVietnamese": "Nguyên Khí Đạn",
+      "vietnamese": "Quả Cầu Khinh Khí"
+    },
+    {
+      "stt": 187,
+      "english": "Spirit Excalibur",
+      "japanese": "スピリッツエクスカリバー",
+      "previousVietnamese": "Linh Khí Thánh Kiếm",
+      "vietnamese": "Linh Khí Thánh Kiếm"
+    },
+    {
+      "stt": 188,
+      "english": "Spirit Sword",
+      "japanese": "スピリッツソード",
+      "previousVietnamese": "Linh Khí Kiếm",
+      "vietnamese": "Kiếm Năng Lượng"
+    },
+    {
+      "stt": 189,
+      "english": "Storm Kick",
+      "japanese": "ストームキック",
+      "previousVietnamese": "Bạo Phong Cước",
+      "vietnamese": "Bạo Phong Cước"
+    },
+    {
+      "stt": 190,
+      "english": "Strangle Gum",
+      "japanese": "ストラングルガム",
+      "previousVietnamese": "Trất Tức Đường Giao",
+      "vietnamese": "Kẹo Dẻo Trói Buộc"
+    },
+    {
+      "stt": 191,
+      "english": "Super Ghost Kamikaze Attack",
+      "japanese": "スーパーゴーストカミカゼアタック",
+      "previousVietnamese": "Siêu Cấp U Linh Thần Phong Quyền",
+      "vietnamese": "Thần Phong Cảm Tử"
+    },
+    {
+      "stt": 192,
+      "english": "Super Ghosts",
+      "japanese": "スーパーゴースト",
+      "previousVietnamese": "Siêu Cấp U Linh",
+      "vietnamese": "Siêu U Linh"
+    },
+    {
+      "stt": 193,
+      "english": "Super Kamehameha",
+      "japanese": "超かめはめ波",
+      "previousVietnamese": "Siêu Cấp Quy Phái Thần Công",
+      "vietnamese": "Siêu Kamehameha"
+    },
+    {
+      "stt": 194,
+      "english": "Super Saiyan",
+      "japanese": "超サイヤ人",
+      "previousVietnamese": "Siêu Saiyan",
+      "vietnamese": "Siêu Saiya"
+    },
+    {
+      "stt": 195,
+      "english": "Super Saiyan (Berserk)",
+      "japanese": "超サイヤ人 暴走",
+      "previousVietnamese": "Bạo Tẩu Siêu Saiyan",
+      "vietnamese": "Siêu Saiya Cuồng Bạo"
+    },
+    {
+      "stt": 196,
+      "english": "Super Saiyan 2",
+      "japanese": "超サイヤ人2",
+      "previousVietnamese": "Siêu Saiyan 2",
+      "vietnamese": "Siêu Saiya Cấp 2"
+    },
+    {
+      "stt": 197,
+      "english": "Super Saiyan 3",
+      "japanese": "超サイヤ人3",
+      "previousVietnamese": "Siêu Saiyan 3",
+      "vietnamese": "Siêu Saiya Cấp 3"
+    },
+    {
+      "stt": 198,
+      "english": "Super Saiyan 4",
+      "japanese": "超サイヤ人4",
+      "previousVietnamese": "Siêu Saiyan 4",
+      "vietnamese": "Siêu Saiya Cấp 4"
+    },
+    {
+      "stt": 199,
+      "english": "Super Vegito",
+      "japanese": "超ベジット",
+      "previousVietnamese": "Siêu Cấp Vegito",
+      "vietnamese": "Siêu Vegeto"
+    },
+    {
+      "stt": 200,
+      "english": "Supernova",
+      "japanese": "スーパーノヴァ",
+      "previousVietnamese": "Siêu Tân Tinh",
+      "vietnamese": "Siêu Tân Tinh"
+    },
+    {
+      "stt": 201,
+      "english": "Swift Spark",
+      "japanese": "閃烈瞬身撃",
+      "previousVietnamese": "Thiểm Liệt Thuấn Thân Kích",
+      "vietnamese": "Thiểm Liệt Tốc Kích"
+    },
+    {
+      "stt": 202,
+      "english": "Technician",
+      "japanese": "技巧派",
+      "previousVietnamese": "Kỹ Xảo Phái",
+      "vietnamese": "Kỹ Thuật Gia"
+    },
+    {
+      "stt": 203,
+      "english": "Vanish Strike",
+      "japanese": "バニッシュストライク",
+      "previousVietnamese": "Bạo Viêm Đột Kích",
+      "vietnamese": "Biến Ảnh Đột Kích"
+    },
+    {
+      "stt": 204,
+      "english": "Violent Rage",
+      "japanese": "はげしい怒り",
+      "previousVietnamese": "Bạo Nộ",
+      "vietnamese": "Bạo Nộ"
+    },
+    {
+      "stt": 205,
+      "english": "Vital Point Strike",
+      "japanese": "急所突き",
+      "previousVietnamese": "Thống Kích Yếu Hại",
+      "vietnamese": "Yếu Huyệt Kích"
+    },
+    {
+      "stt": 206,
+      "english": "Wild Roar",
+      "japanese": "ワイルドロア",
+      "previousVietnamese": "Cuồng Dã Lãng Triều",
+      "vietnamese": "Tiếng Gầm Hoang Dã"
+    },
+    {
+      "stt": 207,
+      "english": "You Can't Win...",
+      "japanese": "勝てんぜ おまえは…",
+      "previousVietnamese": "Ngươi Không Thể Thắng…",
+      "vietnamese": "Ngươi Không Thể Thắng..."
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+/* Localisation controls live inside each page header. No fixed offsets or overlap hacks. */
+.gs-language-slot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  min-width: 0;
+  margin-inline-start: 8px;
+  font-family: var(--font-body, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+}
+
+.gs-language-switcher {
+  position: relative;
+  z-index: 90;
+  display: inline-flex;
+  min-width: 0;
+  color: var(--text-primary, #f5f7fb);
+  font-family: inherit;
+}
+
+.gs-language-trigger {
+  min-width: 104px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--border-strong, #526078) 72%, transparent);
+  border-radius: 9px;
+  color: var(--text-primary, #f5f7fb);
+  background: color-mix(in srgb, var(--surface-raised, #131a2a) 96%, transparent);
+  box-shadow: none;
+  cursor: pointer;
+  font: 700 .72rem/1 var(--font-body, Inter, system-ui, sans-serif);
+  letter-spacing: .015em;
+  white-space: nowrap;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+.gs-language-trigger:hover,
+.gs-language-switcher.open .gs-language-trigger {
+  border-color: var(--interactive-primary, #f2c94c);
+  background: var(--surface-hover, #1b2437);
+}
+.gs-language-trigger:active { transform: translateY(1px); }
+.gs-language-trigger:focus-visible { outline: 2px solid var(--interactive-primary, #f2c94c); outline-offset: 2px; }
+
+.gs-language-glyph {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--interactive-primary, #f2c94c);
+  background: color-mix(in srgb, var(--interactive-primary, #f2c94c) 13%, transparent);
+  font: 800 .7rem/1 var(--font-body, Inter, system-ui, sans-serif);
+}
+.gs-language-current { min-width: 30px; max-width: 72px; overflow: hidden; text-overflow: ellipsis; text-align: left; white-space: nowrap; }
+.gs-language-chevron { color: var(--text-secondary, #aab4c8); font-size: .65rem; transition: transform .16s ease; }
+.gs-language-switcher.open .gs-language-chevron { transform: rotate(180deg); }
+
+.gs-language-menu {
+  position: absolute;
+  inset-block-start: calc(100% + 8px);
+  inset-inline-end: 0;
+  width: 220px;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--border-strong, #526078) 70%, transparent);
+  border-radius: 12px;
+  background: var(--surface-raised, #111827);
+  box-shadow: 0 18px 48px rgba(0,0,0,.4);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-5px) scale(.985);
+  transform-origin: right top;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+.gs-language-switcher.open .gs-language-menu { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); }
+.gs-language-menu button {
+  width: 100%; min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 10px; border: 1px solid transparent; border-radius: 8px; color: var(--text-secondary, #b8c1d2);
+  background: transparent; cursor: pointer; font: 650 .76rem/1.2 var(--font-body, Inter, system-ui, sans-serif); text-align: left;
+}
+.gs-language-menu button small { color: var(--text-muted, #758198); font: 700 .6rem/1 var(--font-body, Inter, system-ui, sans-serif); letter-spacing: .06em; }
+.gs-language-menu button:hover,
+.gs-language-menu button:focus-visible { color: var(--text-primary, #f5f7fb); border-color: var(--border-default, #344058); background: var(--surface-hover, #1c2639); outline: none; }
+.gs-language-menu button[aria-selected="true"] { color: var(--text-primary, #fff); border-color: var(--interactive-primary, #f2c94c); background: color-mix(in srgb, var(--interactive-primary, #f2c94c) 12%, var(--surface-hover, #1c2639)); }
+.gs-language-menu button[aria-selected="true"] small { color: var(--interactive-primary, #f2c94c); }
+
+html[data-locale="ja"] body,
+html[data-locale="zh-CN"] body,
+html[data-locale="ko"] body {
+  font-family: "Noto Sans CJK JP", "Noto Sans CJK SC", "Noto Sans KR", "Yu Gothic UI", "Microsoft YaHei UI", "Malgun Gothic", system-ui, sans-serif;
+}
+html[data-locale="ja"] .hero-detail-name,
+html[data-locale="zh-CN"] .hero-detail-name,
+html[data-locale="ko"] .hero-detail-name { letter-spacing: .01em; line-height: 1.08; }
+
+html[data-appearance="light"] .gs-language-trigger,
+body.light-mode .gs-language-trigger,
+html[data-appearance="light"] .gs-language-menu,
+body.light-mode .gs-language-menu { color: #101827; border-color: rgba(33,48,72,.24); background: #f8fafe; }
+html[data-appearance="light"] .gs-language-menu button,
+body.light-mode .gs-language-menu button { color: #43506a; }
+html[data-appearance="light"] .gs-language-menu button:hover,
+html[data-appearance="light"] .gs-language-menu button:focus-visible,
+body.light-mode .gs-language-menu button:hover,
+body.light-mode .gs-language-menu button:focus-visible { color: #101827; background: #eef2f8; }
+
+@media (max-width: 860px) {
+  .gs-language-slot { margin-inline-start: 4px; }
+  .gs-language-trigger { min-width: 74px; height: 34px; padding: 0 8px; }
+  .gs-language-current { max-width: 42px; }
+  .gs-language-menu { width: min(220px, calc(100vw - 24px)); }
+}
+@media (max-width: 560px) {
+  .gs-language-glyph { display: none; }
+  .gs-language-trigger { min-width: 62px; }
+}
+
+/* Standalone account/import pages use a real header row instead of a viewport overlay. */
+.gs-standalone-nav {
+  position: relative;
+  z-index: 70;
+  width: min(1180px, calc(100% - 40px));
+  min-height: 64px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 12px;
+}
+.gs-standalone-nav .auth-back {
+  position: static;
+  inset: auto;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.gs-standalone-nav .gs-language-slot { margin-inline-start: auto; }
+
+/* Draft Room has no account navigation, so its selector shares the match header tools row. */
+.draft-header-tools {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+  margin-inline-start: 12px;
+}
+.draft-header-tools .header-divine-rules {
+  position: static;
+  inset: auto;
+  transform: none;
+}
+.draft-header-tools .gs-language-slot { margin-inline-start: 0; }
+
+@media (max-width: 700px) {
+  .gs-standalone-nav { width: calc(100% - 20px); min-height: 56px; gap: 8px; padding-block: 8px; }
+  .gs-standalone-nav .auth-back { font-size: .62rem; }
+  .draft-header { flex-wrap: wrap; }
+  .draft-header-tools { width: 100%; margin-inline-start: 0; justify-content: flex-end; order: 5; }
+}

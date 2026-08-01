@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "policy": "Fields captured directly from the released game client override the corresponding official-site snapshot fields. Uncaptured fields continue to use the official website snapshot; no text is inferred or machine-generated.",
+  "locales": {
+    "es": {
+      "0015": {
+        "officialName": "Bojack Máximo Poder",
+        "evidence": [
+          {
+            "path": "data/locales/evidence/in-game/es-0015-passive.png",
+            "sha256": "ef9b0ca3464c48f8a388b364d3747c24a690cb494a47a6fda600d502aba4a190",
+            "verifiedFields": [
+              "officialName",
+              "skills.transformation1.name",
+              "skills.passive1.name",
+              "skills.passive1.desc",
+              "skills.rush_attack1.name",
+              "skills.skill1.name",
+              "skills.skill2.name",
+              "skills.skill3.name",
+              "skills.super_attack1.name"
+            ]
+          }
+        ],
+        "skills": {
+          "transformation1": {
+            "name": "Máximo Poder"
+          },
+          "passive1": {
+            "name": "Asesino Estelar",
+            "desc": "Capacidad de ordenar a sus subordinados que efectúen ataques adicionales.\nEstos se producen cuando un héroe enemigo recibe una Arremetida tras ser golpeado por técnicas."
+          },
+          "rush_attack1": {
+            "name": "Arremetida"
+          },
+          "skill1": {
+            "name": "Destrozo Galáctico"
+          },
+          "skill2": {
+            "name": "Resplandor Cósmico"
+          },
+          "skill3": {
+            "name": "Psique Carmesí"
+          },
+          "super_attack1": {
+            "name": "Gigagolpe Aplastante"
+          }
+        }
+      }
+    },
+    "ko": {
+      "0015": {
+        "officialName": "풀 파워 보자크",
+        "evidence": [
+          {
+            "path": "data/locales/evidence/in-game/ko-0015-rush.png",
+            "sha256": "d7a0f1a7001d3211d7edd5969af17275c623a245b8532e5225a8924f50cdf9da",
+            "verifiedFields": [
+              "officialName",
+              "skills.transformation1.name",
+              "skills.passive1.name",
+              "skills.rush_attack1.name",
+              "skills.rush_attack1.desc",
+              "skills.skill1.name",
+              "skills.skill2.name",
+              "skills.skill3.name",
+              "skills.super_attack1.name"
+            ]
+          }
+        ],
+        "skills": {
+          "transformation1": {
+            "name": "풀 파워"
+          },
+          "passive1": {
+            "name": "은하에서 온 자객"
+          },
+          "rush_attack1": {
+            "name": "러시 공격",
+            "desc": "기탄을 발사하는 공격\n연속으로 발동하면 탄 수 증가"
+          },
+          "skill1": {
+            "name": "갤럭틱 버스터"
+          },
+          "skill2": {
+            "name": "코즈믹 블룸"
+          },
+          "skill3": {
+            "name": "사이코 스레드"
+          },
+          "super_attack1": {
+            "name": "기가 그랜드 스매셔"
+          }
+        }
+      }
+    }
+  }
+}

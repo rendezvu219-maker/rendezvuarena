@@ -1,0 +1,321 @@
+/* RendezVu Arena Design System v1
+ * Semantic tokens stay stable across appearance modes.
+ * data-theme controls surfaces, data-contrast accessibility contrast,
+ * data-palette role colors, data-aura cosmetic hero/cinematic accents only.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Typography */
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Arial Narrow', 'Segoe UI', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'SFMono-Regular', Consolas, monospace;
+  --type-caption-size: .75rem;
+  --type-label-size: .75rem;
+  --type-body-sm-size: .875rem;
+  --type-body-size: 1rem;
+  --type-title-sm-size: clamp(1.125rem, 2vw, 1.375rem);
+  --type-title-md-size: clamp(1.5rem, 3vw, 2rem);
+  --type-title-lg-size: clamp(2rem, 4vw, 3.5rem);
+  --type-hero-size: clamp(3rem, 8vw, 6.5rem);
+
+  /* Space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Shape */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+
+  /* Layout */
+  --header-height: 64px;
+  --content-max: 1440px;
+  --reading-max: 760px;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 360ms;
+  --duration-cinematic: 700ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+  --ease-out-back: cubic-bezier(.34, 1.2, .64, 1);
+  --ease-spring: cubic-bezier(.175, .885, .32, 1.15);
+
+  /* Z-index */
+  --z-base: 1;
+  --z-dropdown: 50;
+  --z-header: 100;
+  --z-modal: 500;
+  --z-overlay: 900;
+  --z-tooltip: 1200;
+  --z-cinematic: 2000;
+  --z-toast: 3000;
+
+  /* Stable role tokens. Icon + text must accompany role color. */
+  --role-damage: #e5484d;
+  --role-damage-glow: rgba(229, 72, 77, .25);
+  --role-tank: #35a66f;
+  --role-tank-glow: rgba(53, 166, 111, .25);
+  --role-tech: #4a8fe7;
+  --role-tech-glow: rgba(74, 143, 231, .25);
+
+  /* Traditional MOBA team sides. Team A/left is blue; Team B/right is red. */
+  --team-left-primary: #1593ff;
+  --team-left-highlight: #66bdff;
+  --team-left-deep: #0b3e73;
+  --team-left-secondary: #8fd2ff;
+  --team-left-surface: rgba(21, 147, 255, .18);
+  --team-left-border: #2aa8ff;
+  --team-left-glow: rgba(21, 147, 255, .22);
+  --team-left-gradient: linear-gradient(180deg, rgba(8, 70, 126, .72), rgba(13, 17, 29, .98));
+  --team-left-accent-gradient: linear-gradient(135deg, #0878d8, #66bdff);
+
+  --team-right-primary: #ff334d;
+  --team-right-highlight: #ff7182;
+  --team-right-deep: #7a1022;
+  --team-right-secondary: #ff7182;
+  --team-right-surface: rgba(255, 51, 77, .18);
+  --team-right-border: #ff5268;
+  --team-right-glow: rgba(255, 51, 77, .2);
+  --team-right-gradient: linear-gradient(180deg, rgba(120, 15, 35, .72), rgba(13, 17, 29, .98));
+  --team-right-accent-gradient: linear-gradient(135deg, #c41431, #ff7182);
+
+  --side-a-primary: var(--team-left-primary);
+  --side-a-secondary: var(--team-left-secondary);
+  --side-b-primary: var(--team-right-primary);
+  --side-b-secondary: var(--team-right-secondary);
+
+  /* Temporary compatibility aliases while legacy selectors are migrated. */
+  --faction-divine-primary: var(--team-left-primary);
+  --faction-divine-highlight: var(--team-left-highlight);
+  --faction-divine-deep: var(--team-left-deep);
+  --faction-divine-secondary: var(--team-left-secondary);
+  --faction-divine-surface: var(--team-left-surface);
+  --faction-divine-border: var(--team-left-border);
+  --faction-divine-glow: var(--team-left-glow);
+  --faction-divine-gradient: var(--team-left-gradient);
+  --faction-divine-accent-gradient: var(--team-left-accent-gradient);
+  --faction-corrupted-primary: var(--team-right-primary);
+  --faction-corrupted-highlight: var(--team-right-highlight);
+  --faction-corrupted-deep: var(--team-right-deep);
+  --faction-corrupted-secondary: var(--team-right-secondary);
+  --faction-corrupted-surface: var(--team-right-surface);
+  --faction-corrupted-border: var(--team-right-border);
+  --faction-corrupted-glow: var(--team-right-glow);
+  --faction-corrupted-gradient: var(--team-right-gradient);
+  --faction-corrupted-accent-gradient: var(--team-right-accent-gradient);
+
+  /* Cosmetic aura: deliberately cannot redefine UI/team/role tokens. */
+  --aura-beerus-accent: #f0c24a;
+  --aura-beerus-glow: rgba(240, 194, 74, .2);
+  --aura-goku-black-accent: #f067a6;
+  --aura-goku-black-glow: rgba(240, 103, 166, .18);
+  --aura-accent: var(--aura-beerus-accent);
+  --aura-accent-soft: rgba(240, 194, 74, .14);
+  --aura-glow: var(--aura-beerus-glow);
+  --aura-header: linear-gradient(135deg, rgba(60, 43, 12, .34), rgba(13, 17, 29, .96));
+
+  /* Decorative helpers, never used as the only semantic signal. */
+  --decorative-purple: #9b78e8;
+  --decorative-purple-glow: rgba(155, 120, 232, .22);
+  --decorative-cyan: #5aa9ff;
+}
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface-canvas: #070910;
+  --surface-base: #0d111d;
+  --surface-raised: #141a29;
+  --surface-overlay: #1b2233;
+  --surface-sunken: #090c15;
+  --surface-translucent: rgba(13, 17, 29, .84);
+  --surface-scrim: rgba(4, 6, 12, .78);
+  --text-primary: #f7f8fc;
+  --text-secondary: #b7c0d2;
+  --text-muted: #7e899e;
+  --text-inverse: #12141b;
+  --border-subtle: #252d40;
+  --border-strong: #46516b;
+  --interactive-primary: #f0c24a;
+  --interactive-primary-hover: #ffd66d;
+  --interactive-primary-active: #c9921d;
+  --interactive-primary-ink: #17120a;
+  --interactive-primary-soft: rgba(240, 194, 74, .12);
+  --interactive-primary-glow: rgba(240, 194, 74, .2);
+  --focus-ring: #ffd666;
+  --status-success: #36b37e;
+  --status-warning: #f5a524;
+  --status-danger: #ff5d6c;
+  --status-info: #5aa9ff;
+  --shadow-1: 0 2px 8px rgba(0, 0, 0, .24);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, .32);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, .4);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, .48);
+  --shadow-team-left: 0 0 24px var(--team-left-glow);
+  --shadow-team-right: 0 0 24px var(--team-right-glow);
+  --shadow-faction-divine: var(--shadow-team-left);
+  --shadow-faction-corrupted: var(--shadow-team-right);
+  --shadow-primary: 0 0 22px var(--interactive-primary-glow);
+  --page-atmosphere:
+    radial-gradient(ellipse at 18% -8%, rgba(21, 147, 255, .11), transparent 48%),
+    radial-gradient(ellipse at 82% -8%, rgba(255, 51, 77, .08), transparent 48%);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --surface-canvas: #f4f6fa;
+  --surface-base: #ffffff;
+  --surface-raised: #edf1f7;
+  --surface-overlay: #ffffff;
+  --surface-sunken: #e7ebf2;
+  --surface-translucent: rgba(255, 255, 255, .9);
+  --surface-scrim: rgba(28, 34, 47, .42);
+  --text-primary: #151821;
+  --text-secondary: #4d5668;
+  --text-muted: #737d90;
+  --text-inverse: #ffffff;
+  --border-subtle: #d9dee8;
+  --border-strong: #aab4c5;
+  --interactive-primary: #9a6500;
+  --interactive-primary-hover: #754c00;
+  --interactive-primary-active: #5e3d00;
+  --interactive-primary-ink: #ffffff;
+  --interactive-primary-soft: rgba(154, 101, 0, .09);
+  --interactive-primary-glow: rgba(154, 101, 0, .06);
+  --focus-ring: #6d4c00;
+  --status-success: #177a52;
+  --status-warning: #9a5b00;
+  --status-danger: #b42335;
+  --status-info: #1c5f9e;
+  --team-left-primary: #006fc8;
+  --team-left-highlight: #1686dc;
+  --team-left-deep: #074675;
+  --team-left-secondary: #126eaf;
+  --team-left-surface: #e7f4ff;
+  --team-left-border: #087cca;
+  --team-left-glow: rgba(0, 111, 200, .06);
+  --team-left-gradient: linear-gradient(180deg, #e7f4ff, #ffffff);
+  --team-left-accent-gradient: linear-gradient(135deg, #006fc8, #58b5f6);
+  --team-right-primary: #c91d36;
+  --team-right-highlight: #df3c52;
+  --team-right-deep: #821225;
+  --team-right-secondary: #b51d33;
+  --team-right-surface: #fff0f2;
+  --team-right-border: #c91d36;
+  --team-right-glow: rgba(201, 29, 54, .05);
+  --team-right-gradient: linear-gradient(180deg, #fff0f2, #ffffff);
+  --team-right-accent-gradient: linear-gradient(135deg, #b4172f, #ef6374);
+  --aura-accent-soft: rgba(154, 101, 0, .07);
+  --aura-glow: rgba(154, 101, 0, .05);
+  --aura-header: linear-gradient(135deg, rgba(166, 111, 0, .08), rgba(255, 255, 255, .96));
+  --shadow-1: 0 2px 8px rgba(27, 35, 52, .1);
+  --shadow-2: 0 8px 24px rgba(27, 35, 52, .14);
+  --shadow-3: 0 16px 40px rgba(27, 35, 52, .16);
+  --shadow-modal: 0 24px 64px rgba(27, 35, 52, .18);
+  --shadow-team-left: 0 0 16px var(--team-left-glow);
+  --shadow-team-right: 0 0 16px var(--team-right-glow);
+  --shadow-faction-divine: var(--shadow-team-left);
+  --shadow-faction-corrupted: var(--shadow-team-right);
+  --shadow-primary: 0 0 12px var(--interactive-primary-glow);
+  --page-atmosphere:
+    radial-gradient(ellipse at 18% -8%, rgba(0, 111, 200, .06), transparent 44%),
+    radial-gradient(ellipse at 82% -8%, rgba(201, 29, 54, .045), transparent 44%);
+}
+
+:root[data-contrast='high'] {
+  --surface-canvas: #000;
+  --surface-base: #080808;
+  --surface-raised: #121212;
+  --surface-overlay: #161616;
+  --surface-sunken: #000;
+  --surface-translucent: #080808;
+  --text-primary: #fff;
+  --text-secondary: #fff;
+  --text-muted: #e2e2e2;
+  --border-subtle: #bdbdbd;
+  --border-strong: #fff;
+  --interactive-primary: #ffe45e;
+  --interactive-primary-hover: #fff08f;
+  --interactive-primary-active: #ffd400;
+  --interactive-primary-ink: #000;
+  --focus-ring: #fff36a;
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: none;
+  --shadow-modal: 0 0 0 2px #fff;
+  --shadow-team-left: none;
+  --shadow-team-right: none;
+  --shadow-faction-divine: none;
+  --shadow-faction-corrupted: none;
+  --shadow-primary: none;
+  --page-atmosphere: none;
+}
+
+:root[data-theme='light'][data-contrast='high'] {
+  --surface-canvas: #fff;
+  --surface-base: #fff;
+  --surface-raised: #f2f2f2;
+  --surface-overlay: #fff;
+  --surface-sunken: #e8e8e8;
+  --surface-translucent: #fff;
+  --text-primary: #000;
+  --text-secondary: #000;
+  --text-muted: #222;
+  --text-inverse: #fff;
+  --border-subtle: #333;
+  --border-strong: #000;
+  --interactive-primary: #6d4700;
+  --interactive-primary-hover: #422b00;
+  --interactive-primary-active: #000;
+  --interactive-primary-ink: #fff;
+  --focus-ring: #000;
+}
+
+:root[data-palette='accessible'] {
+  --role-damage: #d55e00;
+  --role-damage-glow: rgba(213, 94, 0, .2);
+  --role-tank: #009e73;
+  --role-tank-glow: rgba(0, 158, 115, .2);
+  --role-tech: #0072b2;
+  --role-tech-glow: rgba(0, 114, 178, .2);
+}
+
+:root[data-aura='beerus'] {
+  --aura-accent: var(--aura-beerus-accent);
+  --aura-accent-soft: rgba(240, 194, 74, .14);
+  --aura-glow: var(--aura-beerus-glow);
+  --aura-header: linear-gradient(135deg, rgba(76, 52, 7, .36), rgba(13, 17, 29, .96));
+}
+
+:root[data-aura='goku-black'] {
+  --aura-accent: var(--aura-goku-black-accent);
+  --aura-accent-soft: rgba(240, 103, 166, .13);
+  --aura-glow: var(--aura-goku-black-glow);
+  --aura-header: linear-gradient(135deg, rgba(74, 16, 48, .34), rgba(13, 17, 29, .96));
+}
+
+:root[data-motion='reduced'] {
+  --duration-fast: 1ms;
+  --duration-normal: 1ms;
+  --duration-slow: 1ms;
+  --duration-cinematic: 80ms;
+  --ease-out-back: linear;
+  --ease-spring: linear;
+}

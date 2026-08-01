@@ -1,0 +1,231 @@
+/* Tournament Bracket Manager Styles */
+.bracket-view {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-canvas);
+  position: relative;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.bracket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(6,6,14,0.9);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(10px);
+}
+
+.bracket-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: 2px;
+  color: var(--interactive-primary);
+}
+
+.bracket-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.bracket-container {
+  flex: 1;
+  display: flex;
+  padding: 40px;
+  gap: 60px;
+  overflow-x: auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.bracket-round {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100%;
+  min-width: 280px;
+  position: relative;
+}
+
+.bracket-round-title {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.bracket-match {
+  background: rgba(17, 17, 37, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.3s;
+}
+
+.bracket-match:hover {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 4px 24px rgba(255,215,0,0.1);
+}
+
+.bracket-team-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bracket-team-row:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.bracket-team-row.winner {
+  border-left: 3px solid var(--interactive-primary);
+}
+
+.bracket-team-name {
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.5px;
+}
+
+.bracket-team-score {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 0.9rem;
+  color: var(--interactive-primary);
+}
+
+/* Connecting Lines for Bracket Matches */
+.bracket-round:not(:last-child) .bracket-match::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  width: 30px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bracket-round:nth-child(2) .bracket-match::before {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 50%;
+  width: 30px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Profile Modal styles */
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 4, 12, 0.85);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+
+.profile-modal {
+  width: 90%;
+  max-width: 500px;
+  background: rgba(16, 16, 32, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  position: relative;
+}
+
+.profile-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--interactive-primary), var(--interactive-primary-active));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: #000;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.profile-role {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--interactive-primary);
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.profile-info-item {
+  background: rgba(0,0,0,0.25);
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.profile-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.profile-value {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}

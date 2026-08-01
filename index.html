@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="pageTitleHome">RendezVu Arena — Draft &amp; Tournament Hub</title>
+<meta content="Create casual drafts, join tournaments, captain a team, or organize competitive community events." name="description"/>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/home.css" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body class="home-page">
+<header class="home-nav">
+<a class="home-brand" href="/">
+<span class="home-brand-mark" data-no-i18n="true">RV</span>
+<span><b data-no-i18n="true">RENDEZVU</b><small data-i18n="brandHub">ARENA</small></span>
+</a>
+<nav>
+<a data-i18n="homeTournaments" href="#tournaments">Tournaments</a>
+<a data-i18n="heroes" href="/heroes.html">Heroes</a>
+<a data-i18n="quickDraft" href="/quick-draft.html">Quick Draft</a>
+<a data-i18n="importEvent" href="/host-apply.html">Import an Event</a>
+</nav>
+<div class="home-account" id="home-account">
+<a class="btn btn-ghost btn-sm" data-i18n="login" href="/auth.html">LOG IN</a>
+<a class="btn btn-primary btn-sm" data-i18n="createAccount" href="/auth.html?mode=register">CREATE ACCOUNT</a>
+<div class="gs-language-slot" data-language-slot="true"></div></div>
+</header>
+<main>
+<section class="home-hero">
+<div class="home-hero-copy">
+<span class="home-eyebrow" data-i18n="communityEyebrow">COMMUNITY DRAFTS · COMPETITIVE EVENTS</span>
+<h1><span data-i18n="onePlaceTo">ONE PLACE TO</span><br/><em data-i18n="draftCompete">DRAFT, COMPETE</em><br/><span data-i18n="runEvents">AND RUN EVENTS.</span></h1>
+<p data-i18n="homeHeroDesc">Build a custom pick-ban room for fun, join a public tournament as a player or Captain, or import an externally listed event and run it with full Tournament Operations.</p>
+<div class="home-hero-actions">
+<a class="btn btn-primary btn-lg" data-i18n="startQuickDraft" href="/quick-draft.html">START A QUICK DRAFT</a>
+<a class="btn btn-ghost btn-lg" data-i18n="findTournament" href="#tournaments">FIND A TOURNAMENT</a>
+</div>
+<div class="home-role-strip">
+<span><img alt="Damage" data-i18n-alt="damage" src="assets/roles/damage.png"/><span data-i18n="roleDamageCount">2 DAMAGE</span></span>
+<span><img alt="Tank" data-i18n-alt="tank" src="assets/roles/tank.png"/><span data-i18n="roleTankCount">1 TANK</span></span>
+<span><img alt="Technical" data-i18n-alt="technical" src="assets/roles/technical.png"/><span data-i18n="roleTechCount">1 TECHNICAL</span></span>
+</div>
+</div>
+<div aria-hidden="true" class="home-hero-visual">
+<div class="home-orbit orbit-one"></div><div class="home-orbit orbit-two"></div>
+<div class="home-core"><span data-no-i18n="true">RV</span><small data-i18n="draftHub">DRAFT HUB</small></div>
+<div class="home-float-card one"><b data-i18n="fearless">FEARLESS</b><small data-i18n="fearlessDesc">Series-ready draft rules</small></div>
+<div class="home-float-card two"><b data-i18n="liveOps">LIVE OPS</b><small data-i18n="liveOpsDesc">Bracket · results · chat</small></div>
+<div class="home-float-card three"><b data-i18n="quickDraftCaps">QUICK DRAFT</b><small data-i18n="quickShare">Create and share instantly</small></div>
+</div>
+</section>
+<section class="home-paths">
+<article><span class="path-number">01</span><h2 data-i18n="playForFun">PLAY FOR FUN</h2><p data-i18n="playForFunDesc">Create a custom room, set bans, timers, Mirror Pick and Divine Draw, then share the room with friends.</p><a data-i18n="openQuickDraft" href="/quick-draft.html">OPEN QUICK DRAFT →</a></article>
+<article><span class="path-number">02</span><h2 data-i18n="joinCompetition">JOIN THE COMPETITION</h2><p data-i18n="joinCompetitionDesc">One normal account can become a player or Captain when a Host invites or links you to a tournament team.</p><a data-i18n="browseEvents" href="#tournaments">BROWSE EVENTS →</a></article>
+<article><span class="path-number">03</span><h2 data-i18n="organizeEvent">ORGANIZE AN EVENT</h2><p data-i18n="organizeDesc">Use the same account, paste a supported start.gg, Tonamel or Challonge tournament link, then manage that event as its Owner.</p><a data-i18n="importTournament" href="/host-apply.html">IMPORT TOURNAMENT →</a></article>
+</section>
+<section class="home-section" id="tournaments">
+<div class="home-section-head"><div><span class="home-eyebrow" data-i18n="publicEvents">PUBLIC EVENTS</span><h2 data-i18n="tournamentsCaps">TOURNAMENTS</h2></div><button class="btn btn-ghost btn-sm" data-i18n="refresh" id="refresh-events">↻ REFRESH</button></div>
+<div class="home-event-filters" id="event-filters"><button class="active" data-filter="all" data-i18n="all">ALL</button><button data-filter="live" data-i18n="live">LIVE</button><button data-filter="upcoming" data-i18n="upcoming">UPCOMING</button><button data-filter="completed" data-i18n="completed">COMPLETED</button></div>
+<div class="home-event-grid" id="home-events"><div class="home-event-empty" data-i18n="loadingTournaments">Loading public tournaments…</div></div>
+</section>
+<section class="home-how">
+<div><span class="home-eyebrow" data-i18n="oneAccountPaths">ONE ACCOUNT, DIFFERENT PATHS</span><h2 data-i18n="howAccessWorks">HOW ACCESS WORKS</h2></div>
+<div class="home-how-grid">
+<article><b data-i18n="normalAccount">NORMAL ACCOUNT</b><p data-i18n="normalAccountDesc">Quick Draft, public events, tournament invitations, player and Captain access.</p></article>
+<article><b data-i18n="externalEventLink">EXTERNAL EVENT LINK</b><p data-i18n="externalLinkDesc">Paste a supported tournament URL. No separate Host account and no approval queue are required.</p></article>
+<article><b data-i18n="perEventOwnership">PER-EVENT OWNERSHIP</b><p data-i18n="perEventDesc">The importing account owns only that event. Captain, referee and broadcaster permissions remain assigned per tournament.</p></article>
+</div>
+</section>
+</main>
+<footer class="home-footer"><div><span data-i18n="hubBrandFull">RENDEZVU ARENA</span><span data-i18n="hubFooter">Draft rooms · Tournament operations · Public brackets</span></div><nav class="home-legal-links" data-no-i18n="true"><a href="/copyright">Copyright &amp; Removal</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><p class="home-disclaimer" data-no-i18n="true">RendezVu Arena is an independent community tool compatible with DRAGON BALL GEKISHIN SQUADRA. It is not affiliated with, sponsored by, or endorsed by Bandai Namco Entertainment, Shueisha, BIRD STUDIO, or Toei Animation.</p></footer>
+<script src="js/home.js?v=0.6.48-account-dropdown" type="module"></script>
+<script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
+</body>
+</html>

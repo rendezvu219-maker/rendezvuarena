@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="pageTitleHeroes">RendezVu Arena — Heroes &amp; Divine Card Builds</title>
+<meta content="Browse community reference data, draft roles, skill details, and card-build presets in RendezVu Arena." name="description"/>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/content.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body class="heroes-page">
+<header class="content-nav">
+<a class="content-brand" href="/"><span class="content-brand-mark" data-no-i18n="true">RV</span><span><b data-no-i18n="true">RENDEZVU</b><small data-i18n="heroDatabase">HERO DATABASE</small></span></a>
+<nav><a data-i18n="home" href="/">Home</a><a class="active" data-i18n="heroes" href="/heroes.html">Heroes</a><a data-i18n="quickDraft" href="/quick-draft.html">Quick Draft</a><a data-i18n="tournamentOps" href="/dashboard.html">Tournament Ops</a></nav>
+<div class="content-account" id="heroes-account"><a class="btn btn-ghost btn-sm" data-i18n="login" href="/auth.html">LOG IN</a><div class="gs-language-slot" data-language-slot="true"></div></div>
+</header>
+<main class="heroes-shell">
+<section class="heroes-intro">
+<div><span class="content-kicker" data-i18n="heroRoster">39-HERO ROSTER</span><h1 data-i18n="heroBuilds">HEROES &amp; DIVINE CARD BUILDS</h1><p data-i18n="heroesIntro">Browse official hero data, compare skills, and view reusable three-card build presets. Only the platform Admin can catalog cards or change builds.</p></div>
+<button class="btn btn-primary hidden" data-i18n="manageDivine" id="open-build-admin" type="button">MANAGE DIVINE CARDS</button>
+</section>
+<section class="heroes-browser">
+<aside class="hero-roster-panel">
+<div class="hero-roster-tools">
+<label><span class="sr-only" data-i18n="searchHeroes">Search heroes</span><input data-i18n-placeholder="searchHero" id="hero-search" placeholder="Search hero name…" type="search"/></label>
+<div class="hero-role-filters" id="hero-role-filters">
+<button class="active" data-i18n="all" data-role="all" type="button">All</button>
+<button data-i18n="damage" data-role="Damage" type="button">Damage</button>
+<button data-i18n="tank" data-role="Tank" type="button">Tank</button>
+<button data-i18n="technical" data-role="Technical" type="button">Technical</button>
+</div>
+</div>
+<div aria-live="polite" class="hero-roster-list" id="hero-roster-list"></div>
+</aside>
+<article class="hero-detail-panel" id="hero-detail-panel">
+<div class="loading-state"><span class="loading-spinner"></span><p data-i18n="loadingHero">Loading hero data…</p></div>
+</article>
+</section>
+<section class="divine-library-section">
+<div class="section-heading"><div><span class="content-kicker" data-i18n="cardLibrary">CARD LIBRARY</span><h2 data-i18n="divineCards">DIVINE CARDS</h2><p data-i18n="libraryHelp">Hover or focus a card to view its full effect and activation conditions. Cards can be reused across presets and heroes.</p></div></div>
+<div class="divine-public-library" id="divine-public-library"><div class="empty-state"><p data-i18n="cardsNotCataloged">Card names and Slot pools have not been cataloged yet.</p></div></div>
+</section>
+</main>
+<div class="build-admin-backdrop hidden" id="build-admin-backdrop"></div>
+<aside aria-hidden="true" aria-label="Divine Card administration" class="build-admin-drawer hidden" data-i18n-aria-label="divineAdminAria" id="build-admin-drawer">
+<header class="build-admin-head"><div><span class="content-kicker" data-i18n="adminOnly">ADMIN ONLY</span><h2 data-i18n="divineManager">DIVINE CARD BUILD MANAGER</h2></div><button class="btn btn-ghost btn-sm" data-i18n="close" id="close-build-admin" type="button">CLOSE</button></header>
+<div class="build-admin-tabs" role="tablist">
+<button class="active" data-admin-tab="catalog" data-i18n="cardCatalog" type="button">Card Catalog</button>
+<button data-admin-tab="presets" data-i18n="buildPresets" type="button">Build Presets</button>
+<button data-admin-tab="assign" data-i18n="assignHeroes" type="button">Assign to Heroes</button>
+</div>
+<div class="build-admin-content">
+<section class="admin-pane active" data-admin-pane="catalog">
+<div class="admin-pane-head"><div><h3 data-i18n="catalog18">Catalog the 18 card images</h3><p data-i18n="catalogDesc">Each card keeps a clean display name, Effect, Note, type, and fixed Slot pool. Raw image filenames are never shown in the interface.</p></div><button class="btn btn-ghost btn-sm" data-i18n="addCardImage" id="toggle-card-upload" type="button">ADD CARD IMAGE</button></div>
+<form class="card-upload-form hidden" id="card-upload-form">
+<label><span data-i18n="pngImage">PNG image</span><input accept="image/png" name="image" required="" type="file"/></label>
+<label><span data-i18n="cardName">Card name</span><input maxlength="120" name="name" type="text"/></label>
+<label><span data-i18n="slotPool">Slot pool</span><select name="slotPool"><option data-i18n="unassignedLabel" value="">Unassigned</option><option data-i18n="slot1" value="1">Slot 1</option><option data-i18n="slot2" value="2">Slot 2</option><option data-i18n="slot3" value="3">Slot 3</option></select></label>
+<label><span data-i18n="cardType">Card type</span><select name="cardType"><option data-i18n="unassignedLabel" value="">Unassigned</option><option data-i18n="attackRed" value="attack">Attack · Red</option><option data-i18n="defenseGreen" value="defense">Defense · Green</option><option data-i18n="technicalBlue" value="technical">Technical · Blue</option></select></label>
+<label class="wide"><span data-i18n="effect">Effect</span><textarea maxlength="3000" name="effect" rows="3"></textarea></label>
+<label class="wide"><span data-i18n="noteActivation">Note / activation condition</span><textarea maxlength="3000" name="note" rows="3"></textarea></label>
+<div class="wide form-actions"><button class="btn btn-primary" data-i18n="uploadCard" type="submit">UPLOAD CARD</button><span class="form-message" data-upload-message=""></span></div>
+</form>
+<div class="card-catalog-grid" id="card-catalog-grid"></div>
+</section>
+<section class="admin-pane" data-admin-pane="presets">
+<div class="preset-admin-layout">
+<aside class="preset-list-panel"><div class="preset-list-head"><h3 data-i18n="presetsLabel">Presets</h3><button class="btn btn-primary btn-sm" data-i18n="newPreset" id="new-preset" type="button">NEW PRESET</button></div><div class="preset-admin-list" id="preset-admin-list"></div></aside>
+<form class="preset-builder" id="preset-builder">
+<input name="presetId" type="hidden"/>
+<div class="preset-builder-fields">
+<label><span data-i18n="presetName">Preset name</span><input maxlength="140" name="name" data-i18n-placeholder="presetNameFrontlineExample" placeholder="e.g. Frontline sustain" required=""/></label>
+<label><span data-i18n="useCase">Use case / matchup</span><input maxlength="180" name="scenario" data-i18n-placeholder="presetScenarioExample" placeholder="e.g. Default, vs Tanks, anti-burst"/></label>
+<label><span data-i18n="gaugeCapacity">Card gauge capacity</span><input max="100000" min="1" name="energyThreshold" required="" type="number" value="100"/></label>
+<label><span data-i18n="gaugeRate">Gauge gain rate</span><input max="1000" min="0.01" name="energyRate" required="" step="0.01" type="number" value="1"/></label>
+<label class="wide"><span data-i18n="description">Description</span><textarea maxlength="3000" name="description" rows="3"></textarea></label>
+</div>
+<div class="preset-builder-help"><b data-i18n="coreCardsLabel">Cards 1–3:</b><span data-i18n="coreCardsDesc">the required core loadout.</span><b data-i18n="situationALabel">Cards 4–6:</b><span data-i18n="situationADesc">optional situation set A.</span><b data-i18n="situationBLabel">Cards 7–9:</b><span data-i18n="situationBLong">optional situation set B. Each option stays tied to its Slot: Cards 4/7 replace Card 1, Cards 5/8 replace Card 2, and Cards 6/9 replace Card 3. You may leave any option empty. At a full gauge, change exactly one Slot, then the gauge resets to 0.</span></div>
+<div aria-live="polite" class="preset-card-inspector" id="preset-card-inspector"></div>
+<div class="preset-game-board" id="preset-game-board"></div>
+<div class="form-actions"><button class="btn btn-primary" data-i18n="savePreset" type="submit">SAVE PRESET</button><button class="btn btn-danger hidden" data-i18n="deletePreset" id="delete-preset" type="button">DELETE PRESET</button><span class="form-message" data-preset-message=""></span></div>
+</form>
+</div>
+</section>
+<section class="admin-pane" data-admin-pane="assign">
+<div class="assignment-layout">
+<div class="assignment-controls">
+<label><span data-i18n="buildPreset">Build preset</span><select id="assignment-preset"></select></label>
+<label class="check-row"><input id="assignment-default" type="checkbox"/><span data-i18n="makeDefault">Make this the default preset for selected heroes</span></label>
+<div class="assignment-actions"><button class="btn btn-primary" data-i18n="assignSelected" id="assign-preset" type="button">ASSIGN TO SELECTED</button><button class="btn btn-danger" data-i18n="removeSelected" id="unassign-preset" type="button">REMOVE FROM SELECTED</button></div>
+<p class="assignment-note" data-i18n="liveReferenceDesc">A preset is a live shared reference. Editing it updates every assigned hero. Use the REMOVE button on an assigned hero to detach a mistaken build immediately, or select several heroes and use REMOVE FROM SELECTED.</p>
+<span class="form-message" id="assignment-message"></span>
+</div>
+<div class="assignment-heroes">
+<div class="assignment-hero-head"><div><h3 data-i18n="selectHeroes">Select heroes</h3><small data-i18n="heroesShown" id="assignment-visible-count">39 HEROES SHOWN</small></div><div><button class="btn btn-ghost btn-xs" data-i18n="selectAssigned" id="select-assigned-heroes" type="button">SELECT ASSIGNED</button><button class="btn btn-ghost btn-xs" data-i18n="selectShown" id="select-all-heroes" type="button">SELECT SHOWN</button><button class="btn btn-ghost btn-xs" data-i18n="clear" id="clear-all-heroes" type="button">CLEAR</button></div></div>
+<div class="assignment-filterbar">
+<label><span class="sr-only" data-i18n="searchAssign">Search heroes to assign</span><input id="assignment-hero-search" data-i18n-placeholder="searchHeroNameId" placeholder="Search hero name or ID…" type="search"/></label>
+<div class="assignment-role-filters" id="assignment-role-filters">
+<button class="active" data-assignment-role="all" data-i18n="all" type="button">All</button>
+<button data-assignment-role="Damage" data-i18n="damage" type="button">Damage</button>
+<button data-assignment-role="Tank" data-i18n="tank" type="button">Tank</button>
+<button data-assignment-role="Technical" data-i18n="technical" type="button">Technical</button>
+</div>
+</div>
+<div class="assignment-hero-grid" id="assignment-hero-grid"></div>
+</div>
+</div>
+</section>
+</div>
+</aside>
+<script src="js/heroes-page.js?v=0.6.48-account-dropdown" type="module"></script>
+</body>
+</html>

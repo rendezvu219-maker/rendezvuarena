@@ -1,0 +1,58 @@
+[[IMG:Especialista]]
+Goku Oscuro
+Goku Oscuro
+Dificultad
+Un héroe oscuro que combate generando áreas ventajosas para sí mismo.
+¡Debilita al enemigo, restringe su movimiento y toma el control del frente de combate creando tu zona ideal!
+Daño instantáneo
+Daño sostenido
+Área de ataque
+Asistencia
+Movilidad
+Resistencia a ataques de onda de ki
+Resistencia a ataques de impacto
+Técnica
+Pasiva
+[[IMG:passive1]]
+Arremetida
+[[IMG:rush_attack1]]
+Técnica
+[[IMG:skill1]]
+[[IMG:skill2]]
+[[IMG:skill3]]
+Técnica especial
+[[IMG:super_attack1]]
+[[IMG:PASIVA]]
+Camino para ser un Dios
+Capacidad de fortalecerse al estar dentro de áreas específicas.
+Cuando se encuentra dentro un área de sanación o que otorga cambios de estado creada por alguna técnica suya o de héroes aliados, reduce el tiempo de recarga de sus propias técnicas no especiales cada cierto tiempo.
+[[IMG:passive1]]
+[[IMG:ARREMETIDA]]
+Dispara balas de ki.
+Si se encuentra dentro de un área que generó él mismo, se convierte en ataque reforzado y aumenta el número de ataques.
+[[IMG:TÉCNICA]]
+Kamehameha Oscuro
+Lanza una explosión de ki en la dirección deseada.
+Otorga Movimiento acelerado a los aliados impactados e inflige Movimiento ralentizado y Alta presión a los enemigos impactados.
+Después de activar la técnica, genera un área que otorga Movimiento acelerado a sí mismo y a héroes aliados e inflige Movimiento ralentizado y Alta presión a los enemigos.
+Cuanto mayor sea la cantidad de daño recibido mientras se encuentra en el área, más corta será la duración del área.
+[[IMG:TÉCNICA]]
+Ruptura Oscura
+Se lanza a la carrera en la dirección deseada y ejecuta un ataque que lanza ki a su alrededor.
+Al mismo tiempo, genera un área que otorga Defensas + a sí mismo y a héroes aliados e inflige Defensas - a los enemigos.
+Cuantos más aliados y enemigos afectados haya, más se va expandiendo el área gradualmente.
+Cuanto mayor sea la cantidad de daño recibido mientras se encuentra en el área, más corta será la duración del área.
+[[IMG:TÉCNICA]]
+Enlace Oscuro
+Envuelve con una explosión de ki a los enemigos en la dirección deseada y los desplaza forzosamente en la dirección introducida.
+Cuando se encuentra dentro de un área que él mismo generó, otorga Inmunidad total a sí mismo.
+Cuando el enemigo que esté atacando se encuentra en el área que él mismo generó, prolonga la duración del área.
+Al concluir el desplazamiento forzoso, si el enemigo que esté atacando se encuentra dentro del área que él mismo generó, esta explotará y se agregará un efecto que aturde a los enemigos impactados y les inflige daño adicional.
+El área que explotó desaparecerá, con excepción de la generada por medio de Bola de Poder Oscuro.
+Es posible desplazarse durante el desplazamiento forzoso.
+[[IMG:TÉCNICA ESPECIAL]]
+Bola de Poder Oscuro
+Arroja balas de ki a la posición deseada.
+Al mismo tiempo que impactan las balas, genera un área que inflige Reducción de vida base y armadura a los enemigos.
+*Las aptitudes indicadas son las aptitudes al momento del lanzamiento del héroe.
+[[IMG:SELECCIÓN DE HÉROE]]

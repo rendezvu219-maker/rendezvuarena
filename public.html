@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="pageTitlePublic">RendezVu Arena — Public Bracket</title>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/dashboard.css" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body>
+<div class="ops-shell public-shell">
+<header class="ops-topbar">
+<div><div class="ops-kicker">GEKISHIN SQUADRA</div><h1 data-i18n="publicBracket">PUBLIC TOURNAMENT BRACKET</h1></div>
+<div class="ops-top-actions"><a class="btn btn-ghost btn-sm" data-i18n="home" href="/">Home</a><a class="btn btn-ghost btn-sm" data-i18n="playerPortalLink" href="/portal.html">Player &amp; Captain Portal</a></div>
+<div class="gs-language-slot" data-language-slot="true"></div></header>
+<main class="ops-main">
+<section class="ops-empty" data-i18n="loadingPublic" id="public-loading">Loading public tournament data…</section>
+<section class="hidden" id="public-content">
+<div class="public-hero">
+<div><div class="ops-kicker" id="public-status"></div><h2 id="public-name"></h2><p id="public-description"></p><div class="ops-list-meta" id="public-time"></div><div id="public-source" style="margin-top:10px"></div></div>
+<div id="public-stream"></div>
+</div>
+<div id="public-groups"></div>
+<div class="ops-section">
+<div class="ops-section-header"><div><h3 data-i18n="bracketMatches">Bracket &amp; Matches</h3><div class="ops-list-meta" data-i18n="publicInfoDesc">Public information only. Room codes, staff notes, evidence and private data are never included.</div></div><div class="ops-toolbar"><input data-i18n-placeholder="searchTeam" id="public-search" placeholder="Search team"/><button class="btn btn-ghost btn-sm" data-i18n="fit" id="public-fit">FIT</button><button class="btn btn-ghost btn-sm" data-i18n="fullscreen" id="public-fullscreen">FULLSCREEN</button></div></div>
+<div class="ops-bracket-viewport" id="public-bracket-viewport"><div class="ops-bracket-canvas" id="public-bracket"></div></div>
+</div>
+</section>
+<section class="ops-empty hidden" id="public-error"></section>
+</main>
+</div>
+<script src="js/public.js" type="module"></script>
+<script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
+</body>
+</html>

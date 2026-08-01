@@ -1,0 +1,414 @@
+{
+  "source": "Untitled spreadsheet.xlsx",
+  "version": 1,
+  "description": "User-provided Divine Card recommendations by hero. Slash-separated values represent situational alternatives within the same Slot.",
+  "heroes": [
+    {
+      "heroId": "0006",
+      "sourceName": "Android 18",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "GS/Barrier",
+        "3": "Defense Step"
+      },
+      "heroName": "Android 18"
+    },
+    {
+      "heroId": "0010",
+      "sourceName": "Baby",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Baby (Young Body)"
+    },
+    {
+      "heroId": "0019",
+      "sourceName": "Android 17",
+      "role": "Technical",
+      "slots": {
+        "1": "Buildup/Blue Card",
+        "2": "Art of Decoy",
+        "3": "Defense Step/LBJ"
+      },
+      "heroName": "Android 17"
+    },
+    {
+      "heroId": "0015",
+      "sourceName": "Boujack",
+      "role": "Damage",
+      "slots": {
+        "1": "Snowball",
+        "2": "Barrier",
+        "3": "Defense Step/Backstab"
+      },
+      "heroName": "Full Power Bojack"
+    },
+    {
+      "heroId": "0030",
+      "sourceName": "Bardock (SSJ)",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan Bardock"
+    },
+    {
+      "heroId": "0011",
+      "sourceName": "Frieza (First Form)",
+      "role": "Technical",
+      "slots": {
+        "1": "Snowball/Buildup/Gekishin High",
+        "2": "Giant Slayer/Boss Hunter",
+        "3": "Defense Step"
+      },
+      "heroName": "Frieza (First Form)"
+    },
+    {
+      "heroId": "0028",
+      "sourceName": "Broly (LSSJ)",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card",
+        "3": "Defense Step"
+      },
+      "heroName": "Legendary Super Saiyan Broly"
+    },
+    {
+      "heroId": "0037",
+      "sourceName": "Bulma (Youth)",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Bulma (Youth)"
+    },
+    {
+      "heroId": "0035",
+      "sourceName": "Frieza (Fourth Form)",
+      "role": "Technical",
+      "slots": {
+        "1": "Snowball/Buildup",
+        "2": "Red Card/Barrier/Art of Decoy",
+        "3": "Defense Step/LBJ"
+      },
+      "heroName": "Frieza (Fourth Form)"
+    },
+    {
+      "heroId": "0012",
+      "sourceName": "Dabura",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card/Green Card",
+        "3": "Pursuer/Defense Step"
+      },
+      "heroName": "Dabura"
+    },
+    {
+      "heroId": "0016",
+      "sourceName": "Caulilfa",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan 2 Caulifla"
+    },
+    {
+      "heroId": "0009",
+      "sourceName": "Gohan (Kid)",
+      "role": "Technical",
+      "slots": {
+        "1": "Buildup",
+        "2": "Green Card/Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Son Gohan (Kid)"
+    },
+    {
+      "heroId": "0022",
+      "sourceName": "Gammas",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card",
+        "3": "Pursuer/Defense Step"
+      },
+      "heroName": "Gamma 1 & Gamma 2"
+    },
+    {
+      "heroId": "0018",
+      "sourceName": "Cell",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Cell (Perfect Form)"
+    },
+    {
+      "heroId": "0027",
+      "sourceName": "Gohan (Ultimate)",
+      "role": "Technical",
+      "slots": {
+        "1": "Build Up",
+        "2": "Green Card/Art of Decoy",
+        "3": "Defense Step/LBJ"
+      },
+      "heroName": "Ultimate Gohan"
+    },
+    {
+      "heroId": "0017",
+      "sourceName": "Goku (Mini)",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card/Art of Decoy",
+        "3": "Pursuer/Defense Step"
+      },
+      "heroName": "Son Goku (Mini)"
+    },
+    {
+      "heroId": "0013",
+      "sourceName": "Cooler",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Giant Slayer",
+        "3": "Defense Step"
+      },
+      "heroName": "Cooler (Final Form)"
+    },
+    {
+      "heroId": "0024",
+      "sourceName": "Gotenks",
+      "role": "Technical",
+      "slots": {
+        "1": "Snowball/Buildup",
+        "2": "Red Card/Green Card/Art of Decoy",
+        "3": "Defense Step/Backstab"
+      },
+      "heroName": "Super Saiyan Gotenks"
+    },
+    {
+      "heroId": "0032",
+      "sourceName": "Goku (SSG)",
+      "role": "Damage",
+      "slots": {
+        "1": "Snowball/Strat",
+        "2": "Giant Slayer/Barrier",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan God Son Goku"
+    },
+    {
+      "heroId": "0033",
+      "sourceName": "Vegeta (SSG)",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan God Vegeta"
+    },
+    {
+      "heroId": "0020",
+      "sourceName": "Hit",
+      "role": "Technical",
+      "slots": {
+        "1": "Snowball/Blue Card",
+        "2": "Barrier",
+        "3": "Defense Step/Blue Card"
+      },
+      "heroName": "Hit"
+    },
+    {
+      "heroId": "0001",
+      "sourceName": "Goku (SSJ1)",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup/Strat",
+        "2": "Red Card/Boss Hunter",
+        "3": "Defense Step/Backstab"
+      },
+      "heroName": "Super Saiyan Son Goku"
+    },
+    {
+      "heroId": "0002",
+      "sourceName": "Vegeta (SSJ1)",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan Vegeta"
+    },
+    {
+      "heroId": "0003",
+      "sourceName": "Krillin",
+      "role": "Technical",
+      "slots": {
+        "1": "Snowball/Buildup/Blue Card",
+        "2": "Any",
+        "3": "Pursuer/Defense Step/Blue"
+      },
+      "heroName": "Krillin"
+    },
+    {
+      "heroId": "0023",
+      "sourceName": "Goku (SSJ3)",
+      "role": "Damage",
+      "slots": {
+        "1": "Snowball",
+        "2": "Red Card/Barrier",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan 3 Son Goku"
+    },
+    {
+      "heroId": "0026",
+      "sourceName": "Vegeta (SSJ4)",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan 4 Vegeta"
+    },
+    {
+      "heroId": "0007",
+      "sourceName": "Majin Buu (Good)",
+      "role": "Technical",
+      "slots": {
+        "1": "Buildup",
+        "2": "Green Card/Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Majin Buu (Good)"
+    },
+    {
+      "heroId": "0036",
+      "sourceName": "Goku (Youth)",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card",
+        "3": "Defense Step"
+      },
+      "heroName": "Son Goku (Youth)"
+    },
+    {
+      "heroId": "0008",
+      "sourceName": "Zamasu",
+      "role": "Tank",
+      "slots": {
+        "1": "Buildup",
+        "2": "Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Zamasu"
+    },
+    {
+      "heroId": "0034",
+      "sourceName": "Majin Buu (Pure)",
+      "role": "Technical",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card/Green Card/Art of Decoy",
+        "3": "Defense Step"
+      },
+      "heroName": "Majin Buu (Pure)"
+    },
+    {
+      "heroId": "0021",
+      "sourceName": "Kale",
+      "role": "Damage",
+      "slots": {
+        "1": "Snowball/Build Up",
+        "2": "Red Card/Barrier",
+        "3": "Defense Step/LBJ"
+      },
+      "heroName": "Super Saiyan Kale (Berserk)"
+    },
+    {
+      "heroId": "0031",
+      "sourceName": "Kefla (SSJ2)",
+      "role": "Damage",
+      "slots": {
+        "1": "Snowball/Build Up",
+        "2": "Red Card",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan 2 Kefla"
+    },
+    {
+      "heroId": "0005",
+      "sourceName": "Piccalo",
+      "role": "Damage",
+      "slots": {
+        "1": "Snowball",
+        "2": "Barrier",
+        "3": "Defense Step/Backstab"
+      },
+      "heroName": "Piccolo"
+    },
+    {
+      "heroId": "0025",
+      "sourceName": "Toppo",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card/Green Card",
+        "3": "Pursuer/Defense Step"
+      },
+      "heroName": "God of Destruction Toppo"
+    },
+    {
+      "heroId": "0004",
+      "sourceName": "Trunks",
+      "role": "Damage",
+      "slots": {
+        "1": "Snowball/Build Up",
+        "2": "Red Card/Barrier",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Saiyan Trunks (Teen)"
+    },
+    {
+      "heroId": "0014",
+      "sourceName": "Uub",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card",
+        "3": "Wicked Warrior/Defense Step"
+      },
+      "heroName": "Super Uub"
+    },
+    {
+      "heroId": "0029",
+      "sourceName": "Vegito (SSJ)",
+      "role": "Damage",
+      "slots": {
+        "1": "Buildup",
+        "2": "Red Card",
+        "3": "Defense Step"
+      },
+      "heroName": "Super Vegito"
+    }
+  ]
+}

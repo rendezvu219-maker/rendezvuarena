@@ -1,0 +1,334 @@
+히어로명 | DRAGON BALL GEKISHIN SQUADRA | 반다이남코 엔터테인먼트 공식 사이트
+
+[[IMG:DRAGON BALL GEKISHIN SQUADRA]]
+
+[[IMG:뉴스]]
+
+[[IMG:뉴스]]
+
+[[IMG:GEKISHIN SQUADRA 정보]]
+
+[[IMG:GEKISHIN SQUADRA 정보]]
+
+[[IMG:플레이 방법]]
+
+[[IMG:플레이 방법]]
+
+[[IMG:히어로 목록]]
+
+[[IMG:히어로 목록]]
+
+[[IMG:시리얼 코드]]
+
+[[IMG:시리얼 코드]]
+
+[[IMG:스펙]]
+
+[[IMG:스펙]]
+
+KR
+
+日本語
+
+ENGLISH（NA）
+
+ENGLISH（EUW）
+
+FRANÇAIS
+
+DEUTSCH
+
+繁體中文
+
+簡體中文
+
+한국어
+
+ESPAÑOL
+
+PORTUGUÊS
+
+KR
+
+日本語
+
+ENGLISH（NA）
+
+ENGLISH（EUW）
+
+FRANÇAIS
+
+DEUTSCH
+
+繁體中文
+
+簡體中文
+
+한국어
+
+ESPAÑOL
+
+PORTUGUÊS
+
+[[IMG:CLOSE]]
+
+[[IMG:MENU]]
+
+[[IMG:히어로 목록]]
+
+[[IMG:대미지 딜러]]
+
+풀 파워
+보자크
+
+풀 파워 보자크
+
+난이도
+
+강력한 기탄과 폭격으로 전장을 제압하는 집단 전투 특화형 히어로.
+
+네 명의 부하를 이끌고 집중포화를 퍼부으면 은하계에 더 이상 적은 없을 겁니다!
+
+순간 화력
+
+지속 화력
+
+공격 범위
+
+보조
+
+기동력
+
+기공파 내구성
+
+타격 내구성
+
+기술
+
+패시브
+
+[[IMG:passive1]]
+
+러시 공격
+
+[[IMG:rush_attack1]]
+
+기술
+
+[[IMG:skill1]]
+
+[[IMG:skill2]]
+
+[[IMG:skill3]]
+
+필살기
+
+[[IMG:super_attack1]]
+
+변신
+
+[[IMG:transformation1]]
+
+패시브
+
+[[IMG:passive1]]
+
+러시 공격
+
+[[IMG:rush_attack1]]
+
+기술
+
+[[IMG:skill1]]
+
+[[IMG:skill2]]
+
+[[IMG:skill3]]
+
+[[IMG:PASSIVE]]
+
+은하에서 온 자객
+
+기술로 DMG를 가한 적 히어로에게 러시 공격이 명중하면 부하의 추가 공격이 발생한다.
+
+[[IMG:RUSH ATTACK]]
+
+[[IMG:SKILL]]
+
+갤럭틱 버스터
+
+기탄 2개를 발사하며, 착탄 시 폭파한다.
+
+[[IMG:SKILL]]
+
+코즈믹 블룸
+
+기탄을 흩뿌린다.
+적・아군 히어로의 기공파 공격에 맞거나 일정 시간이 경과하면 폭발한다.
+발동 중 이동 및 방향 조작이 가능하다.
+
+[[IMG:SKILL]]
+
+사이코 스레드
+
+부하들을 불러내 기의 실을 펼친다.
+구역 내의 적에게 대미지 및 "이동 속도 감소"를 부여한다.
+부하는 공격을 받으면 퇴각하지만, 기술 레벨이 상승하면 부하 수가 증가하고 "지속 대미지"를 부여한 후 남은 부하 수만큼 추가로 폭발이 발생한다.
+
+[[IMG:SUPER ATTACK]]
+
+기가 그랜드 스매셔
+
+부하들을 불러내 기공파 5개를 발사.
+발동 시간이 경과하면 기공파가 중앙으로 모인다.
+
+[[IMG:TRANSFORMATION]]
+
+풀 파워
+
+레벨 7 이상이면 변신 가능.
+"은하에서 온 자객"으로 가하는 부하의 추가 공격 DMG가 상승한다.
+
+[[IMG:transformation1]]
+
+필살기
+
+[[IMG:super_attack1]]
+
+변신
+
+[[IMG:transformation1]]
+
+※기재된 성능은 히어로 등장일 시점의 성능입니다.
+최신 버전과 성능이 다를 수 있으니, 자세한 내용은 게임 내에서 확인해 주시기 바랍니다.
+
+[[IMG:HERO SELECT]]
+
+오공 블랙
+
+비루스
+
+초사이어인
+손오공
+
+초사이어인
+베지터
+
+크리링
+
+초사이어인
+트랭크스: 청년기
+
+피콜로
+
+인조인간 18호
+
+마인 부우: 선
+
+자마스
+
+손오반: 유년기
+
+베이비: 소년체
+
+프리저: 1차 형태
+
+데브라
+
+쿠우라: 최종 형태
+
+슈퍼 우부
+
+풀 파워
+보자크
+
+초사이어인 2
+카리프라
+
+손오공 (미니)
+
+셀: 완전체
+
+인조인간 17호
+
+히트
+
+초사이어인
+케일: 폭주
+
+감마 1호 &
+감마 2호
+
+초사이어인 3
+손오공
+
+초사이어인
+오천크스
+
+파괴신 톳포
+
+초사이어인 4
+베지터
+
+얼티밋 손오반
+
+전설의 초사이어인
+브로리
+
+초베지트
+
+초사이어인 버독
+
+초사이어인 2
+케프라
+
+초사이어인 갓
+손오공
+
+초사이어인 갓
+베지터
+
+마인 부우: 순수
+
+프리저: 최종 형태
+
+손오공: 소년기
+
+부르마: 소녀기
+
+[[IMG:BACK TO LIST]]
+
+[[IMG:BACK TO LIST]]
+
+[[IMG:DRAGON BALL GEKISHIN SQUADRA]]
+
+[[IMG:OFFICIAL X]]
+
+[[IMG:OFFICIAL Discord]]
+
+[[IMG:OFFICIAL Facebook]]
+
+[[IMG:OFFICIAL Instagram]]
+
+[[IMG:확률정보]]
+
+[[IMG:DRAGON BALL Z DOKKAN BATTLE]]
+
+[[IMG:DRAGON BALL LEGENDS]]
+
+©BIRD STUDIO/SHUEISHA, TOEI ANIMATION
+©Bandai Namco Entertainment Inc.
+
+※Apple, Apple 로고, App Store는 미국과 그 밖의 다른 나라 및 지역에 등록된 Apple Inc.의 상표입니다.
+
+※Google Play는 Google LLC의 상표입니다.
+
+※©2026 Sony Interactive Entertainment LLC. "PlayStation Family Mark",  "PlayStation",  "PS5 Logo", "PS5", "PS4 Logo", as well as "PS4" are registered trademarks or  trademarks of Sony Interactive Entertainment Inc.
+
+※Nintendo Switch is a trademark of Nintendo.
+
+※©2026 Valve Corporation. Steam과 Steam 로고는 미국 및 기타 국가에서 등록된  Valve Corporation의 상표 또는 등록 상표입니다.
+
+[[IMG:PAGE TOP]]
+
+[[IMG:12세이용가]]

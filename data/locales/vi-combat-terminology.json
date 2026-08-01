@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "locale": "vi",
+  "status": "user-approved",
+  "policy": "Giữ nguyên thuật ngữ Ki của Dragon Ball và tách rõ hai nhóm sát thương Vật Lý/Ki.",
+  "damageTypes": {
+    "physical": {
+      "damage": "Sát Thương Vật Lý",
+      "defense": "Phòng Ngự Vật Lý",
+      "description": "Đòn cận chiến, thể thuật và các đòn thuộc nhóm Strike/Physical.",
+      "resistanceLabel": "KHÁNG VẬT LÝ"
+    },
+    "ki": {
+      "damage": "Sát Thương Ki",
+      "defense": "Phòng Ngự Ki",
+      "projectile": "đạn Ki",
+      "beam": "luồng Ki",
+      "description": "Đòn sử dụng Ki, gồm đạn, tia, sóng và các công kích năng lượng chiến đấu.",
+      "resistanceLabel": "KHÁNG KI"
+    }
+  },
+  "rules": [
+    "Không dịch Ki thành Khí Công.",
+    "Không thay mọi từ Năng Lượng thành Ki; chỉ dùng Ki cho loại sát thương, đòn đánh hoặc vật phóng chiến đấu.",
+    "Giữ Năng Lượng cho thanh tài nguyên, năng lượng trạng thái và các tên riêng đã được duyệt.",
+    "Strike Attack/Physical Damage dùng Sát Thương Vật Lý.",
+    "Energy Damage dùng Sát Thương Ki.",
+    "Strike Defense dùng Phòng Ngự Vật Lý; Energy Defense dùng Phòng Ngự Ki.",
+    "Nhãn chỉ số dùng KHÁNG VẬT LÝ và KHÁNG KI; không dùng KHÁNG ĐẢ KÍCH hoặc KHÁNG KHÍ CÔNG."
+  ],
+  "uiLabels": {
+    "burstDamage": "SÁT THƯƠNG BỘC PHÁ",
+    "sustainedDamage": "SÁT THƯƠNG DUY TRÌ"
+  }
+}

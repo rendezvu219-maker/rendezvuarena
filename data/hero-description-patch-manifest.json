@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "approvedAt": "2026-07-29",
+  "verifiedThrough": "2026-07-22",
+  "heroCount": 20,
+  "descriptionCount": 33,
+  "locales": [
+    "en",
+    "ja",
+    "zh-CN",
+    "ko",
+    "es",
+    "vi"
+  ],
+  "heroes": {
+    "0001": [
+      "skill2"
+    ],
+    "0002": [
+      "skill1",
+      "super_attack1"
+    ],
+    "0003": [
+      "skill1",
+      "skill2"
+    ],
+    "0006": [
+      "passive1",
+      "skill1",
+      "skill2",
+      "skill3"
+    ],
+    "0007": [
+      "skill3"
+    ],
+    "0008": [
+      "skill2",
+      "super_attack1"
+    ],
+    "0009": [
+      "skill3"
+    ],
+    "0010": [
+      "skill3"
+    ],
+    "0011": [
+      "super_attack1"
+    ],
+    "0015": [
+      "skill3"
+    ],
+    "0016": [
+      "skill2",
+      "skill3"
+    ],
+    "0017": [
+      "skill3",
+      "super_attack1"
+    ],
+    "0019": [
+      "super_attack1"
+    ],
+    "0020": [
+      "super_attack1"
+    ],
+    "0022": [
+      "passive1",
+      "super_attack1"
+    ],
+    "0024": [
+      "skill3"
+    ],
+    "0025": [
+      "skill2",
+      "skill3",
+      "super_attack1"
+    ],
+    "0027": [
+      "skill1",
+      "skill2",
+      "skill3"
+    ],
+    "0028": [
+      "passive1"
+    ],
+    "0032": [
+      "passive1"
+    ]
+  }
+}

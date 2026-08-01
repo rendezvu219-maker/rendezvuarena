@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="pageTitleDraftRoom">RendezVu Arena — Draft Room</title>
+<meta content="Live RendezVu Arena Draft Room" name="description"/>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/draft.css?v=0.6.38-coin-side-divine-1" rel="stylesheet"/>
+<link href="css/animations.css" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body class="draft-room-page">
+<main id="app">
+<div class="draft-container" id="draft-view">
+<!-- Pre-Draft Overlay (Coin Flip & Divine Draw) -->
+<div class="pre-draft-overlay hidden" id="pre-draft-overlay"><div class="pre-draft-modal pre-draft-waiting hidden" id="pre-draft-waiting-screen"><div aria-hidden="true" class="pre-draft-waiting-mark" data-no-i18n="true">VS</div><h2 class="pre-draft-title" data-i18n="preDraftInProgress">PRE-DRAFT IN PROGRESS</h2><p class="pre-draft-desc" data-i18n="preDraftDesc">The two teams are resolving side selection, Divine Draw or pre-roll bans. The Draft Room will appear when this stage is complete.</p><div aria-hidden="true" class="pre-draft-waiting-pulse"><span></span><span></span><span></span></div></div>
+<!-- Step 1: Coin Call, Flip and Side Selection -->
+<div class="pre-draft-modal pre-draft-modal-wide coin-flow-modal" id="coin-flip-screen">
+<h2 class="pre-draft-title" data-i18n="decideSide">DECIDE SIDE — COIN FLIP</h2>
+<p class="pre-draft-desc" data-i18n="coinFlowDesc" id="coin-flow-desc">Call a coin face. The winner chooses Blue or Red side.</p>
+<div class="pre-draft-matchup-stage" id="pre-draft-matchup-stage" aria-live="polite">
+<article class="pre-draft-team-card" data-entrant="teamA" id="pre-draft-team-teamA">
+<div class="pre-draft-team-logo" id="pre-draft-logo-teamA"><img alt=""/><span data-no-i18n="true">TA</span></div>
+<strong data-i18n="teamA" id="pre-draft-name-teamA">TEAM A</strong><small data-i18n="upperTeam" id="pre-draft-note-teamA">UPPER TEAM</small>
+</article>
+<div class="pre-draft-versus" data-no-i18n="true">VS</div>
+<article class="pre-draft-team-card" data-entrant="teamB" id="pre-draft-team-teamB">
+<div class="pre-draft-team-logo" id="pre-draft-logo-teamB"><img alt=""/><span data-no-i18n="true">TB</span></div>
+<strong data-i18n="teamB" id="pre-draft-name-teamB">TEAM B</strong><small data-i18n="lowerTeam" id="pre-draft-note-teamB">LOWER TEAM</small>
+</article>
+</div>
+<div class="coin-interaction" id="coin-interaction">
+<div class="coin-container">
+<div class="coin" id="spinning-coin">
+<div class="coin-face coin-heads" data-i18n="heads">HEADS</div>
+<div class="coin-face coin-tails" data-i18n="tails">TAILS</div>
+</div>
+</div>
+<div class="coin-call-grid" id="coin-call-grid">
+<article class="coin-call-panel" data-coin-team="teamA">
+<h3 data-i18n="teamA" id="coin-teamA-title">TEAM A</h3><p data-i18n="chooseCoinFace" id="coin-teamA-help">Choose a coin face.</p>
+<div class="coin-face-buttons"><button class="btn btn-ghost btn-sm" data-coin-face="HEADS" data-i18n="heads" data-team-key="teamA" type="button">HEADS</button><button class="btn btn-ghost btn-sm" data-coin-face="TAILS" data-i18n="tails" data-team-key="teamA" type="button">TAILS</button></div>
+</article>
+<article class="coin-call-panel" data-coin-team="teamB">
+<h3 data-i18n="teamB" id="coin-teamB-title">TEAM B</h3><p data-i18n="chooseCoinFace" id="coin-teamB-help">Choose a coin face.</p>
+<div class="coin-face-buttons"><button class="btn btn-ghost btn-sm" data-coin-face="HEADS" data-i18n="heads" data-team-key="teamB" type="button">HEADS</button><button class="btn btn-ghost btn-sm" data-coin-face="TAILS" data-i18n="tails" data-team-key="teamB" type="button">TAILS</button></div>
+</article>
+</div>
+<div class="coin-actions"><button class="btn btn-primary btn-lg" data-i18n="flipCoin" disabled id="btn-flip-coin" type="button">FLIP COIN</button></div>
+<div class="side-choice-panel hidden" id="side-choice-panel"><strong data-i18n="winnerChoosesSide" id="side-choice-title">WINNER CHOOSES SIDE</strong><div class="side-choice-actions"><button class="btn btn-blue btn-lg" data-i18n="chooseBlue" data-side-choice="A" type="button">CHOOSE BLUE</button><button class="btn btn-red btn-lg" data-i18n="chooseRed" data-side-choice="B" type="button">CHOOSE RED</button></div></div>
+<div class="coin-result-text" id="coin-result-text"></div>
+</div>
+</div>
+<!-- Step 2: Divine Draw (Random Roulette OR Pick/Ban) -->
+<div class="pre-draft-modal pre-draft-modal-wide hidden" id="divine-draw-screen">
+<h2 class="pre-draft-title" data-i18n="divineDrawPhase">✦ DIVINE DRAW PHASE ✦</h2>
+<p class="pre-draft-desc" data-i18n="twoDivineRules" id="divine-draw-mode-desc">Two divine rules will be drawn for this match.</p>
+<!-- Roulette mode container -->
+<div class="divine-roulette-container hidden" id="divine-roulette-container">
+<div class="divine-reel" id="divine-reel"></div>
+</div>
+<!-- Pick/Ban mode container -->
+<div class="divine-cards-container" id="divine-cards-container"></div>
+<div id="divine-draw-status" style="font-weight:bold; margin-top:16px; color:var(--interactive-primary); min-height:24px;"></div>
+<div class="divine-actions hidden" id="divine-actions" style="margin-top:24px">
+<button class="btn btn-primary btn-lg" data-i18n="proceedDraft" id="btn-start-pickban">PROCEED TO DRAFT</button>
+</div>
+</div>
+</div>
+<!-- Game / Series Control: shown after a ban-pick finishes -->
+<div class="series-control-overlay hidden" id="series-control-overlay">
+<section aria-labelledby="series-control-title" aria-modal="true" class="series-control-modal" role="dialog">
+<button aria-label="Minimize game result controls" class="series-control-close" data-i18n-aria-label="minimizeControls" id="series-control-close" type="button">—</button>
+<div class="series-control-kicker" data-i18n="game1DraftComplete" id="series-control-kicker">GAME 1 DRAFT COMPLETE</div>
+<h2 data-i18n="recordGameWinner" id="series-control-title">RECORD GAME WINNER</h2>
+<p class="series-control-rule" data-i18n="afterGameRule" id="series-control-rule">After the game finishes, select the winning team. The next Fearless draft will load automatically.</p>
+<div class="series-scoreboard">
+<button class="series-team series-team-a" id="series-winner-a" type="button">
+<span data-i18n="teamA" id="series-team-a-name">TEAM A</span>
+<strong id="series-team-a-score">0</strong>
+<em data-i18n="teamAWonStatic">TEAM A WON THIS GAME</em>
+</button>
+<div class="series-score-vs"><span data-i18n="boSeries">BO SERIES</span><b data-no-i18n="true">VS</b></div>
+<button class="series-team series-team-b" id="series-winner-b" type="button">
+<strong id="series-team-b-score">0</strong>
+<span data-i18n="teamB" id="series-team-b-name">TEAM B</span>
+<em data-i18n="teamBWonStatic">TEAM B WON THIS GAME</em>
+</button>
+</div>
+<div class="series-control-status" data-i18n="waitingHostWinner" id="series-control-status">Waiting for the Host to record the game winner.</div>
+<div class="series-control-actions">
+<a class="btn btn-ghost btn-sm hidden" data-i18n="openTournamentOps" href="/dashboard.html" id="series-open-ops">OPEN TOURNAMENT OPS</a>
+</div>
+</section>
+</div>
+<!-- Draft Header -->
+<header class="draft-header">
+<div class="header-team team-a" id="header-team-a">
+<span class="header-team-logo" id="header-team-a-logo"><img alt=""/><span data-no-i18n="true">TB</span></span>
+<span class="team-name" data-i18n="teamBlue" id="team-a-name">TEAM BLUE</span>
+<span class="team-score" id="team-a-score">0</span>
+</div>
+<div class="match-center">
+<div class="match-stage" data-i18n="fourVFourDraft" id="match-stage-text">4v4 DRAFT</div>
+<div class="timer" id="draft-timer">30</div>
+<div class="phase-indicator" data-i18n="banPhase" id="phase-indicator">BAN PHASE</div>
+</div>
+<div class="header-team team-b" id="header-team-b">
+<span class="team-score" id="team-b-score">0</span>
+<span class="team-name" data-i18n="teamRed" id="team-b-name">TEAM RED</span>
+<span class="header-team-logo" id="header-team-b-logo"><img alt=""/><span data-no-i18n="true">TR</span></span>
+</div>
+<div class="draft-header-tools"><div class="draft-access-badge" id="draft-access-badge" aria-live="polite" data-no-i18n="true">CONNECTING…</div><div class="header-divine-rules" id="header-divine-rules"></div><div class="gs-language-slot" data-language-slot="true"></div></div></header>
+<!-- Chat Sidebar toggle button -->
+<button id="btn-toggle-chat" style="position:absolute;top:70px;right:0;z-index:200;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:6px 10px;font-size:0.7rem;letter-spacing:1px;cursor:pointer;border-radius:4px 0 0 4px;">💬</button>
+<!-- Draft Body + Chat -->
+<div class="draft-workspace">
+<div class="draft-body" id="draft-body" style="flex:1;">
+<div class="team-column team-a">
+<h3 class="column-title text-blue" data-i18n="picks">PICKS</h3>
+<div class="slot-group picks" id="team-a-picks"></div>
+<h3 class="column-title text-muted" data-i18n="bans">BANS</h3>
+<div class="bans-row" id="team-a-bans"></div>
+</div>
+<div class="center-column">
+<div class="hero-preview" id="preview-container">
+<div aria-hidden="true" class="preview-video-container" id="preview-video-container"><video id="preview-hero-video" muted="" playsinline="" preload="metadata"></video><img alt="" class="preview-hero-poster" id="preview-hero-poster" src=""/></div>
+<img alt="" class="preview-img" id="preview-hero-img" onerror="this.style.display='none'" src="" style="display:none"/>
+<div class="preview-content-grid" id="preview-content-grid" style="display:none; width:100%; height:100%;">
+<div class="preview-left-column">
+<div class="preview-header-row">
+<h1 class="preview-name" data-i18n="selectHero" id="preview-hero-name">SELECT HERO</h1>
+<div class="preview-role-badge" data-i18n="damage" id="preview-hero-role-badge">DAMAGE</div>
+</div>
+<div class="preview-difficulty-row">
+<span class="difficulty-label" data-i18n="difficulty">Difficulty</span>
+<div class="difficulty-bar-container">
+<div class="difficulty-bar-fill" id="preview-difficulty-fill" style="width: 20%;"></div>
+</div>
+</div>
+<div class="preview-desc-text" data-i18n="heroPlaceholderDesc" id="preview-hero-desc">Hero description goes here...</div>
+<div class="preview-skills-section">
+<div class="skills-title" data-i18n="skills">Skills</div>
+<div class="preview-skills-icons" id="preview-skills-icons"></div>
+<div class="preview-skill-detail">
+<div class="skill-detail-name" data-i18n="skillNamePlaceholder" id="skill-detail-name">Skill Name</div>
+<div class="skill-detail-desc" data-i18n="skillDescPlaceholder" id="skill-detail-desc">Skill description...</div>
+</div>
+</div>
+</div>
+<div class="preview-right-column">
+<!-- SVG Radar Chart -->
+<svg class="radar-chart-svg" viewbox="-40 -20 280 240">
+<!-- Axis / Grid lines -->
+<g fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1">
+<path d="M 100.0 0.0 L 178.2 37.7 L 197.5 122.3 L 143.4 190.1 L 56.6 190.1 L 2.5 122.3 L 21.8 37.7 L 100.0 0.0"></path>
+<path d="M 100.0 20.0 L 162.5 50.1 L 178.0 117.8 L 134.7 172.1 L 65.3 172.1 L 22.0 117.8 L 37.5 50.1 L 100.0 20.0"></path>
+<path d="M 100.0 40.0 L 146.9 62.6 L 158.5 113.4 L 126.0 154.1 L 74.0 154.1 L 41.5 113.4 L 53.1 62.6 L 100.0 40.0"></path>
+<path d="M 100.0 60.0 L 131.3 75.1 L 139.0 108.9 L 117.4 136.0 L 82.6 136.0 L 61.0 108.9 L 68.7 75.1 L 100.0 60.0"></path>
+<path d="M 100.0 80.0 L 115.6 87.5 L 119.5 104.5 L 108.7 118.0 L 91.3 118.0 L 80.5 104.5 L 84.4 87.5 L 100.0 80.0"></path>
+<!-- Center connections -->
+<line x1="100" x2="100" y1="100" y2="0"></line>
+<line x1="100" x2="178.2" y1="100" y2="37.7"></line>
+<line x1="100" x2="197.5" y1="100" y2="122.3"></line>
+<line x1="100" x2="143.4" y1="100" y2="190.1"></line>
+<line x1="100" x2="56.6" y1="100" y2="190.1"></line>
+<line x1="100" x2="2.5" y1="100" y2="122.3"></line>
+<line x1="100" x2="21.8" y1="100" y2="37.7"></line>
+</g>
+<!-- Actual Stats polygon fill path -->
+<path d="" fill="rgba(0, 194, 50, 0.45)" id="radar-stats-path" stroke="#00c232" stroke-width="1.5"></path>
+<!-- Label helper hints positioned around chart -->
+<text class="radar-label" data-i18n="burstDamage" x="100" y="-8">Burst DMG</text>
+<text class="radar-label" data-i18n="sustainedDamage" style="text-anchor:start" x="194" y="32">Sustained DMG</text>
+<text class="radar-label" data-i18n="range" style="text-anchor:start" x="210" y="125">Range</text>
+<text class="radar-label" data-i18n="support" x="154" y="202">Support</text>
+<text class="radar-label" data-i18n="mobility" x="46" y="202">Mobility</text>
+<text class="radar-label" data-i18n="energyRes" style="text-anchor:end" x="-12" y="125">Energy Res</text>
+<text class="radar-label" data-i18n="strikeRes" style="text-anchor:end" x="6" y="32">Strike Res</text>
+</svg>
+</div>
+</div>
+<!-- Placeholder when no hero is selected/hovered -->
+<div class="preview-placeholder" data-i18n="selectHeroDetails" id="preview-placeholder" style="position:absolute; z-index:2; font-family:var(--font-display); color:var(--text-muted); font-size:1.2rem; letter-spacing:2px; text-transform:uppercase;">
+                                Select Hero to View Details
+                            </div>
+</div>
+<div class="hero-grid-container">
+<div class="role-filters" id="role-filters">
+<button class="role-btn active" data-i18n="all" data-role="all">ALL</button>
+<button class="role-btn role-damage" data-i18n="damage" data-role="Damage">Damage</button>
+<button class="role-btn role-tank" data-i18n="tank" data-role="Tank">Tank</button>
+<button class="role-btn role-tech" data-i18n="technical" data-role="Technical">Technical</button>
+</div>
+<div class="hero-grid" id="hero-grid"></div>
+</div>
+</div>
+<div class="team-column team-b">
+<h3 class="column-title text-red" data-i18n="picks">PICKS</h3>
+<div class="slot-group picks" id="team-b-picks"></div>
+<h3 class="column-title text-muted" data-i18n="bans">BANS</h3>
+<div class="bans-row" id="team-b-bans"></div>
+</div>
+</div>
+<!-- Chat Sidebar -->
+<div class="chat-sidebar hidden" id="chat-sidebar">
+<div class="chat-header">
+<span data-i18n="chat">💬 CHAT</span>
+<button id="btn-close-chat" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;">✕</button>
+</div>
+<!-- Room code box -->
+<div class="room-code-box" id="room-code-box" style="display:none;">
+<div class="room-code-title" data-i18n="roomCode">Room Code</div>
+<div class="room-code-value" data-i18n-title="clickCopy" id="room-code-display" title="Click to copy">—</div>
+</div>
+<div class="chat-messages" id="chat-messages"></div>
+<div class="chat-input-area">
+<input class="chat-input" data-i18n-placeholder="typeMessage" id="chat-input" maxlength="120" placeholder="Type message or room code…" type="text"/>
+<button class="btn btn-primary btn-sm" id="btn-chat-send">↑</button>
+</div>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="action-bar">
+<button class="btn-series-control hidden" data-i18n="setGameWinner" id="btn-series-control" type="button">SET GAME WINNER</button>
+<button class="btn-lock" data-i18n="ban" disabled="" id="btn-lock">BAN</button>
+</div>
+<div class="phase-banner" data-i18n="banPhase" id="phase-banner">BAN PHASE</div>
+</div>
+<div class="cinematic-overlay" id="cinematic-overlay">
+<div class="cinematic-bg"></div>
+<div class="cinematic-team-bar left" id="cinematic-bar-left"></div>
+<div class="cinematic-team-bar right" id="cinematic-bar-right"></div>
+<div class="cinematic-hero" id="cinematic-hero">
+<img alt="" id="cinematic-img" src=""/>
+<div class="cinematic-name" id="cinematic-name"></div>
+<div class="cinematic-team" id="cinematic-team"></div>
+</div>
+</div>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/app.js?v=0.6.44-game-results-wide-layout" type="module"></script>
+<script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
+</body>
+</html>

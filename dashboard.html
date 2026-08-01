@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="pageTitleDashboard">RendezVu Arena — Tournament Operations</title>
+<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<link href="css/variables.css" rel="stylesheet"/>
+<link href="css/base.css" rel="stylesheet"/>
+<link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
+<link href="css/dashboard.css?v=0.6.45-bracket-card-align" rel="stylesheet"/>
+<link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+</head>
+<body>
+<div class="ops-shell">
+<header class="ops-topbar">
+<div>
+<div class="ops-kicker">GEKISHIN SQUADRA</div>
+<h1 data-i18n="opsTitle">TOURNAMENT OPERATIONS</h1>
+</div>
+<div class="ops-top-actions">
+<span id="ops-user"></span>
+<a class="btn btn-ghost btn-sm" data-i18n="playerPortalLink" href="/portal.html">Player &amp; Captain Portal</a>
+<a class="btn btn-ghost btn-sm" data-i18n="home" href="/">Home</a><a class="btn btn-ghost btn-sm" data-i18n="quickDraft" href="/quick-draft.html">Quick Draft</a>
+<button class="btn btn-ghost btn-sm hidden" data-i18n="logout" id="btn-logout">Log out</button>
+</div>
+<div class="gs-language-slot" data-language-slot="true"></div></header>
+<main class="ops-main">
+<section class="ops-auth" id="auth-view">
+<div class="ops-auth-card">
+<h2 data-i18n="accountLogin">Account Login</h2>
+<form id="login-form">
+<label><span data-i18n="usernameEmail">Username or email</span><input autocomplete="username" id="login-identity" required=""/></label>
+<label><span data-i18n="password">Password</span><input autocomplete="current-password" id="login-password" required="" type="password"/></label>
+<button class="btn btn-primary" data-i18n="loginAction" type="submit">LOGIN</button>
+</form>
+</div>
+<div class="ops-auth-card">
+<h2 data-i18n="organizeEventMixed">Organize an Event</h2>
+<p class="ops-list-meta" data-i18n="organizeEventDesc">Use one normal account, then import a public tournament link from start.gg, Tonamel or Challonge. No approval queue is required.</p>
+<a class="btn btn-primary" data-i18n="importTournamentPlain" href="/host-apply.html">IMPORT TOURNAMENT</a>
+<a class="btn btn-ghost" data-i18n="createNormalAccount" href="/auth.html?mode=register" style="margin-top:8px">CREATE NORMAL ACCOUNT</a>
+</div>
+</section>
+<section class="hidden" id="dashboard-view">
+<div class="ops-grid ops-overview-grid">
+<aside class="ops-panel ops-tournament-list-panel">
+<div class="ops-panel-header"><h2 data-i18n="homeTournaments">Tournaments</h2><div class="ops-toolbar"><button class="btn btn-ghost btn-sm hidden" data-i18n="devTest" id="btn-dev-console" type="button">DEV / TEST</button><a class="btn btn-primary btn-sm" data-i18n="importButton" href="/host-apply.html" id="btn-new-tournament">+ Import</a></div></div>
+<div class="ops-list" id="tournament-list"></div>
+</aside>
+<section class="ops-workspace">
+<div class="ops-empty" id="no-tournament"><span data-i18n="importSelectTournament">Import or select a tournament to begin.</span><br/><a class="btn btn-primary btn-sm" data-i18n="importTournamentPlain" href="/host-apply.html" style="margin-top:14px">IMPORT TOURNAMENT</a></div>
+<div class="hidden" id="tournament-workspace">
+<div class="ops-title-row">
+<div><div class="ops-kicker" id="tournament-status"></div><h2 id="tournament-name"></h2></div>
+<button class="btn btn-ghost btn-sm" data-i18n="refreshMixed" id="btn-refresh">↻ Refresh</button>
+</div>
+<nav class="ops-tabs" id="ops-tabs">
+<button class="active" data-i18n="overview" data-tab="overview">Overview</button>
+<button data-i18n="teamsSeeding" data-tab="teams">Teams &amp; Seeding</button>
+<button data-i18n="bracketMatches" data-tab="bracket">Bracket &amp; Matches</button>
+<button data-i18n="rulesDefaults" data-tab="rules">Rules &amp; Defaults</button>
+<button data-i18n="staffPermissions" data-tab="staff">Staff &amp; Permissions</button>
+<button data-i18n="externalSource" data-tab="startgg">External Source</button>
+<button data-i18n="auditActivity" data-tab="audit">Audit &amp; Activity</button>
+</nav>
+<div class="ops-tab-panel" id="tab-overview"></div>
+<div class="ops-tab-panel hidden" id="tab-teams"></div>
+<div class="ops-tab-panel hidden" id="tab-bracket"></div>
+<div class="ops-tab-panel hidden" id="tab-rules"></div>
+<div class="ops-tab-panel hidden" id="tab-staff"></div>
+<div class="ops-tab-panel hidden" id="tab-startgg"></div>
+<div class="ops-tab-panel hidden" id="tab-audit"></div>
+</div>
+</section>
+</div>
+</section>
+</main>
+</div>
+<div class="ops-modal hidden" id="team-modal">
+<div class="ops-modal-card ops-team-modal-card">
+<div class="ops-panel-header">
+<div><div class="ops-kicker" id="team-modal-status"></div><h2 data-i18n="singularTeam" id="team-modal-title">Team</h2></div>
+<button id="close-team-modal" type="button">✕</button>
+</div>
+<div id="team-modal-body"></div>
+</div>
+</div>
+<div class="ops-modal hidden" id="match-modal">
+<div class="ops-modal-card ops-match-modal-card">
+<div class="ops-panel-header">
+<div><div class="ops-kicker" id="match-modal-round"></div><h2 data-i18n="singularMatch" id="match-modal-title">Match</h2></div>
+<button id="close-match-modal" type="button">✕</button>
+</div>
+<div id="match-modal-body"></div>
+</div>
+</div>
+<div class="ops-modal hidden" id="dev-console-modal">
+<div class="ops-modal-card ops-dev-console-card">
+<div class="ops-panel-header">
+<div><div class="ops-kicker" data-i18n="adminOnly">ADMIN ONLY</div><h2 data-i18n="devConsole">DEV / TEST CONSOLE</h2></div>
+<button id="close-dev-console" type="button">✕</button>
+</div>
+<div id="dev-console-body"></div>
+</div>
+</div>
+<div class="ops-toast hidden" id="ops-toast"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/dashboard.js?v=0.6.48-account-dropdown" type="module"></script>
+<script src="js/i18n.js?v=0.6.42-profile-broadcast-ux" type="module"></script>
+</body>
+</html>

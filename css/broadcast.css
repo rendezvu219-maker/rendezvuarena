@@ -1,0 +1,461 @@
+/* OBS-first broadcast overlay: tournament rail, center reveal stage and bottom team clusters.
+   Each team's ban strip is attached directly above that team's own pick row. */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body.broadcast-page { background: transparent; }
+.broadcast-view { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #070910; color: #f7f8fc; --surface-canvas:#070910; --text-primary:#f7f8fc; --interactive-primary:#f0c24a; --team-left-primary:#1593ff; --team-right-primary:#ff334d; }
+.broadcast-view[data-transparent="true"] { background: transparent; }
+.broadcast-view[data-transparent="true"] .bc-background { opacity: 0; }
+.bc-background { position: absolute; inset: 0; background: radial-gradient(circle at 50% 42%, #1a2132 0%, #090d16 58%, #03050a 100%); }
+.bc-overlay-shell { position: absolute; inset: 0; display: grid; grid-template-rows: clamp(52px, 5.5vh, 72px) minmax(0, 1fr) auto; }
+
+/* Tournament identity occupies the unused upper broadcast rail. */
+.bc-event-banner { position:relative; z-index:30; min-width:0; display:flex; align-items:center; justify-content:center; padding:8px 24px; border-bottom:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg,rgba(3,6,13,.96),rgba(3,6,13,.58)); box-shadow:0 8px 30px rgba(0,0,0,.18); }
+.bc-tournament-name { max-width:min(90vw,1500px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgba(255,255,255,.86); font:900 clamp(.72rem,1.15vw,1.12rem)/1 var(--font-display); letter-spacing:clamp(.12em,.4vw,.26em); text-align:center; text-transform:uppercase; }
+
+/* Phase and timer have separate rows so long phase labels never collide with the countdown. */
+.bc-live-meta { width:100%; min-width:0; display:grid; grid-template-rows:auto auto; place-content:center; justify-items:center; gap:5px; padding:0 2px; text-align:center; }
+.bc-phase { max-width:100%; overflow:hidden; text-overflow:ellipsis; color:var(--interactive-primary); font:800 .58rem/1 var(--font-display); letter-spacing:.12em; white-space:nowrap; }
+.bc-timer { min-width:32px; color:#fff; font:900 1.75rem/1 var(--font-display); }
+.bc-timer.danger { color: #ff465b; }
+
+/* Center media stage */
+.bc-hero-stage { position: relative; min-height: 0; overflow: hidden; }
+.bc-trailer-video, .bc-hero-fallback { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center -16px; opacity: 0; transform: scale(1.012); transition: opacity .35s ease, transform 1s ease; }
+.bc-hero-fallback { object-fit: contain; object-position: center 24%; filter: drop-shadow(0 12px 42px rgba(0,0,0,.72)); }
+.bc-hero-fallback.poster-frame { object-fit: cover; object-position: center -16px; filter: none; }
+.bc-trailer-video.visible, .bc-hero-fallback.visible { opacity: .9; transform: scale(1); }
+.bc-hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,7,15,.72), transparent 22%, transparent 78%, rgba(15,4,8,.72)), linear-gradient(0deg, rgba(2,4,9,.9), transparent 38%, rgba(2,4,9,.32)); }
+.bc-hero-stage[data-reveal-team="A"]::before, .bc-hero-stage[data-reveal-team="B"]::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.bc-hero-stage[data-reveal-team="A"]::before { background: linear-gradient(90deg, color-mix(in srgb, var(--team-left-primary) 23%, transparent), transparent 45%); }
+.bc-hero-stage[data-reveal-team="B"]::before { background: linear-gradient(270deg, color-mix(in srgb, var(--team-right-primary) 23%, transparent), transparent 45%); }
+.bc-hero-stage.ban-reveal::after { content: ''; position: absolute; inset: 0; z-index: 2; background: rgba(95,0,10,.24); box-shadow: inset 0 0 130px rgba(255,20,45,.22); }
+.bc-hero-stage.waiting-with-poster .bc-hero-shade { background: linear-gradient(90deg, rgba(4,7,15,.66), transparent 24%, transparent 76%, rgba(15,4,8,.66)), linear-gradient(0deg, rgba(2,4,9,.88), transparent 42%, rgba(2,4,9,.18)); }
+.bc-waiting, .bc-reveal-copy { position: absolute; z-index: 5; inset: 0; display: grid; place-content: center; text-align: center; padding: 32px; text-shadow: 0 5px 28px #000; }
+.bc-waiting-kicker, .bc-reveal-action { color: var(--interactive-primary); font: 800 .76rem/1 var(--font-display); letter-spacing: .34em; text-transform: uppercase; }
+.bc-waiting-title, .bc-reveal-name { margin-top: 14px; color: #fff; font: 900 clamp(2.1rem, 5vw, 5.6rem)/.96 var(--font-display); letter-spacing: .06em; text-transform: uppercase; }
+.bc-reveal-role { margin-top: 12px; color: rgba(255,255,255,.72); font: 700 .72rem/1 var(--font-display); letter-spacing: .28em; text-transform: uppercase; }
+.bc-stage-divine { position: absolute; z-index: 8; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 10px; }
+.bc-divine-badge { display: flex; align-items: center; gap: 8px; max-width: 220px; padding: 6px 12px 6px 6px; border: 1px solid rgba(240,194,74,.4); border-radius: 999px; background: rgba(4,7,15,.8); }
+.bc-divine-badge img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; object-position: center 20%; }
+.bc-divine-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: .56rem; font-weight: 800; text-transform: uppercase; }
+
+/* Broadcast-only side assignment reveal.
+   Both neutral team cards orbit counter-clockwise around a horizontal oval,
+   then dock into the resolved Blue / Red setup. Team POV never uses this layer. */
+.bc-side-assignment {
+  position: absolute;
+  z-index: 45;
+  top: clamp(52px, 5.5vh, 72px);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at center, rgba(24,31,48,.88) 0%, rgba(6,9,17,.96) 58%, rgba(2,4,9,.99) 100%);
+}
+.bc-side-assignment-copy {
+  position: absolute;
+  top: clamp(32px, 7vh, 82px);
+  left: 50%;
+  z-index: 4;
+  width: min(92vw, 980px);
+  transform: translateX(-50%);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+  text-shadow: 0 5px 24px rgba(0,0,0,.9);
+}
+.bc-side-assignment-copy small {
+  color: var(--interactive-primary);
+  font: 800 clamp(.58rem,.85vw,.82rem)/1 var(--font-display);
+  letter-spacing: .3em;
+}
+.bc-side-assignment-copy strong {
+  color: #fff;
+  font: 900 clamp(1.25rem,2.5vw,2.8rem)/1 var(--font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.bc-side-orbit {
+  position: relative;
+  width: min(78vw, 920px);
+  height: min(38vh, 340px);
+  min-height: 230px;
+}
+.bc-side-orbit::before {
+  content: '';
+  position: absolute;
+  inset: 12% 7%;
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 50%;
+  box-shadow: 0 0 34px rgba(240,194,74,.08), inset 0 0 28px rgba(255,255,255,.025);
+}
+.bc-side-orbit::after {
+  content: '➜';
+  position: absolute;
+  right: 4.5%;
+  bottom: 25%;
+  color: rgba(240,194,74,.72);
+  font: 900 1.65rem/1 sans-serif;
+  transform: rotate(20deg);
+  text-shadow: 0 0 16px rgba(240,194,74,.3);
+}
+.bc-side-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(260px, 28vw);
+  min-height: 112px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  grid-template-columns: 78px minmax(0,1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 18px;
+  background: rgba(5,8,18,.94);
+  box-shadow: 0 22px 52px rgba(0,0,0,.5);
+  will-change: transform;
+}
+.bc-side-card[data-entrant='teamA'] { transform: translate(-50%, -50%) translateX(clamp(-340px, -23vw, -180px)); }
+.bc-side-card[data-entrant='teamB'] { transform: translate(-50%, -50%) translateX(clamp(180px, 23vw, 340px)); }
+.bc-side-card-logo {
+  width: 78px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(240,194,74,.22), rgba(255,255,255,.04));
+}
+.bc-side-card-logo img { width:100%; height:100%; object-fit:contain; display:none; }
+.bc-side-card-logo.has-logo img { display:block; }
+.bc-side-card-logo.has-logo span { display:none; }
+.bc-side-card-logo span { color:#fff; font:900 1.15rem/1 var(--font-display); letter-spacing:.08em; }
+.bc-side-card > div:last-child { min-width:0; display:grid; gap:7px; }
+.bc-side-card small { color:rgba(255,255,255,.48); font:700 .52rem/1 var(--font-display); letter-spacing:.16em; }
+.bc-side-card strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff; font:900 clamp(.72rem,1.15vw,1.02rem)/1.15 var(--font-display); letter-spacing:.05em; }
+.bc-side-assignment.is-revealing .bc-side-orbit::before { border-color:rgba(240,194,74,.34); box-shadow:0 0 45px rgba(240,194,74,.13), inset 0 0 30px rgba(240,194,74,.035); }
+.bc-side-assignment.is-docking .bc-side-orbit::before,
+.bc-side-assignment.is-docking .bc-side-orbit::after { opacity:0; transition:opacity .18s ease; }
+.bc-side-card-flyer { z-index:1000; pointer-events:none; }
+
+/* Hide the colored Blue/Red dock until the side assignment is actually known. */
+.bc-lineup-dock { transition: opacity .42s ease, transform .56s cubic-bezier(.18,.78,.22,1); }
+.broadcast-view.side-pending .bc-lineup-dock { opacity:0; transform:translateY(92px); }
+
+/* Bottom dock: left cluster stays left, right cluster stays right. */
+.bc-lineup-dock { position: relative; z-index: 20; display: grid; grid-template-columns: minmax(0, 1fr) clamp(122px, 9vw, 154px) minmax(0, 1fr); align-items: end; gap: 16px; padding: 0 20px 20px; pointer-events: none; }
+.bc-team-cluster { min-width: 0; width: 100%; max-width: 820px; display: grid; grid-template-rows: 68px 128px; gap: 0; }
+.bc-team-cluster-a { justify-self: start; }
+.bc-team-cluster-b { justify-self: end; }
+
+/* Ban row shares the exact column geometry of the pick row beneath it. */
+.bc-team-ban-dock { min-width: 0; display: grid; align-items: end; }
+.bc-team-ban-dock-a { grid-template-columns: minmax(0, 1fr) minmax(150px, 31%); }
+.bc-team-ban-dock-b { grid-template-columns: minmax(150px, 31%) minmax(0, 1fr); }
+.bc-ban-spacer { min-width: 0; }
+.bc-team-bans { min-width: 0; height: 68px; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.1); border-bottom: 0; background: rgba(3,6,13,.9); box-shadow: 0 -8px 24px rgba(0,0,0,.2); }
+.bc-team-bans-a { justify-content: flex-start; border-left: 4px solid var(--team-left-primary); border-radius: 12px 12px 0 0; background: linear-gradient(90deg, color-mix(in srgb, var(--team-left-primary) 17%, rgba(3,6,13,.94)), rgba(3,6,13,.92)); }
+.bc-team-bans-b { justify-content: flex-end; flex-direction: row-reverse; border-right: 4px solid var(--team-right-primary); border-radius: 12px 12px 0 0; background: linear-gradient(270deg, color-mix(in srgb, var(--team-right-primary) 17%, rgba(3,6,13,.94)), rgba(3,6,13,.92)); }
+.bc-ban-card { position: relative; width: 52px; height: 52px; flex: 0 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,.14); border-radius: 7px; background: rgba(255,255,255,.035); }
+.bc-ban-img { position: absolute; inset: 0; background-size: cover; background-position: center top; filter: grayscale(1) contrast(.9); opacity: 0; transform: scale(1); }
+.bc-ban-muted { position: absolute; inset: 0; background: rgba(2,4,9,.58); opacity: 0; }
+.bc-ban-x { position: absolute; inset: -12%; display: grid; place-items: center; color: #fff; font-size: 3.65rem; font-weight: 300; line-height: 1; opacity: 0; transform: rotate(-15deg); text-shadow: 0 2px 8px #000; }
+.bc-ban-card.filled { border-color: rgba(255,255,255,.28); }
+.bc-ban-card.filled .bc-ban-img { opacity: .88; }
+.bc-ban-card.filled .bc-ban-muted, .bc-ban-card.filled .bc-ban-x { opacity: 1; }
+.bc-ban-card.active { border-color: var(--interactive-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-primary) 35%, transparent); }
+
+/* Logo + team + score + four picks stay on one line. */
+.bc-team-lineup { min-width: 0; display: grid; align-items: stretch; gap: 12px; padding: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(3,6,13,.94); box-shadow: 0 -8px 30px rgba(0,0,0,.28); }
+.bc-team-lineup-a { grid-template-columns: minmax(0, 1fr) minmax(150px, 31%); border-left: 4px solid var(--team-left-primary); border-radius: 12px 0 14px 14px; }
+.bc-team-lineup-b { grid-template-columns: minmax(150px, 31%) minmax(0, 1fr); border-right: 4px solid var(--team-right-primary); border-radius: 0 12px 14px 14px; }
+.bc-team-identity { min-width: 0; display: grid; grid-template-columns: 54px minmax(0, 1fr) 42px; align-items: center; gap: 10px; }
+.bc-team-identity-b { grid-template-columns: 42px minmax(0, 1fr) 54px; text-align: right; }
+.bc-team-logo { width: 54px; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,.18); border-radius: 12px; background: linear-gradient(135deg, rgba(48,116,255,.28), rgba(48,116,255,.08)); }
+.bc-team-lineup-b .bc-team-logo { background: linear-gradient(135deg, rgba(224,47,69,.28), rgba(224,47,69,.08)); }
+.bc-team-logo img { width: 100%; height: 100%; object-fit: contain; display: none; }
+.bc-team-logo.has-logo img { display: block; }
+.bc-team-logo.has-logo span { display: none; }
+.bc-team-logo span { color: #fff; font: 900 1rem/1 var(--font-display); letter-spacing: .08em; }
+.bc-team-copy { min-width: 0; display: grid; gap: 4px; }
+.bc-team-copy small { color: rgba(255,255,255,.46); font: 700 .48rem/1 var(--font-display); letter-spacing: .18em; }
+.bc-team-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font: 900 .86rem/1.1 var(--font-display); letter-spacing: .05em; }
+.bc-team-score { display: grid; place-items: center; color: #fff; font: 900 2rem/1 var(--font-display); }
+.bc-team-picks { min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.bc-pick-card { position: relative; min-width: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: rgba(0,0,0,.38); }
+.bc-pick-img { position: absolute; inset: 0; background-size: cover; background-position: center top; opacity: 0; transform: scale(1); transition: opacity .25s ease, transform .5s ease; }
+.bc-pick-shade { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.94), transparent 52%); }
+.bc-pick-name { position: absolute; left: 5px; right: 5px; bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.54); font: 800 .48rem/1 var(--font-display); letter-spacing: .04em; text-align: center; text-transform: uppercase; }
+.bc-pick-card.filled .bc-pick-img { opacity: 1; transform: scale(1); }
+.bc-pick-card.filled .bc-pick-name { color: #fff; }
+.bc-pick-card.active { border-color: var(--interactive-primary); box-shadow: inset 0 0 0 1px var(--interactive-primary); }
+.bc-match-center { align-self:end; min-height:128px; display:grid; grid-template-rows:minmax(48px,auto) auto auto; place-content:center; justify-items:center; gap:7px; padding:10px 5px 15px; text-align:center; text-shadow:0 3px 16px #000; border-top:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg,rgba(3,6,13,.42),rgba(3,6,13,.9)); }
+.bc-match-center > span { color:#fff; font:900 1.8rem/1 var(--font-display); }
+.bc-match-meta { max-width:138px; overflow:hidden; text-overflow:ellipsis; color:rgba(255,255,255,.58); font:700 .48rem/1.35 var(--font-display); letter-spacing:.11em; text-transform:uppercase; }
+
+.hidden { display: none !important; }
+[data-contrast="high"] .bc-ban-card, [data-contrast="high"] .bc-team-lineup, [data-contrast="high"] .bc-pick-card { border-width: 2px; }
+[data-motion="reduced"] .bc-trailer-video, [data-motion="reduced"] .bc-hero-fallback { transition: opacity .1s linear; transform: none; }
+[data-motion="reduced"] .bc-lineup-dock { transition:none; }
+[data-motion="reduced"] .bc-side-orbit::after { display:none; }
+@media (prefers-reduced-motion: reduce) {
+  .bc-lineup-dock { transition:none; }
+  .bc-side-orbit::after { display:none; }
+}
+
+@media (max-width: 1100px) {
+  .bc-side-orbit { width:92vw; height:300px; }
+  .bc-side-card { width:min(220px,34vw); grid-template-columns:62px minmax(0,1fr); min-height:96px; gap:11px; padding:12px; }
+  .bc-side-card-logo { width:62px; }
+  .bc-lineup-dock { grid-template-columns: minmax(0,1fr) 100px minmax(0,1fr); gap: 7px; padding: 0 9px 10px; }
+  .bc-team-cluster { grid-template-rows: 56px 108px; }
+  .bc-team-bans { height: 56px; padding: 5px 7px; gap: 5px; }
+  .bc-ban-card { width: 44px; height: 44px; }
+  .bc-ban-x { font-size: 3rem; }
+  .bc-team-lineup { gap: 6px; padding: 7px; }
+  .bc-team-ban-dock-a, .bc-team-lineup-a { grid-template-columns: minmax(0,1fr) minmax(104px, 30%); }
+  .bc-team-ban-dock-b, .bc-team-lineup-b { grid-template-columns: minmax(104px, 30%) minmax(0,1fr); }
+  .bc-team-identity { grid-template-columns: 38px minmax(0,1fr) 24px; gap: 5px; }
+  .bc-team-identity-b { grid-template-columns: 24px minmax(0,1fr) 38px; }
+  .bc-team-logo { width: 38px; }
+  .bc-team-copy small { display: none; }
+  .bc-team-copy strong { font-size: .62rem; }
+  .bc-team-score { font-size: 1.3rem; }
+  .bc-pick-name { font-size: .38rem; }
+  .bc-match-center { min-height:108px; padding:7px 3px 11px; gap:5px; }
+  .bc-event-banner{padding-inline:12px}
+  .bc-tournament-name{font-size:.62rem}
+  .bc-phase{font-size:.48rem}
+  .bc-timer{font-size:1.35rem}
+}
+
+@media (max-aspect-ratio: 4/3) {
+  .bc-lineup-dock { grid-template-columns: 1fr; grid-template-rows: auto auto auto; gap: 8px; }
+  .bc-team-cluster { max-width: none; grid-template-rows: 50px 96px; }
+  .bc-team-cluster-a { grid-row: 1; }
+  .bc-match-center { grid-row:2; min-height:auto; grid-template-columns:minmax(0,1fr) auto auto; grid-template-rows:1fr; align-items:center; justify-items:center; padding:7px 14px; }
+  .bc-live-meta{width:auto;justify-self:end}
+  .bc-match-center > span{font-size:1.35rem}
+  .bc-match-meta{justify-self:start}
+  .bc-team-cluster-b { grid-row: 3; }
+  .bc-team-bans { height: 50px; }
+  .bc-ban-card { width: 38px; height: 38px; }
+  .bc-team-lineup-a, .bc-team-lineup-b { border-radius: 0 0 12px 12px; }
+}
+
+/* Team identities sit immediately beside VS; ban rails remain attached above the outer pick columns. */
+.bc-team-cluster-a .bc-team-identity { border-left:1px solid rgba(255,255,255,.08); padding-left:8px; }
+.bc-team-cluster-b .bc-team-identity { border-right:1px solid rgba(255,255,255,.08); padding-right:8px; }
+.bc-team-bans.host-ban-rail { position:relative; padding-top:16px; }
+.bc-team-bans.host-ban-rail::before { content:attr(data-label); position:absolute; top:4px; left:9px; color:rgba(255,255,255,.52); font:800 .42rem/1 var(--font-display); letter-spacing:.12em; }
+.bc-team-bans-b.host-ban-rail::before { left:auto; right:9px; }
+.bc-ban-card.host-ban { border-color:rgba(240,194,74,.45); }
+
+/* Broadcaster match picker. This screen is shown only when broadcast.html is
+   opened without a Draft Room link, so it never appears inside an active OBS overlay. */
+.broadcast-view.bc-selector-mode {
+  overflow: auto;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34,48,78,.72), transparent 42%),
+    #080b13;
+}
+.bc-match-selector {
+  box-sizing: border-box;
+  width: min(1180px, calc(100% - 40px));
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(42px, 7vh, 90px) 0 56px;
+  color: #f7f8fc;
+  font-family: var(--font-body);
+}
+.bc-selector-kicker {
+  color: var(--interactive-primary);
+  font: 800 .72rem/1 var(--font-display);
+  letter-spacing: .28em;
+  text-transform: uppercase;
+}
+.bc-match-selector > h1 {
+  margin: 14px 0 10px;
+  color: #fff;
+  font: 900 clamp(1.7rem, 4vw, 3.8rem)/.98 var(--font-display);
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+.bc-match-selector > h1 span { color: var(--interactive-primary); }
+.bc-match-selector > p {
+  max-width: 760px;
+  margin: 0 0 30px;
+  color: rgba(255,255,255,.68);
+  font-size: .96rem;
+  line-height: 1.6;
+}
+.bc-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 18px;
+}
+.bc-selector-match {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  background: rgba(7,11,20,.9);
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+.bc-selector-match.is-ready { border-color: rgba(74,205,128,.46); }
+.bc-selector-match > header,
+.bc-selector-match > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  background: rgba(255,255,255,.035);
+}
+.bc-selector-match > header span,
+.bc-selector-match > header b,
+.bc-selector-match > footer span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bc-selector-match > header span {
+  color: rgba(255,255,255,.58);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.bc-selector-match > header b {
+  color: #fff;
+  font-size: .72rem;
+}
+.bc-selector-versus {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 24px 18px;
+}
+.bc-selector-versus > div {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.bc-selector-versus strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #fff;
+  font: 800 .86rem/1.2 var(--font-display);
+}
+.bc-selector-versus em {
+  color: var(--interactive-primary);
+  font: 900 1rem/1 var(--font-display);
+  font-style: normal;
+}
+.bc-selector-logo {
+  position: relative;
+  width: 72px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 14px;
+  background: rgba(255,255,255,.045);
+}
+.bc-selector-logo img { width: 100%; height: 100%; object-fit: contain; }
+.bc-selector-logo.has-logo b { display: none; }
+.bc-selector-logo b { color: #fff; font: 900 1rem/1 var(--font-display); }
+.bc-selector-match > footer span {
+  color: rgba(255,255,255,.55);
+  font-size: .68rem;
+}
+.bc-selector-match button,
+.bc-selector-secondary {
+  border: 1px solid rgba(240,194,74,.5);
+  border-radius: 8px;
+  background: rgba(240,194,74,.12);
+  color: #fff;
+  font: 800 .66rem/1 var(--font-display);
+  letter-spacing: .07em;
+  text-decoration: none;
+  cursor: pointer;
+}
+.bc-selector-match button { padding: 10px 12px; }
+.bc-selector-match button:hover,
+.bc-selector-secondary:hover { background: rgba(240,194,74,.22); }
+.bc-selector-secondary {
+  display: inline-flex;
+  margin-top: 24px;
+  padding: 12px 16px;
+}
+.bc-selector-empty {
+  grid-column: 1 / -1;
+  padding: 42px 24px;
+  border: 1px dashed rgba(255,255,255,.17);
+  border-radius: 14px;
+  color: rgba(255,255,255,.6);
+  text-align: center;
+}
+.bc-match-waiting {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+.bc-match-waiting > p { margin-bottom: 14px; text-align: center; }
+.bc-match-waiting small { max-width: 620px; color: rgba(255,255,255,.52); line-height: 1.5; }
+.bc-selector-pulse {
+  width: 22px;
+  aspect-ratio: 1;
+  margin: 14px 0 22px;
+  border-radius: 50%;
+  background: var(--interactive-primary);
+  box-shadow: 0 0 0 0 rgba(240,194,74,.5);
+  animation: bc-selector-pulse 1.4s infinite;
+}
+@keyframes bc-selector-pulse {
+  70% { box-shadow: 0 0 0 18px rgba(240,194,74,0); }
+  100% { box-shadow: 0 0 0 0 rgba(240,194,74,0); }
+}
+@media (max-width: 640px) {
+  .bc-match-selector { width: min(100% - 24px, 1180px); padding-top: 34px; }
+  .bc-selector-match > footer { align-items: stretch; flex-direction: column; }
+  .bc-selector-match button { width: 100%; }
+}
+
+/* ===== v0.6.42 BROADCAST SELECTOR WALKTHROUGH ===== */
+.bc-selector-howto{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0 16px}
+.bc-selector-howto article{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start;padding:14px;border:1px solid rgba(255,255,255,.13);border-radius:9px;background:rgba(255,255,255,.035);text-align:left}
+.bc-selector-howto i{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--interactive-primary);color:#10131d;font-style:normal;font-weight:950}
+.bc-selector-howto article>div{display:grid;gap:6px}
+.bc-selector-howto b{font-size:.78rem;letter-spacing:.02em;color:#fff}
+.bc-selector-howto span{font-size:.68rem;line-height:1.55;color:rgba(255,255,255,.66)}
+.bc-selector-howto strong{color:var(--interactive-primary);font-size:.64rem}
+.bc-selector-legend{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:0 0 18px;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:7px;background:rgba(0,0,0,.18)}
+.bc-selector-legend>span{padding:4px 7px;border-radius:999px;font-size:.55rem;font-weight:950;letter-spacing:.08em}
+.bc-selector-legend>span.is-ready{border:1px solid rgba(70,220,132,.55);color:#57e696;background:rgba(70,220,132,.08)}
+.bc-selector-legend>span.is-waiting{border:1px solid rgba(240,194,74,.5);color:#f0c24a;background:rgba(240,194,74,.07)}
+.bc-selector-legend em{margin-left:auto;color:rgba(255,255,255,.55);font-size:.62rem;font-style:normal}
+.bc-selector-match.is-ready{border-color:rgba(70,220,132,.45)}
+.bc-selector-match.is-waiting{border-color:rgba(240,194,74,.28)}
+.bc-selector-match.is-ready header::after,.bc-selector-match.is-waiting header::after{margin-left:auto;padding:3px 6px;border-radius:999px;font-size:.5rem;font-weight:950;letter-spacing:.08em}
+.bc-selector-match.is-ready header::after{content:'READY';color:#57e696;border:1px solid rgba(70,220,132,.45)}
+.bc-selector-match.is-waiting header::after{content:'WAITING';color:#f0c24a;border:1px solid rgba(240,194,74,.4)}
+.bc-selector-empty{display:grid;gap:8px;min-height:160px;place-content:center;text-align:center}
+.bc-selector-empty b{font-size:1rem;color:#fff}
+.bc-selector-empty span{max-width:500px;color:rgba(255,255,255,.58);line-height:1.55}
+.bc-selector-footer-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:20px}
+button.bc-selector-secondary{cursor:pointer;background:transparent;font:inherit}
+@media(max-width:900px){.bc-selector-howto{grid-template-columns:1fr}.bc-selector-legend em{width:100%;margin-left:0}}
