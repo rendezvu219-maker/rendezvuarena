@@ -97,9 +97,9 @@ const heroCatalog = loadHeroI18nCatalog();
 const inGameOverrides = loadInGameHeroOverrides();
 const overrideValidation = validateInGameHeroOverrides(inGameOverrides);
 const officialSyncSource = read('scripts/sync-official-hero-i18n.mjs');
-assert.match(officialSyncSource, /applyInGameHeroOverride/, 'Official sync must reapply exact in-game evidence after every website fetch.');
+assert.match(officialSyncSource, /applyInGameHeroOverride/, 'Official sync must reapply exact in-game verification after every website fetch.');
 assert.match(officialSyncSource, /data\/locales\/fixtures\/live/, 'Saved live fixtures must remain available for offline retry regression tests.');
-assert.equal(overrideValidation.recordCount, 2, 'Expected the two supplied in-game evidence records.');
+assert.equal(overrideValidation.recordCount, 2, 'Expected the two retained in-game verification records.');
 const effectiveHeroCatalog = applyInGameHeroOverridesToCatalog(heroCatalog, inGameOverrides);
 const catalogValidation = validateHeroI18nCatalog(effectiveHeroCatalog);
 for (const locale of ['ja', 'zh-CN', 'ko', 'es']) {
@@ -590,17 +590,16 @@ for (const locale of ['es', 'ko']) {
 }
 assert.doesNotThrow(() => validateHeroI18nCatalog(catalogWithOfficialEmpty), 'Catalog validation must accept explicitly empty official skill copy.');
 
-// Exact game-client evidence overrides the corresponding website fields only.
-// The Spanish screenshot shows Passive selected; it does not provide a Rush
-// description. The Korean screenshot shows Rush Attack selected and supplies
-// the two missing lines that the website omits.
+// Exact fields manually verified in the released game client override only
+// the corresponding website fields. Temporary source screenshots were removed
+// after transcription and review, so the public repository retains no images.
 const effectiveEs0015 = applyInGameHeroOverride(realEmptyRushSnapshots.es, 'es', '0015', inGameOverrides);
 assert.equal(effectiveEs0015.translationStatus, 'official-site+in-game-verified');
 assert.equal(effectiveEs0015.officialName, 'Bojack Máximo Poder');
 assert.equal(effectiveEs0015.skills.passive1.name, 'Asesino Estelar');
 assert.equal(effectiveEs0015.skills.passive1.desc, `Capacidad de ordenar a sus subordinados que efectúen ataques adicionales.
 Estos se producen cuando un héroe enemigo recibe una Arremetida tras ser golpeado por técnicas.`);
-assert.equal(effectiveEs0015.skills.rush_attack1.desc, '', 'The supplied Spanish screenshot does not show Rush selected, so its website-empty description must stay empty.');
+assert.equal(effectiveEs0015.skills.rush_attack1.desc, '', 'The Spanish verification record does not verify a Rush description, so the website-empty description must stay empty.');
 assert.equal(effectiveEs0015.skills.rush_attack1.officialEmpty, true);
 
 const effectiveKo0015 = applyInGameHeroOverride(realEmptyRushSnapshots.ko, 'ko', '0015', inGameOverrides);

@@ -1,27 +1,10 @@
 {
   "schemaVersion": 1,
-  "policy": "Fields captured directly from the released game client override the corresponding official-site snapshot fields. Uncaptured fields continue to use the official website snapshot; no text is inferred or machine-generated.",
+  "policy": "Fields manually verified against the released game client override the corresponding official-site snapshot fields. Temporary source screenshots are not distributed after transcription and review. Uncaptured fields continue to use the official website snapshot; no text is inferred or machine-generated.",
   "locales": {
     "es": {
       "0015": {
         "officialName": "Bojack Máximo Poder",
-        "evidence": [
-          {
-            "path": "data/locales/evidence/in-game/es-0015-passive.png",
-            "sha256": "ef9b0ca3464c48f8a388b364d3747c24a690cb494a47a6fda600d502aba4a190",
-            "verifiedFields": [
-              "officialName",
-              "skills.transformation1.name",
-              "skills.passive1.name",
-              "skills.passive1.desc",
-              "skills.rush_attack1.name",
-              "skills.skill1.name",
-              "skills.skill2.name",
-              "skills.skill3.name",
-              "skills.super_attack1.name"
-            ]
-          }
-        ],
         "skills": {
           "transformation1": {
             "name": "Máximo Poder"
@@ -45,29 +28,30 @@
           "super_attack1": {
             "name": "Gigagolpe Aplastante"
           }
-        }
+        },
+        "verification": [
+          {
+            "source": "released-game-client",
+            "sourceMediaBundled": false,
+            "verifiedFields": [
+              "officialName",
+              "skills.transformation1.name",
+              "skills.passive1.name",
+              "skills.passive1.desc",
+              "skills.rush_attack1.name",
+              "skills.skill1.name",
+              "skills.skill2.name",
+              "skills.skill3.name",
+              "skills.super_attack1.name"
+            ],
+            "note": "Temporary verification screenshot removed after the localized fields were transcribed and reviewed."
+          }
+        ]
       }
     },
     "ko": {
       "0015": {
         "officialName": "풀 파워 보자크",
-        "evidence": [
-          {
-            "path": "data/locales/evidence/in-game/ko-0015-rush.png",
-            "sha256": "d7a0f1a7001d3211d7edd5969af17275c623a245b8532e5225a8924f50cdf9da",
-            "verifiedFields": [
-              "officialName",
-              "skills.transformation1.name",
-              "skills.passive1.name",
-              "skills.rush_attack1.name",
-              "skills.rush_attack1.desc",
-              "skills.skill1.name",
-              "skills.skill2.name",
-              "skills.skill3.name",
-              "skills.super_attack1.name"
-            ]
-          }
-        ],
         "skills": {
           "transformation1": {
             "name": "풀 파워"
@@ -91,7 +75,25 @@
           "super_attack1": {
             "name": "기가 그랜드 스매셔"
           }
-        }
+        },
+        "verification": [
+          {
+            "source": "released-game-client",
+            "sourceMediaBundled": false,
+            "verifiedFields": [
+              "officialName",
+              "skills.transformation1.name",
+              "skills.passive1.name",
+              "skills.rush_attack1.name",
+              "skills.rush_attack1.desc",
+              "skills.skill1.name",
+              "skills.skill2.name",
+              "skills.skill3.name",
+              "skills.super_attack1.name"
+            ],
+            "note": "Temporary verification screenshot removed after the localized fields were transcribed and reviewed."
+          }
+        ]
       }
     }
   }

@@ -18,7 +18,7 @@ This package is cleaned for a **private GitHub repository**:
 - production legal pages and a monitored-contact requirement added;
 - GitHub Actions CI and Dependabot configuration added.
 
-The repository still contains game-related artwork and reference data. Those files are **not copyright-cleared for redistribution merely because a disclaimer is present**. Read `LEGAL_REVIEW_VI.md` and `THIRD_PARTY_NOTICES.md` before making the repository or website public.
+The project uses character/skill names and gameplay facts as descriptive compatibility data for tournament and reference functions. The repository also contains game-related artwork; public visibility of that artwork on an official site is not, by itself, a redistribution licence. Read `LEGAL_REVIEW_VI.md` and `THIRD_PARTY_NOTICES.md` before publishing a repository that includes the asset files.
 
 ## Stack
 

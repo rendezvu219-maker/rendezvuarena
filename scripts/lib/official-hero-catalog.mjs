@@ -33,8 +33,8 @@ export function validateHeroI18nCatalog(catalog, { requireFullOfficial = false, 
       if (!allowedStatuses.has(record?.translationStatus)) {
         errors.push(`${locale}.${heroId}: translationStatus must be one of ${[...allowedStatuses].join(', ')}.`);
       }
-      if (record?.translationStatus === 'official-site+in-game-verified' && !record?.inGameEvidence?.length) {
-        errors.push(`${locale}.${heroId}: in-game-verified records require inGameEvidence.`);
+      if (record?.translationStatus === 'official-site+in-game-verified' && !record?.inGameVerification?.length) {
+        errors.push(`${locale}.${heroId}: in-game-verified records require inGameVerification metadata.`);
       }
       if (OFFICIAL_LOCALES.includes(locale) && !/^https:\/\/dbg-squadra\.bn-ent\.net\//.test(record?.sourceUrl || '')) {
         errors.push(`${locale}.${heroId}: an official sourceUrl is required.`);
@@ -100,7 +100,7 @@ export function compiledOverrides(catalog) {
       const {
         sourceUrl: _sourceUrl,
         officialName: _officialName,
-        inGameEvidence: _inGameEvidence,
+        inGameVerification: _inGameVerification,
         sourceLocale: _sourceLocale,
         sourcePolicy: _sourcePolicy,
         ...runtimeRecord

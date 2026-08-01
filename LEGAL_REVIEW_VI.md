@@ -4,67 +4,64 @@ Cập nhật: 01/08/2026
 
 Đây là đánh giá rủi ro kỹ thuật/nội dung, không thay thế tư vấn của luật sư.
 
-## Kết luận
+## Kết luận đã hiệu chỉnh
 
-Bản này phù hợp để đưa lên **GitHub private** và tiếp tục deploy thử nghiệm có kiểm soát. Chưa nên gọi là “đã sạch bản quyền” hoặc mở GitHub public, vì repo vẫn chứa ảnh nhân vật, ảnh Divine Card, tên nhân vật và phần mô tả/kỹ năng có nguồn gốc từ game hoặc website chính thức.
+Báo cáo trước đã xếp tên nhân vật, tên kỹ năng và dữ liệu cơ chế vào cùng nhóm rủi ro với artwork. Cách diễn đạt đó quá rộng.
 
-Đổi tên miền thành RendezVu Arena giúp giảm nguy cơ người dùng hiểu nhầm đây là website chính thức, nhưng không tạo quyền sử dụng ảnh, video, logo hoặc nội dung của chủ sở hữu.
+- **Tên nhân vật, tên kỹ năng, chỉ số, vai trò và cơ chế gameplay** chủ yếu là định danh ngắn hoặc dữ kiện dùng để nhận diện và vận hành giải đấu. Đây không phải trọng tâm rủi ro bản quyền của dự án. Tuy vậy, tên/logo vẫn có thể liên quan đến nhãn hiệu và website phải tránh gây hiểu nhầm là sản phẩm chính thức.
+- **Mô tả kỹ năng dài sao chép nguyên văn** có thể chứa cách diễn đạt sáng tạo. Nên ưu tiên mô tả ngắn, bản dịch/diễn giải do dự án biên tập, ghi nguồn và chỉ trích dẫn đúng phần cần thiết.
+- **Ảnh nhân vật, icon kỹ năng, Divine Card và role icon** là phần rủi ro rõ nhất vì đây là tác phẩm hình ảnh được sao chép vào repo và phục vụ trực tiếp trên website.
 
-## Các điểm đã xử lý
+Hai ảnh chụp trong game từng dùng để xác minh bản dịch đã được xóa hoàn toàn. Dự án chỉ giữ lại các trường đã được chép và kiểm tra; không còn đường dẫn, hash hay file ảnh bằng chứng trong gói public.
 
-- Đổi thương hiệu sản phẩm từ tên game thành **RendezVu Arena**.
-- Chỉ giữ tên game ở ngữ cảnh mô tả khả năng tương thích và thông báo quyền.
-- Bổ sung tuyên bố không liên kết/không được chứng thực.
-- Bổ sung đúng dòng ghi nhận quyền:
-  - `©BIRD STUDIO/SHUEISHA, TOEI ANIMATION`
-  - `©Bandai Namco Entertainment Inc.`
-- Bổ sung quy trình yêu cầu gỡ bỏ nội dung và yêu cầu cấu hình email liên hệ thật.
-- Tắt quảng bá donation trong lần phát hành đầu.
-- Xóa `.env`, database, tài khoản local, dữ liệu cá nhân, file demo và log khỏi gói GitHub.
+## Điểm pháp lý quan trọng
 
-## Rủi ro còn lại
+### Dữ kiện và tên gọi
 
-### 1. Ảnh và dữ liệu game
+WIPO nêu rằng quyền tác giả bảo hộ **cách thể hiện**, không bảo hộ ý tưởng, thủ tục, phương pháp hoặc khái niệm; tên, tiêu đề và khẩu hiệu có được bảo hộ hay không phụ thuộc mức độ sáng tạo. U.S. Copyright Office cũng nêu rõ tên, tiêu đề và cụm từ ngắn không thuộc đối tượng quyền tác giả tại Hoa Kỳ. Đây là cơ sở hợp lý để đánh giá tên nhân vật/kỹ năng và dữ kiện gameplay có rủi ro bản quyền thấp hơn artwork.
 
-Disclaimer và credit chỉ xác định chủ sở hữu; chúng không phải giấy phép. Việc đưa ảnh vào website công khai và đặc biệt là commit chúng vào repo public vẫn là hành vi sao chép/phân phối.
+Mục đích wiki, bình luận, giới thiệu và tổ chức giải đấu là yếu tố hỗ trợ tính chính đáng của việc tham chiếu. Luật Sở hữu trí tuệ Việt Nam có ngoại lệ cho việc trích dẫn hợp lý để bình luận, giới thiệu hoặc minh họa, nhưng ngoại lệ này vẫn phụ thuộc phạm vi, mục đích, nguồn ghi nhận và việc sử dụng có ảnh hưởng bất hợp lý đến quyền của chủ sở hữu hay không.
 
-Hướng an toàn nhất là xin xác nhận bằng văn bản. Nếu chưa có, để repo ở chế độ private và chuẩn bị một bản public-source không chứa media/tài liệu chính thức.
+### Hình ảnh công khai trên website chính thức
 
-### 2. Squadra Creators Guidelines
+Việc một hình ảnh được công khai để mọi người xem hoặc tương tác **không làm hình ảnh trở thành public domain và không tự tạo giấy phép sao chép/phân phối**. Vì repo chứa bản sao cục bộ của các file hình, rủi ro này khác với việc chỉ đặt liên kết đến trang chính thức.
 
-Guidelines dành cho thành viên chương trình yêu cầu nội dung do creator tự tạo; tài sản được công ty cung cấp không được sửa và việc dùng tài sản đó được giới hạn cho video/stream liên quan đến game. Vì vậy không nên suy luận rằng Guidelines tự động cho phép dùng các tài sản đó trong một web app.
+Điều đó không có nghĩa website chắc chắn vi phạm. Việc sử dụng giới hạn, có mục đích nhận diện/bình luận, không thay thế game hay kho asset, có ghi nguồn và cơ chế gỡ bỏ có thể giúp lập luận của dự án tốt hơn. Tuy nhiên, không thể kết luận “không thể có bản quyền” chỉ vì asset đã được đăng công khai.
 
-### 3. Tournament Support Program
+## Trạng thái phát hành
 
-Điều khoản chương trình ghi rằng tài sản do chương trình cung cấp chỉ được dùng cho giải đã được hỗ trợ và không được sửa đổi. Tài liệu cũng có điều khoản cấm tạo/phân phối nội dung kết hợp game với dịch vụ bên thứ ba trong phạm vi chương trình. Nếu một giải được chương trình hỗ trợ, cần hỏi Tournament Office xem RendezVu Arena có được phép dùng trong quy trình đó hay không.
+- **GitHub private:** sẵn sàng.
+- **Website cộng đồng public:** có thể triển khai về mặt kỹ thuật, với thông báo độc lập, ghi nguồn và quy trình gỡ bỏ; rủi ro pháp lý còn tập trung ở visual assets.
+- **GitHub public chứa toàn bộ asset:** rủi ro cao hơn website vận hành vì GitHub cho phép tải và phân phối trực tiếp toàn bộ file gốc. Nên cân nhắc repo code public nhưng asset private/được tải khi deploy, hoặc giữ repo private trong giai đoạn đầu.
 
-Một giải được duyệt không đồng nghĩa toàn bộ website được duyệt.
+## Các biện pháp đã có
 
-### 4. Video do bạn bè quay
+- Thương hiệu độc lập **RendezVu Arena**; không dùng tên game làm tên sản phẩm hoặc tên miền.
+- Chỉ dùng tên game để mô tả khả năng tương thích và nguồn dữ liệu.
+- Tuyên bố không liên kết/không được chứng thực và ghi nhận đúng chủ thể quyền.
+- Không cung cấp giao diện tải xuống hàng loạt hoặc biến website thành kho asset.
+- Có trang yêu cầu gỡ bỏ/sửa nguồn và yêu cầu email liên hệ thật trước khi launch.
+- Donation bị tắt trong lần phát hành đầu.
+- Đã xóa `.env`, database, dữ liệu cá nhân, file demo, log và ảnh bằng chứng dịch.
 
-Sự đồng ý của streamer giải quyết quyền giữa bạn và người quay, nhưng không tự động giải quyết quyền của nhà phát hành đối với hình ảnh/âm thanh trong game. Video vẫn phải tuân thủ video policy hiện hành và sự đồng ý của người tham gia nếu giải có ghi hình/stream.
+## Creator/Tournament Program
 
-### 5. Donation
+Squadra Creators Guidelines áp dụng cho thành viên chương trình và giới hạn asset **do Công ty cung cấp trong chương trình** vào video/stream liên quan đến game. Vì vậy tài liệu này không phải giấy phép chung cho web app, nhưng cũng không nên suy diễn rằng mọi ảnh công khai trên website chính thức đều thuộc đúng nhóm “provided assets” của chương trình.
 
-Donation đang bị tắt trong bản đầu. Chỉ bật lại sau khi xác nhận:
+Tournament Support Program yêu cầu giải được hỗ trợ phải phi lợi nhuận, cấm phí tham dự/phí xem và tài trợ bên thứ ba, đồng thời có quy định riêng đối với asset được cung cấp cho giải. Một giải được duyệt không đồng nghĩa toàn bộ nền tảng được duyệt.
 
-- không phải phí tham dự hoặc phí xem;
-- không liên quan đến seed, kết quả, giải thưởng hay ưu tiên hỗ trợ;
-- không đặt trên trang của giải đang xin/nhận Tournament Support nếu điều khoản cấm tài trợ;
-- đã xử lý yêu cầu thuế, thanh toán và quyền nội dung.
+## Khuyến nghị thực tế
 
-## Điều kiện tối thiểu trước khi mở public
+1. Public website trước, nhưng giữ repository chứa asset ở chế độ private trong giai đoạn đầu.
+2. Chỉ hiển thị ảnh ở kích thước/phạm vi cần cho chức năng chọn tướng, draft và tra cứu; không mở endpoint tải nguyên bộ.
+3. Với mô tả kỹ năng, ưu tiên dữ kiện ngắn và diễn giải do dự án biên tập thay vì sao chép nguyên đoạn marketing.
+4. Luôn ghi nguồn chính thức, dòng quyền và email gỡ bỏ hoạt động.
+5. Nếu nhận phản đối từ chủ thể quyền, gỡ asset được nêu trước rồi mới tranh luận phạm vi ngoại lệ.
 
-- Có email liên hệ/gỡ bỏ được theo dõi thường xuyên.
-- Có văn bản cho phép hoặc thay toàn bộ media chưa được cấp phép.
-- Chốt thời hạn lưu chat, evidence, security log và quy trình xóa tài khoản.
-- Xác minh domain gửi email, OAuth callback và HTTPS.
-- Không dùng logo/tên miền dễ khiến người dùng hiểu đây là website chính thức.
-- Không tuyên bố “supported”, “official partner” hoặc “approved” ngoài đúng giải và đúng câu chữ được cấp.
+## Nguồn đã đối chiếu
 
-## Nguồn chính đã đối chiếu
-
+- WIPO — Copyright protection and expression: `https://www.wipo.int/en/web/copyright/protection`
+- U.S. Copyright Office — names, titles and short phrases: `https://www.copyright.gov/help/faq/faq-protect.html`
+- Luật số 07/2022/QH15 sửa đổi Luật Sở hữu trí tuệ, hiệu lực từ 01/01/2023: `https://www.wipo.int/wipolex/en/legislation/details/21740`
 - Squadra Creators Guidelines: `https://dbg-squadra.bn-ent.net/en-us/pdf/creators_guideline.pdf`
-- Tournament Support Program Terms and Conditions: `https://dbg-squadra.bn-ent.net/en-us/pdf/support_rules.pdf`
-- Bandai Namco Entertainment Terms of Service: `https://www.bandainamcoent.com/legal/terms`
-- GitHub Pages documentation: `https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site`
+- Tournament Support Program Terms: `https://dbg-squadra.bn-ent.net/en-us/pdf/support_rules.pdf`

@@ -1,6 +1,6 @@
 {
   "name": "rendezvu-arena",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Community tournament operations, draft rooms, brackets and broadcast tools.",
   "main": "server.js",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "policy": "Verified localized hero records may combine verbatim official-site snapshots with exact fields captured from the released game client. In-game evidence overrides only the fields it explicitly verifies; synthetic text is forbidden.",
+  "policy": "Official locale records are stored as official-site snapshots. Exact localized fields manually checked in the released game client may override missing or stale website fields. Temporary verification screenshots are not distributed.",
   "routes": {
     "ja": "https://dbg-squadra.bn-ent.net/hero/{id}",
     "zh-CN": "https://dbg-squadra.bn-ent.net/cn/hero/{id}",
@@ -2695,10 +2695,10 @@
         },
         "translationStatus": "official-site+in-game-verified",
         "sourceUrl": "https://dbg-squadra.bn-ent.net/ko/hero/0015",
-        "inGameEvidence": [
+        "inGameVerification": [
           {
-            "path": "data/locales/evidence/in-game/ko-0015-rush.png",
-            "sha256": "d7a0f1a7001d3211d7edd5969af17275c623a245b8532e5225a8924f50cdf9da",
+            "source": "released-game-client",
+            "sourceMediaBundled": false,
             "verifiedFields": [
               "officialName",
               "skills.transformation1.name",
@@ -4074,10 +4074,10 @@
         },
         "translationStatus": "official-site+in-game-verified",
         "sourceUrl": "https://dbg-squadra.bn-ent.net/es/hero/0015",
-        "inGameEvidence": [
+        "inGameVerification": [
           {
-            "path": "data/locales/evidence/in-game/es-0015-passive.png",
-            "sha256": "ef9b0ca3464c48f8a388b364d3747c24a690cb494a47a6fda600d502aba4a190",
+            "source": "released-game-client",
+            "sourceMediaBundled": false,
             "verifiedFields": [
               "officialName",
               "skills.transformation1.name",

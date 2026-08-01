@@ -87,7 +87,7 @@ const snapshots = await mapConcurrent(jobs, concurrency, async ({ locale, heroId
     const officialSnapshot = parseOfficialHeroHtml({ html, locale, heroId, heroName: heroNames[locale]?.[heroId], sourceDetail: HEROES_DATA[heroId], sourceUrl: url });
     const snapshot = applyInGameHeroOverride(officialSnapshot, locale, heroId, inGameOverrides);
     if (snapshot.translationStatus === 'official-site+in-game-verified') {
-      console.warn(`[GAME] ${locale}.${heroId}: applied exact in-game evidence overlay.`);
+      console.warn(`[GAME] ${locale}.${heroId}: applied exact in-game verification overlay.`);
     }
     const previousName = heroNames[locale]?.[heroId] || '';
     if (previousName && normalizeOfficialCompare(previousName) !== normalizeOfficialCompare(snapshot.officialName)) {

@@ -15,8 +15,8 @@ The former heuristic generator has been removed. It created plausible-sounding s
 but those summaries did not match the wording used by the game or the official site. The replacement policy is
 fail-closed:
 
-- `ja`, `zh-CN`, `ko`, and `es` accept verified website snapshots. When exact in-game evidence exists, only the
-  explicitly evidenced fields are overlaid and the record is marked `official-site+in-game-verified`.
+- `ja`, `zh-CN`, `ko`, and `es` accept verified website snapshots. When exact in-game verification exists, only the
+  fields manually checked in the released game client are overlaid and the record is marked `official-site+in-game-verified`. Temporary screenshots are removed after transcription and are not part of the public package.
 - In-game evidence has higher priority than the website because the website can omit text that is present in the
   released client. Evidence files are SHA-256 pinned and validated during build/test.
 - `vi` accepts only manually edited records marked `editor-reviewed`; hero names remain English.
@@ -179,34 +179,32 @@ The sync tool preserves the official page exactly. If a skill panel exists but i
 }
 ```
 
-This represents the website snapshot only. If an exact game-client capture later proves that the released game
-contains text, `in-game-hero-overrides.json` supplies that field without changing or inventing the remaining copy.
-For Full Power Bojack (`0015`), the Korean game capture supplies the missing Rush Attack description. The supplied
-Spanish capture shows Passive selected, so Spanish Rush remains website-empty until a Spanish in-game Rush capture
-is available.
+This represents the website snapshot only. If fields are later checked directly in the released game client,
+`in-game-hero-overrides.json` may supply only those reviewed fields without changing or inventing the remaining copy.
+For Full Power Bojack (`0015`), the Korean client check supplies the missing Rush Attack description. The Spanish
+verification record covers Passive and visible labels only, so Spanish Rush remains website-empty.
 
 
-## In-game evidence overlays
+## In-game verification overlays
 
-Validate screenshot files, hashes, hero IDs and skill IDs:
+Validate the text-only verification records, hero IDs and skill IDs:
 
 ```bash
 npm run i18n:heroes:verify-game
 ```
 
-Current verified evidence:
+Current verified records:
 
-- `es.0015.passive1`: exact Spanish game-client name and description; all visible Spanish skill names and hero title.
-- `ko.0015.rush_attack1`: exact Korean game-client name and the two Rush Attack description lines; all visible Korean skill names and hero title.
+- `es.0015.passive1`: exact Spanish game-client name and description; visible Spanish skill names and hero title.
+- `ko.0015.rush_attack1`: exact Korean game-client name and the two Rush Attack description lines; visible Korean skill names and hero title.
 
-Source precedence is field-level:
+Temporary screenshots used during review have been deleted and are not distributed. Source precedence is field-level:
 
-1. exact in-game evidence;
+1. fields manually verified in the released game client;
 2. official website snapshot;
 3. complete canonical English fallback when no localized record exists.
 
-The Spanish `0015` screenshot has **Passive** highlighted, not Rush Attack. It must never be used as proof of a
-Spanish Rush description.
+The Spanish `0015` verification record does not cover a Rush description and must never be treated as proof of one.
 
 ## Vietnamese editorial policy
 
