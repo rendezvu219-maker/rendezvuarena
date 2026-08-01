@@ -1,4 +1,4 @@
-import { DraftEngine } from './draft.js';
+import { DraftEngine, draftActionPresentation } from './draft.js';
 import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js';
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js';
@@ -468,9 +468,11 @@ export class DraftUI {
     if (['active', 'paused', 'complete'].includes(this.engine.state)) {
       this.setPreDraftStage(false);
     }
+    this.updateCurrentActionUi();
     this.updateActiveSlot();
     this.renderGrid();
     this.renderDivineHeader();
+    this.applyAccessMode();
   }
 
   showRoomNotice(message) {
@@ -573,6 +575,18 @@ export class DraftUI {
   }
 
 
+  updateCurrentActionUi(action = this.engine?.currentAction, { showBanner = false } = {}) {
+    if (!action) return;
+    const presentation = draftActionPresentation(action);
+    const phaseText = t(presentation.phaseKey);
+    if (showBanner) this.showPhaseBanner(phaseText, action.team);
+    this.phaseIndicator.textContent = phaseText;
+    this.btnLock.textContent = t(presentation.buttonKey);
+    this.btnLock.style.background = presentation.isBan
+      ? 'linear-gradient(135deg, #8b0000, #cc0000)'
+      : '';
+  }
+
   bindEvents() {
     this.engine.on('timerTick', ({ remaining, remote }) => {
       this.timerEl.textContent = remaining;
@@ -592,23 +606,11 @@ export class DraftUI {
 
     this.engine.on('nextTurn', ({ action }) => {
       if (!action) return;
-      let phaseText = t('pickPhase');
-      if (action.type === 'ban') phaseText = t('banPhase');
-      else if (action.type === 'divine-ban') phaseText = t('divineBan');
-      this.showPhaseBanner(phaseText, action.team);
-      this.phaseIndicator.textContent = phaseText;
+      this.updateCurrentActionUi(action, { showBanner: true });
       this.updateActiveSlot();
       this.renderGrid();
       this.btnLock.disabled = true;
       this.btnLock.classList.remove('ready');
-      // Correct label: BAN during ban phase, LOCK IN during pick phase
-      if (action.type === 'ban' || action.type === 'divine-ban') {
-        this.btnLock.textContent = t('ban');
-        this.btnLock.style.background = 'linear-gradient(135deg, #8b0000, #cc0000)';
-      } else {
-        this.btnLock.textContent = t('lockIn');
-        this.btnLock.style.background = '';
-      }
       this.clearPreview();
       this.applyAccessMode();
       this.publishRoomState(true);
@@ -2071,7 +2073,10 @@ if (this.engine.selectedHero === h.id) {
           this.seriesControlStatus.className = 'series-control-status success';
           this.seriesControlStatus.textContent = `Score saved. Loading Game ${payload.nextGameNumber} with ${String(this.config.seriesRule).replaceAll('_', ' ')} history…`;
         }
-        setTimeout(() => window.location.reload(), 900);
+        setTimeout(() => {
+          if (payload.nextDraftUrl) window.location.assign(payload.nextDraftUrl);
+          else window.location.reload();
+        }, 900);
         return;
       }
 

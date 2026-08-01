@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import {
+  DIVINE_RULES,
   buildDivineBanSequence,
   buildDivinePickBanSequence,
   entrantForSide,
@@ -18,6 +19,10 @@ const redForWinner = resolveSideAssignment('teamA', 'B');
 assert.deepEqual(redForWinner, { A: 'teamB', B: 'teamA' });
 assert.equal(sideForEntrant(redForWinner, 'teamA'), 'B');
 assert.equal(entrantForSide(redForWinner, 'A'), 'teamB');
+
+for (const rule of DIVINE_RULES) {
+  await access(new URL(`../divine/${rule.file}`, import.meta.url));
+}
 
 assert.deepEqual(buildDivineBanSequence(0), []);
 assert.deepEqual(buildDivineBanSequence(1), [
@@ -63,6 +68,7 @@ assert.match(app, /!this\.config\.quickDraft && teamKey !== 'teamA'/, 'Tournamen
 assert.match(app, /coinCaller === 'teamA'\s*\? 'teamB' : 'teamA'/, 'A lost call must transfer side choice to the opponent.');
 assert.match(app, /divine\.drawnIndices = \[divine\.picks\.A, divine\.picks\.B\]/, 'Pick/Ban must resolve one Draw per side.');
 assert.match(app, /winnerSide: winnerSideForApi/, 'Game results must map Blue/Red back to bracket Team A/Team B.');
+assert.match(app, /restoreDraftVisuals\(\)[\s\S]*this\.updateCurrentActionUi\(\)/, 'Restored rooms must refresh the BAN/LOCK IN label from the current action.');
 assert.match(html, /id="pre-draft-matchup-stage"/);
 assert.match(html, /data-side-choice="A"/);
 assert.match(html, /data-side-choice="B"/);

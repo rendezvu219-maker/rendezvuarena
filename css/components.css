@@ -577,6 +577,12 @@ select.form-control, select.premium-select {
   filter: drop-shadow(0 5px 9px rgba(0,0,0,.45));
 }
 
+.draft-rule-hero-portrait.is-nikita-easter-egg > img {
+  object-fit: contain;
+  object-position: center;
+  transform: scale(1.1);
+}
+
 
 
 /* v0.6.47 — shared home logo links and global account menu */

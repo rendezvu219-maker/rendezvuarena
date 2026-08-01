@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
-import { DraftEngine } from '../js/draft.js';
+import { DraftEngine, draftActionPresentation } from '../js/draft.js';
 import { HEROES, generateDraftSequence } from '../js/heroes.js';
 
 const summarize = sequence => sequence.map(step => `${step.team}${step.type === 'ban' ? 'B' : 'P'}`);
+
+assert.deepEqual(draftActionPresentation({ type:'ban' }), { phaseKey:'banPhase', buttonKey:'ban', isBan:true });
+assert.deepEqual(draftActionPresentation({ type:'divine-ban' }), { phaseKey:'divineBan', buttonKey:'ban', isBan:true });
+assert.deepEqual(draftActionPresentation({ type:'pick' }), { phaseKey:'pickPhase', buttonKey:'lockIn', isBan:false });
 
 const twoBan = generateDraftSequence(2, 1, 4);
 assert.deepEqual(summarize(twoBan), [

@@ -31,6 +31,7 @@ const child = spawn(process.execPath, ['server.js'], {
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 let output = '';
+let db = null;
 child.stdout.on('data', chunk => { output += chunk; });
 child.stderr.on('data', chunk => { output += chunk; });
 
@@ -124,7 +125,7 @@ try {
   const match = tournament.payload.matches.find(item => item.team_a_id && item.team_b_id && item.result_status !== 'final');
   assert.ok(match, 'Playable match is required.');
 
-  const db = new DatabaseSync(databasePath);
+  db = new DatabaseSync(databasePath);
   const teamA = db.prepare('SELECT captain_user_id FROM teams WHERE id=?').get(match.team_a_id);
   const teamB = db.prepare('SELECT captain_user_id FROM teams WHERE id=?').get(match.team_b_id);
   const captainAPersona = suite.users.find(item => Number(item.id) === Number(teamA.captain_user_id));
@@ -175,6 +176,17 @@ try {
   assert.equal(confirmGame1.payload.nextGameNumber, 2);
   assert.equal(confirmGame1.payload.scoreA, 1);
   assert.equal(confirmGame1.payload.scoreB, 0);
+  assert.equal(confirmGame1.payload.room.links, undefined, 'Captain confirmation must not expose every Draft Room capability link.');
+  assert.match(confirmGame1.payload.nextDraftUrl, /\/draft-room\.html#room=/);
+  const nextGameUrl = new URL(confirmGame1.payload.nextDraftUrl);
+  const nextGameAccess = new URLSearchParams(nextGameUrl.hash.slice(1));
+  const nextGameExchange = await request(`/api/public/draft-rooms/${nextGameAccess.get('room')}/access`, {
+    method: 'POST',
+    body: { accessToken: nextGameAccess.get('access') },
+  });
+  assert.equal(nextGameExchange.response.status, 200, JSON.stringify(nextGameExchange.payload));
+  assert.equal(nextGameExchange.payload.room.role, 'teamB');
+  assert.equal(nextGameExchange.payload.room.config.gameNumber, 2);
 
   setDraftComplete(db, match.id, 2);
   const reportGame2 = await request(`/api/matches/${match.id}/games/current/report`, {
@@ -208,6 +220,7 @@ try {
   assert.equal(confirmGame3.response.status, 200, JSON.stringify(confirmGame3.payload));
   assert.equal(confirmGame3.payload.seriesComplete, true);
   assert.equal(confirmGame3.payload.final, true);
+  assert.equal(confirmGame3.payload.nextDraftUrl, undefined);
   assert.equal(confirmGame3.payload.scoreA, 2);
   assert.equal(confirmGame3.payload.scoreB, 1);
 
@@ -221,6 +234,7 @@ try {
   assert.deepEqual(games.map(item => item.result_status), ['confirmed', 'confirmed', 'confirmed']);
 
   db.close();
+  db = null;
 
   const dashboardSource = fs.readFileSync(path.join(root, 'js', 'dashboard.js'), 'utf8');
   const portalSource = fs.readFileSync(path.join(root, 'js', 'portal.js'), 'utf8');
@@ -233,5 +247,6 @@ try {
 
   console.log('Game-by-game Captain reporting, automatic series finalization, readiness cleanup and wide layout checks passed.');
 } finally {
+  try { db?.close(); } catch {}
   await stopServer();
 }

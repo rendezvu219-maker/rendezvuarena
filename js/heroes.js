@@ -72,6 +72,22 @@ export function imageWithFallback(primary, fallback, alt, className = '') {
 }
 
 
+export const NIKITA_EASTER_EGG = Object.freeze({
+  heroId: '0017',
+  trigger: 'nikita',
+  minimumTriggerLength: 3,
+  searchAliases: Object.freeze(['nikita', 'daima']),
+  imagePath: '/assets/easter-eggs/goku-mini-nikita.png',
+  descriptions: Object.freeze({
+    en: "A hero who... wait, why is he pink? ...Anyway—\nA hero who skillfully keeps enemies at mid-range! Rush in with a flurry of Power Pole attacks and maneuver alongside Panzy and Glorio!\nNikita's Daima Goku wears his signature pink skin—the one he always plays best in. Word has it Indomie noodles might as well be his second weapon.",
+    vi: 'Một chiến binh... khoan, sao cậu ấy lại mặc đồ hồng? ...Dù sao thì—\nMột chiến binh khéo léo giữ kẻ địch ở tầm trung! Hãy lao vào bằng chuỗi đòn Gậy Như Ý dồn dập và phối hợp cùng Panzy và Glorio!\nGoku Daima của Nikita sử dụng bộ skin hồng đặc trưng—cũng chính là skin mà anh ấy luôn chơi hay nhất. Nghe đồn mì Indome chẳng khác nào vũ khí thứ hai của anh ấy.',
+    ja: '敵との間合いを保って闘う中距離型ヒーロー！\n怒涛の如意棒ラッシュでパンジやグロリオと大暴れしよう！\nピンクの服を着たDAIMA悟空とインドミーが大好きなニキータのための特別バージョン！',
+    'zh-CN': '一名擅长与敌人保持距离的中距离英雄！\n施展猛烈的如意棒连击，与庞吉和古罗里奥一起大闹战场吧！\n这是为尼基塔准备的粉色特别版——他最喜欢粉衣DAIMA悟空和Indomie方便面！',
+    ko: '적과 거리를 유지하며 싸우는 중거리형 히어로!\n맹렬한 여의봉 연타로 팬지, 글로리오와 함께 전장을 휘저어 보자!\n분홍색 DAIMA 오공과 인도미 라면을 좋아하는 니키타를 위한 특별 버전!',
+    es: '¡Un héroe de media distancia que mantiene a sus enemigos a raya!\n¡Ataca con una ráfaga del Bastón de Poder y maniobra junto a Panzy y Glorio!\nUna versión especial para Nikita: Goku de DAIMA vestido de rosa y con energía de fideos Indomie.',
+  }),
+});
+
 function normalizeHeroSearch(value = '') {
   return String(value)
     .normalize('NFKD')
@@ -80,31 +96,62 @@ function normalizeHeroSearch(value = '') {
     .toLocaleLowerCase();
 }
 
+export function isNikitaEasterEggSearch(value = '') {
+  const tokens = normalizeHeroSearch(value).split(/[^a-z0-9]+/).filter(Boolean);
+  return tokens.some(token => (
+    token.length >= NIKITA_EASTER_EGG.minimumTriggerLength
+    && token.startsWith(NIKITA_EASTER_EGG.trigger.slice(0, NIKITA_EASTER_EGG.minimumTriggerLength))
+  ));
+}
+
 export function getHeroSearchText(hero, localizedName = '', localizedRole = '') {
   if (!hero) return '';
-  return normalizeHeroSearch(`${localizedName} ${hero.name || ''} ${localizedRole} ${hero.role || ''} ${hero.id || ''}`);
+  const aliases = hero.id === NIKITA_EASTER_EGG.heroId
+    ? ` ${NIKITA_EASTER_EGG.searchAliases.join(' ')}`
+    : '';
+  return normalizeHeroSearch(`${localizedName} ${hero.name || ''} ${localizedRole} ${hero.role || ''} ${hero.id || ''}${aliases}`);
 }
 
 export function heroMatchesSearch(hero, query = '', localizedName = '', localizedRole = '') {
   const normalizedQuery = normalizeHeroSearch(query);
   if (!normalizedQuery) return true;
+  if (String(hero?.id) === NIKITA_EASTER_EGG.heroId && isNikitaEasterEggSearch(normalizedQuery)) return true;
   const haystack = getHeroSearchText(hero, localizedName, localizedRole);
   return normalizedQuery.split(/\s+/).filter(Boolean).every(token => haystack.includes(token));
 }
 
-export function getHeroDisplayImage(id, _search = '', variant = 'full') {
+export function getHeroDisplayImage(id, search = '', variant = 'full') {
+  if (String(id) === NIKITA_EASTER_EGG.heroId && isNikitaEasterEggSearch(search)) {
+    return NIKITA_EASTER_EGG.imagePath;
+  }
   if (variant === 'sp') return getHeroImgSp(id);
   if (variant === 'hover') return getHeroImgHover(id);
   if (variant === 'card') return getHeroImg(id);
   return getHeroFullImg(id);
 }
 
-export function getHeroDisplayName(_id, fallback = '', _search = '') {
+export function getHeroDisplayName(id, fallback = '', search = '') {
+  if (String(id) === NIKITA_EASTER_EGG.heroId && isNikitaEasterEggSearch(search)) {
+    return `${fallback} (Nikita?!)`;
+  }
   return fallback;
 }
 
-export function getHeroDisplayDescription(_id, fallback = '', _search = '', _locale = 'en') {
-  return fallback;
+export function getHeroDisplayDescription(id, fallback = '', search = '', locale = 'en') {
+  if (String(id) !== NIKITA_EASTER_EGG.heroId || !isNikitaEasterEggSearch(search)) return fallback;
+  const requested = String(locale || 'en');
+  const key = requested.toLowerCase().startsWith('zh')
+    ? 'zh-CN'
+    : requested.toLowerCase().startsWith('vi')
+      ? 'vi'
+      : requested.toLowerCase().startsWith('ja')
+        ? 'ja'
+        : requested.toLowerCase().startsWith('ko')
+          ? 'ko'
+          : requested.toLowerCase().startsWith('es')
+            ? 'es'
+            : 'en';
+  return NIKITA_EASTER_EGG.descriptions[key] || NIKITA_EASTER_EGG.descriptions.en;
 }
 
 export function getHeroTrailerUrls(id, configuredUrl = '') {

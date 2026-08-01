@@ -659,3 +659,14 @@ body.heroes-page {
 .hero-detail-art{box-sizing:border-box}
 .hero-detail-name{position:relative; z-index:1}
 @media(max-width:920px){.hero-detail-copy h2{font-size:clamp(2.2rem,8vw,4rem);line-height:1}.hero-detail-copy h2.is-extra-long{font-size:clamp(2rem,7vw,3.45rem)}}
+
+/* Nikita Easter egg: the supplied transparent pink Daima Goku art is shown only
+   after a hero-search token starts with “nik”. */
+.hero-roster-thumb.is-nikita-easter-egg img {
+  object-fit: contain;
+  object-position: center;
+  transform: scale(1.12);
+}
+.hero-detail-art.is-nikita-easter-egg {
+  background: radial-gradient(circle at 52% 44%, rgba(255, 92, 190, .2), transparent 58%);
+}

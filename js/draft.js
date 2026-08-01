@@ -16,6 +16,16 @@ const FIXED_ROLE_LIMITS = Object.freeze({
   Technical: 1,
 });
 
+export function draftActionPresentation(action = null) {
+  const type = String(action?.type || 'pick');
+  const isBan = type === 'ban' || type === 'divine-ban';
+  return {
+    phaseKey: type === 'ban' ? 'banPhase' : type === 'divine-ban' ? 'divineBan' : 'pickPhase',
+    buttonKey: isBan ? 'ban' : 'lockIn',
+    isBan,
+  };
+}
+
 function normalizeMirrorPickMode(config = {}) {
   if (MIRROR_PICK_MODES.has(config.mirrorPickMode)) return config.mirrorPickMode;
 

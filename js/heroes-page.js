@@ -1,5 +1,5 @@
 import { api, getToken, setToken } from './api.js';
-import { HEROES, ROLES, getHeroImg, getHeroImgSp, getHeroFullImg, getHeroSkillIconUrls, roleIconMarkup, heroMatchesSearch, getHeroDisplayImage, getHeroDisplayName, getHeroDisplayDescription, imageWithFallback } from './heroes.js';
+import { HEROES, ROLES, getHeroImg, getHeroImgSp, getHeroFullImg, getHeroSkillIconUrls, roleIconMarkup, heroMatchesSearch, isNikitaEasterEggSearch, getHeroDisplayImage, getHeroDisplayName, getHeroDisplayDescription, imageWithFallback } from './heroes.js';
 import { HEROES_DATA } from './heroes-data.js';
 import { getLocale, heroName, roleLabel, localizeHeroDetail, t } from './i18n.js';
 
@@ -304,6 +304,7 @@ const HERO_DETAIL_ART_BOUNDS = Object.freeze({
   '0015': [328, 2, 1167, 1197],
   '0016': [440, 42, 929, 1158],
   '0017': [430, 104, 928, 861],
+  '0017-nikita': [430, 107, 969, 933],
   '0018': [256, 31, 922, 1211],
   '0019': [474, 71, 885, 1175],
   '0020': [464, 82, 939, 1172],
@@ -537,13 +538,14 @@ function renderHeroDetail() {
   const difficultyValue = Number(detail.difficulty);
   const difficulty = Number.isFinite(difficultyValue) ? `${difficultyValue}/100` : t('notRated');
   const difficultyWidth = Number.isFinite(difficultyValue) ? Math.max(0, Math.min(100, difficultyValue)) : 0;
+  const easterEgg = hero.id === '0017' && isNikitaEasterEggSearch(state.search);
   const displayName = getHeroDisplayName(hero.id, localizedName, state.search);
   const description = getHeroDisplayDescription(hero.id, detail.description || t('detailUnavailable'), state.search, getLocale());
   const heroArt = getHeroDisplayImage(hero.id, state.search, 'full');
 
   $('#hero-detail-panel').innerHTML = `
     <section class="hero-detail-hero" style="${roleStyle(hero)}">
-      <div class="hero-detail-art" data-hero-id="${escapeHtml(hero.id)}" data-art-profile="${escapeHtml(hero.id)}">${imageWithFallback(heroArt, getHeroImg(hero.id), localizedName)}</div>
+      <div class="hero-detail-art ${easterEgg ? 'is-nikita-easter-egg' : ''}" data-hero-id="${escapeHtml(hero.id)}" data-art-profile="${easterEgg ? '0017-nikita' : escapeHtml(hero.id)}">${imageWithFallback(heroArt, getHeroImg(hero.id), localizedName)}</div>
       <div class="hero-detail-copy">
         <div class="hero-detail-identity">
           <span class="hero-detail-tag role">${roleIconMarkup(hero.role, 'inline-role-icon')} ${escapeHtml(detail.roleLabel || roleLabel(hero.role))}</span>
@@ -1093,6 +1095,10 @@ async function bootstrap() {
   bindCardTooltips();
   $('#hero-search').addEventListener('input', event => {
     state.search = event.target.value;
+    if (isNikitaEasterEggSearch(state.search) && state.heroId !== '0017') {
+      selectHero('0017');
+      return;
+    }
     renderRoster();
     renderHeroDetail();
   });

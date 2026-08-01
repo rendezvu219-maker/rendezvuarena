@@ -1367,6 +1367,31 @@ function draftRoomPayload(req, room, access) {
   };
 }
 
+function draftRoomAccessForRequest(req, room, access) {
+  let role = null;
+  if (Number(req.matchTeamId) === Number(req.match?.team_a_id)) role = 'teamA';
+  else if (Number(req.matchTeamId) === Number(req.match?.team_b_id)) role = 'teamB';
+  else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control')) role = 'host';
+  else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'dispute.review')) role = 'referee';
+  else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'broadcast.control')) role = 'broadcaster';
+  if (!role || !access[role]) return null;
+  const route = role === 'broadcaster' ? '/broadcast.html' : '/draft-room.html';
+  return {
+    roomCode: room.room_code,
+    role,
+    url: `${req.protocol}://${req.get('host')}${route}#room=${encodeURIComponent(room.room_code)}&access=${encodeURIComponent(access[role])}`,
+  };
+}
+
+function draftRoomResultPayload(room) {
+  return {
+    id: room.id,
+    roomCode: room.room_code,
+    status: room.status,
+    config: jsonParse(room.config_json),
+  };
+}
+
 function quickDraftConfig(input = {}) {
   const cleanIds = value => [...new Set((Array.isArray(value) ? value : [])
     .map(item => String(item || '').trim())
@@ -1631,7 +1656,7 @@ function recordDraftGameWinner(req, winnerSide) {
     emitBracketUpdated(match.tournament_id);
     const savedRoom = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id);
     return {
-      room: draftRoomPayload(req, savedRoom, access),
+      room: draftRoomResultPayload(savedRoom),
       seriesComplete: true,
       currentGameNumber,
       scoreA: score.scoreA,
@@ -1672,8 +1697,9 @@ function recordDraftGameWinner(req, winnerSide) {
   io.to(`draft:${room.room_code}`).emit('draft:state', nextState);
   emitBracketUpdated(match.tournament_id);
   const savedRoom = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id);
+  const nextAccess = draftRoomAccessForRequest(req, savedRoom, access);
   return {
-    room: draftRoomPayload(req, savedRoom, access),
+    room: draftRoomResultPayload(savedRoom),
     seriesComplete: false,
     currentGameNumber,
     nextGameNumber,
@@ -1681,6 +1707,7 @@ function recordDraftGameWinner(req, winnerSide) {
     scoreB: score.scoreB,
     winsNeeded,
     winnerTeamId,
+    nextDraftUrl: nextAccess?.url || null,
   };
 }
 
@@ -1757,15 +1784,9 @@ app.get('/api/matches/:matchId/draft-room/access', authRequired, emailVerifiedRe
   const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(req.match.id);
   if (!room) return res.status(404).json({ error: 'Draft Room has not been opened by the Host yet.' });
   const access = jsonParse(room.access_json);
-  let role = null;
-  if (req.matchTeamId === req.match.team_a_id) role = 'teamA';
-  else if (req.matchTeamId === req.match.team_b_id) role = 'teamB';
-  else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control')) role = 'host';
-  else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'dispute.review')) role = 'referee';
-  else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'broadcast.control')) role = 'broadcaster';
-  if (!role || !access[role]) return res.status(403).json({ error: 'No Draft Room role is assigned to this account.' });
-  const route = role === 'broadcaster' ? '/broadcast.html' : '/draft-room.html';
-  res.json({ roomCode: room.room_code, role, url: `${req.protocol}://${req.get('host')}${route}#room=${encodeURIComponent(room.room_code)}&access=${encodeURIComponent(access[role])}` });
+  const result = draftRoomAccessForRequest(req, room, access);
+  if (!result) return res.status(403).json({ error: 'No Draft Room role is assigned to this account.' });
+  res.json(result);
 });
 
 app.get('/api/matches/:matchId/games', authRequired, requireMatchAccess, (req, res) => {
