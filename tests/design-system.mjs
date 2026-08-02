@@ -36,6 +36,7 @@ assert.match(preferences, /wirePasswordVisibility/);
 assert.match(preferences, /input\[type='password'\]/);
 assert.match(preferences, /input\.type = visible \? 'text' : 'password'/);
 assert.match(preferences, /aria-pressed/);
+assert.match(preferences, /data-no-i18n/);
 assert.match(components, /\.gs-global-menu-panel/);
 assert.match(components, /\.gs-ops-home-brand/);
 assert.match(components, /\.gs-password-toggle/);

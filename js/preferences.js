@@ -219,6 +219,7 @@
       const button = document.createElement('button');
       button.className = 'gs-password-toggle';
       button.type = 'button';
+      button.setAttribute('data-no-i18n', 'true');
       button.setAttribute('aria-pressed', 'false');
       if (input.id) button.setAttribute('aria-controls', input.id);
       button.setAttribute('aria-label', copy.show);
