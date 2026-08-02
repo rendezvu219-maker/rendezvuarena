@@ -7,6 +7,7 @@ const variables = await readFile(new URL('../css/variables.css', import.meta.url
 const draftCss = await readFile(new URL('../css/draft.css', import.meta.url), 'utf8');
 const preferences = await readFile(new URL('../js/preferences.js', import.meta.url), 'utf8');
 const components = await readFile(new URL('../css/components.css', import.meta.url), 'utf8');
+const home = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 
 for (const token of [
   '--surface-canvas', '--surface-base', '--surface-raised', '--text-primary',
@@ -30,8 +31,14 @@ assert.match(preferences, /gs-global-menu/);
 assert.match(preferences, /data-account-settings/);
 assert.match(preferences, /data-public-profile/);
 assert.match(preferences, /wireHomeBrands/);
+assert.match(preferences, /wirePasswordVisibility/);
+assert.match(preferences, /input\[type='password'\]/);
+assert.match(preferences, /input\.type = visible \? 'text' : 'password'/);
+assert.match(preferences, /aria-pressed/);
 assert.match(components, /\.gs-global-menu-panel/);
 assert.match(components, /\.gs-ops-home-brand/);
+assert.match(components, /\.gs-password-toggle/);
+assert.match(home, /data-i18n="tournamentOps" href="\/dashboard\.html">Tournament Ops<\/a>/);
 assert.doesNotMatch(components, /\.btn:active\s*\{[^}]*translateY/s, 'Button activation must not shift the UI vertically.');
 assert.match(components, /draft-rule-hero-grid[^}]*overflow-anchor:\s*none/s);
 

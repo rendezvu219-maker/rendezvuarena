@@ -796,6 +796,50 @@ select.form-control, select.premium-select {
 #ops-user:has(.gs-global-menu),
 #portal-user:has(.gs-global-menu) { display: inline-flex; align-items: center; }
 
+/* Shared password visibility control for account entry and password changes. */
+.gs-password-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.gs-password-field > input { padding-right: 48px !important; }
+.gs-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.gs-password-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+  background: var(--surface-raised);
+}
+.gs-password-toggle:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+.gs-password-toggle svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.gs-password-toggle-slash { display: none; }
+.gs-password-toggle[aria-pressed='true'] .gs-password-toggle-slash { display: block; }
+
 /* Public test-site credential warning. Keep this visually dominant on every account entry point. */
 .public-test-warning {
   display: grid;

@@ -198,6 +198,51 @@
     }
   }
 
+  function wirePasswordVisibility() {
+    const labels = {
+      en: { show: 'Show password', hide: 'Hide password' },
+      vi: { show: 'Hiện mật khẩu', hide: 'Ẩn mật khẩu' },
+      ja: { show: 'パスワードを表示', hide: 'パスワードを隠す' },
+      'zh-CN': { show: '显示密码', hide: '隐藏密码' },
+      ko: { show: '비밀번호 표시', hide: '비밀번호 숨기기' },
+      es: { show: 'Mostrar contraseña', hide: 'Ocultar contraseña' },
+    };
+    const copy = labels[localeKey()] || labels.en;
+
+    document.querySelectorAll("input[type='password']").forEach(input => {
+      if (input.closest('.gs-password-field')) return;
+      const field = document.createElement('span');
+      field.className = 'gs-password-field';
+      input.before(field);
+      field.appendChild(input);
+
+      const button = document.createElement('button');
+      button.className = 'gs-password-toggle';
+      button.type = 'button';
+      button.setAttribute('aria-pressed', 'false');
+      if (input.id) button.setAttribute('aria-controls', input.id);
+      button.setAttribute('aria-label', copy.show);
+      button.title = copy.show;
+      button.innerHTML = `
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+          <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+          <circle cx="12" cy="12" r="2.75"></circle>
+          <path class="gs-password-toggle-slash" d="m4 4 16 16"></path>
+        </svg>`;
+      button.addEventListener('click', () => {
+        const visible = input.type === 'password';
+        input.type = visible ? 'text' : 'password';
+        button.setAttribute('aria-pressed', String(visible));
+        button.setAttribute('aria-label', visible ? copy.hide : copy.show);
+        button.title = visible ? copy.hide : copy.show;
+        input.focus({ preventScroll: true });
+        const caret = input.value.length;
+        input.setSelectionRange?.(caret, caret);
+      });
+      field.appendChild(button);
+    });
+  }
+
   async function fetchCurrentUser() {
     const headers = {};
     try {
@@ -217,6 +262,7 @@
   }
 
   function createUi() {
+    wirePasswordVisibility();
     if (document.querySelector('.gs-global-menu')) return;
     wireHomeBrands();
 
