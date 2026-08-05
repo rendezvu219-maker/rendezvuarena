@@ -60,7 +60,15 @@ const UI_EXTRA = Object.freeze({
     "squadraBlastGame1NoCarry": "SQUADRA BLAST · Game 1 uses the configured bans. Only each team’s own picks carry into Game 2; these bans do not.",
     "squadraBlastGame2NoCarry": "SQUADRA BLAST · No new bans. Game 1 bans are available again, while each team is locked only from its own Game 1 picks.",
     "discordInviteField": "Discord invite link",
-    "joinDiscordServer": "Join Discord server ↗"
+    "joinDiscordServer": "Join Discord server ↗",
+    "startTournamentConfirm": "Start this tournament and open check-in for every playable match?",
+    "broadcasterRoleLabel": "BROADCASTER · VIEW ONLY",
+    "broadcastReadOnlyPermissions": "This account can view either team and the live Draft state, but cannot change the bracket, Draft, chat or result.",
+    "resultReconfirmConfirm": "Return this result to both Captains and require fresh approval?",
+    "portalYourTeamTag": "✓ Your team: {tag}",
+    "submitApproveResultStep": "Submit & approve result",
+    "submitApproveResultTitle": "Submit & Approve Result",
+    "matchChatScreenshotDesc": "Captains, Host, linked players and assigned referee. Result screenshots appear directly in chat."
   },
   "ja": {
     "viewOnly": "閲覧のみ",
@@ -95,7 +103,15 @@ const UI_EXTRA = Object.freeze({
     "squadraBlastGame1NoCarry": "SQUADRA BLAST · ゲーム1では設定されたBANを行います。ゲーム2へ持ち越されるのは各チーム自身のピックだけで、BANは持ち越されません。",
     "squadraBlastGame2NoCarry": "SQUADRA BLAST · 新たなBANはありません。ゲーム1のBANは再び使用でき、各チームは自分がゲーム1で選んだヒーローだけ使用できません。",
     "discordInviteField": "Discord招待リンク",
-    "joinDiscordServer": "Discordサーバーに参加 ↗"
+    "joinDiscordServer": "Discordサーバーに参加 ↗",
+    "startTournamentConfirm": "この大会を開始し、対戦可能な全試合のチェックインを開きますか？",
+    "broadcasterRoleLabel": "配信担当 · 閲覧のみ",
+    "broadcastReadOnlyPermissions": "このアカウントは両チームとライブDraftを閲覧できますが、ブラケット、Draft、チャット、結果は変更できません。",
+    "resultReconfirmConfirm": "この結果を両キャプテンへ戻し、再承認を求めますか？",
+    "portalYourTeamTag": "✓ あなたのチーム: {tag}",
+    "submitApproveResultStep": "結果を送信・承認",
+    "submitApproveResultTitle": "結果の送信と承認",
+    "matchChatScreenshotDesc": "キャプテン、Host、連携済み選手、担当審判が参加できます。結果画像はチャット内に直接表示されます。"
   },
   "zh-CN": {
     "viewOnly": "仅查看",
@@ -130,7 +146,15 @@ const UI_EXTRA = Object.freeze({
     "squadraBlastGame1NoCarry": "SQUADRA BLAST · 第1局使用已配置的禁用。第2局只延续各队自己的选择，不延续禁用。",
     "squadraBlastGame2NoCarry": "SQUADRA BLAST · 不新增禁用。第1局禁用的英雄可再次使用，每队仍只会被限制自己在第1局选择过的英雄。",
     "discordInviteField": "Discord邀请链接",
-    "joinDiscordServer": "加入Discord服务器 ↗"
+    "joinDiscordServer": "加入Discord服务器 ↗",
+    "startTournamentConfirm": "开始本次赛事并为所有可进行的比赛开放签到吗？",
+    "broadcasterRoleLabel": "直播员 · 仅查看",
+    "broadcastReadOnlyPermissions": "此账号可查看双方队伍和实时 Draft 状态，但不能修改对阵、Draft、聊天或结果。",
+    "resultReconfirmConfirm": "将此结果退回双方队长并要求重新批准吗？",
+    "portalYourTeamTag": "✓ 你的队伍：{tag}",
+    "submitApproveResultStep": "提交并批准结果",
+    "submitApproveResultTitle": "提交与批准结果",
+    "matchChatScreenshotDesc": "队长、Host、已关联选手和指定裁判可参与。结果截图会直接显示在聊天中。"
   },
   "ko": {
     "viewOnly": "보기 전용",
@@ -165,7 +189,15 @@ const UI_EXTRA = Object.freeze({
     "squadraBlastGame1NoCarry": "SQUADRA BLAST · 게임 1에서 설정된 밴을 진행합니다. 게임 2에는 각 팀 자신의 픽만 이어지고 밴은 이어지지 않습니다.",
     "squadraBlastGame2NoCarry": "SQUADRA BLAST · 새 밴은 없습니다. 게임 1 밴 영웅은 다시 사용할 수 있고 각 팀은 자신이 게임 1에서 선택한 영웅만 사용할 수 없습니다.",
     "discordInviteField": "Discord 초대 링크",
-    "joinDiscordServer": "Discord 서버 참가 ↗"
+    "joinDiscordServer": "Discord 서버 참가 ↗",
+    "startTournamentConfirm": "이 대회를 시작하고 진행 가능한 모든 경기의 체크인을 열까요?",
+    "broadcasterRoleLabel": "방송 담당 · 보기 전용",
+    "broadcastReadOnlyPermissions": "이 계정은 양 팀과 실시간 Draft 상태를 볼 수 있지만 대진표, Draft, 채팅 또는 결과를 변경할 수 없습니다.",
+    "resultReconfirmConfirm": "이 결과를 양 팀 주장에게 돌려보내 새 승인을 요청할까요?",
+    "portalYourTeamTag": "✓ 내 팀: {tag}",
+    "submitApproveResultStep": "결과 제출 및 승인",
+    "submitApproveResultTitle": "결과 제출과 승인",
+    "matchChatScreenshotDesc": "주장, Host, 연결된 선수와 배정된 심판이 참여합니다. 결과 스크린샷은 채팅에 바로 표시됩니다."
   },
   "es": {
     "viewOnly": "SOLO LECTURA",
@@ -200,7 +232,15 @@ const UI_EXTRA = Object.freeze({
     "squadraBlastGame1NoCarry": "SQUADRA BLAST · La partida 1 usa los bloqueos configurados. Solo las elecciones propias pasan a la partida 2; los bloqueos no.",
     "squadraBlastGame2NoCarry": "SQUADRA BLAST · No hay bloqueos nuevos. Los bloqueos de la partida 1 vuelven a estar disponibles y cada equipo solo pierde sus propias elecciones de la partida 1.",
     "discordInviteField": "Enlace de invitación de Discord",
-    "joinDiscordServer": "Unirse al servidor de Discord ↗"
+    "joinDiscordServer": "Unirse al servidor de Discord ↗",
+    "startTournamentConfirm": "¿Iniciar este torneo y abrir el check-in de todos los partidos disponibles?",
+    "broadcasterRoleLabel": "BROADCASTER · SOLO LECTURA",
+    "broadcastReadOnlyPermissions": "Esta cuenta puede ver ambos equipos y el estado del Draft en directo, pero no puede cambiar el bracket, el Draft, el chat ni el resultado.",
+    "resultReconfirmConfirm": "¿Devolver este resultado a ambos Capitanes y exigir una nueva aprobación?",
+    "portalYourTeamTag": "✓ Tu equipo: {tag}",
+    "submitApproveResultStep": "Enviar y aprobar resultado",
+    "submitApproveResultTitle": "Enviar y aprobar resultado",
+    "matchChatScreenshotDesc": "Capitanes, Host, jugadores vinculados y árbitro asignado. Las capturas del resultado aparecen directamente en el chat."
   },
   "vi": {
     "viewOnly": "CHỈ XEM",
@@ -235,7 +275,15 @@ const UI_EXTRA = Object.freeze({
     "squadraBlastGame1NoCarry": "SQUADRA BLAST · Ván 1 dùng số lượt cấm đã cấu hình. Sang Ván 2 chỉ giữ khóa lựa chọn riêng của mỗi đội, không giữ lượt cấm.",
     "squadraBlastGame2NoCarry": "SQUADRA BLAST · Không có lượt cấm mới. Tướng bị cấm ở Ván 1 được dùng lại, còn mỗi đội chỉ bị khóa các tướng chính mình đã chọn ở Ván 1.",
     "discordInviteField": "Link mời Discord",
-    "joinDiscordServer": "Vào server Discord ↗"
+    "joinDiscordServer": "Vào server Discord ↗",
+    "startTournamentConfirm": "Bắt đầu giải và mở check-in cho tất cả trận có thể thi đấu?",
+    "broadcasterRoleLabel": "BROADCASTER · CHỈ XEM",
+    "broadcastReadOnlyPermissions": "Tài khoản này được xem hai đội và trạng thái Draft trực tiếp, nhưng không thể sửa bracket, Draft, chat hoặc kết quả.",
+    "resultReconfirmConfirm": "Trả kết quả này về cho cả hai Đội trưởng và yêu cầu duyệt lại?",
+    "portalYourTeamTag": "✓ Đội của bạn: {tag}",
+    "submitApproveResultStep": "Gửi và duyệt kết quả",
+    "submitApproveResultTitle": "Gửi & Duyệt kết quả",
+    "matchChatScreenshotDesc": "Đội trưởng, Host, thành viên đã liên kết và trọng tài được chỉ định. Ảnh kết quả sẽ hiện trực tiếp trong chat."
   }
 });
 

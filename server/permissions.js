@@ -5,7 +5,7 @@ const ROLE_PERMISSIONS = {
   admin: ['*'],
   host: [
     'tournament.manage','team.create','team.edit','team.invite_captain','team.transfer_captain',
-    'seeding.edit','bracket.generate','bracket.restore','match.manage','match.notes.private.read',
+    'seeding.edit','bracket.generate','bracket.restore','match.read','match.manage','match.notes.private.read',
     'result.submit','result.verify','dispute.review','evidence.read','chat.moderate','draft.control','broadcast.control'
   ],
   referee: [
@@ -15,7 +15,10 @@ const ROLE_PERMISSIONS = {
   scheduler: ['match.read','match.schedule','match.manage'],
   scorekeeper: ['match.read','result.submit'],
   broadcaster: ['match.read','broadcast.control'],
-  captain: ['match.read','team.checkin','result.submit','result.confirm','dispute.create','chat.send','draft.assign'],
+  // Captains receive match access through their linked team, not across the
+  // entire tournament. This prevents a Captain from reading another team's
+  // private Match Operations data by guessing an ID.
+  captain: ['team.checkin','result.submit','result.confirm','dispute.create','chat.send','draft.assign'],
   player: ['match.read','chat.send','draft.play'],
 };
 

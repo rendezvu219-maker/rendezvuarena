@@ -27,7 +27,7 @@ const {
 } = require('./server/bracket-service');
 const {
   submitResult, confirmResult, reviewDispute, recommendDispute, verifyDispute,
-  reopenResult, correctFinalResult, getResultContext,
+  reopenResult, correctFinalResult, requestResultReconfirmation, getResultContext,
 } = require('./server/result-service');
 const { saveFile, fileRecord, filePath, refreshTournamentRetention, cleanupExpiredFiles } = require('./server/file-service');
 const { importTournament, extractTournamentSlug } = require('./server/startgg');
@@ -338,6 +338,14 @@ function addSystemMessage(matchId,message) {
 function teamForCaptain(userId,teamId) {
   return db.prepare(`SELECT * FROM teams WHERE id=? AND captain_user_id=? AND team_status NOT IN ('withdrawn','disqualified')`).get(teamId,userId);
 }
+function assertCaptainRosterAccess(userId,teamId) {
+  const team=teamForCaptain(userId,Number(teamId));
+  if(!team){const error=new Error('Only the linked Captain can manage this team roster.');error.status=403;throw error;}
+  const tournament=db.prepare('SELECT roster_lock_at FROM tournaments WHERE id=?').get(team.tournament_id);
+  const effectiveLock=team.roster_locked_at||tournament?.roster_lock_at;
+  if(effectiveLock&&Date.parse(effectiveLock)<=Date.now()){const error=new Error('Roster is locked. Ask the Host for an administrative change.');error.status=409;throw error;}
+  return team;
+}
 function matchPermission(req, permission) {
   const match = req.match || canAccessMatch(req.user.id,Number(req.params.matchId)).match;
   return match && hasTournamentPermission(req.user.id,match.tournament_id,permission);
@@ -355,6 +363,7 @@ function serializePublicMatch(match) {
 }
 function publicTournamentRoom(tournamentId){return `tournament:public:${Number(tournamentId)}`;}
 function internalTournamentRoom(tournamentId){return `tournament:internal:${Number(tournamentId)}`;}
+function internalTeamRoom(teamId){return `team:internal:${Number(teamId)}`;}
 function emitBracketUpdated(tournamentId,matches=listMatches(tournamentId),extra={}){
   io.to(publicTournamentRoom(tournamentId)).emit('bracket:updated',{
     tournamentId:Number(tournamentId),matches:matches.map(serializePublicMatch),...extra,
@@ -362,13 +371,22 @@ function emitBracketUpdated(tournamentId,matches=listMatches(tournamentId),extra
   io.to(internalTournamentRoom(tournamentId)).emit('bracket:updated',{
     tournamentId:Number(tournamentId),matches,...extra,
   });
+  const teamIds=db.prepare(`SELECT id FROM teams WHERE tournament_id=? AND team_status NOT IN ('withdrawn','disqualified')`).all(Number(tournamentId));
+  teamIds.forEach(team=>io.to(internalTeamRoom(team.id)).emit('bracket:updated',{tournamentId:Number(tournamentId)}));
 }
 function emitMatchUpdated(match){
   io.to(publicTournamentRoom(match.tournament_id)).emit('match:updated',serializePublicMatch(match));
   io.to(internalTournamentRoom(match.tournament_id)).emit('match:updated',match);
+  if(match.team_a_id)io.to(internalTeamRoom(match.team_a_id)).emit('match:updated',serializePublicMatch(match));
+  if(match.team_b_id&&Number(match.team_b_id)!==Number(match.team_a_id))io.to(internalTeamRoom(match.team_b_id)).emit('match:updated',serializePublicMatch(match));
 }
 function emitInternalTournamentEvent(tournamentId,event,payload){
   io.to(internalTournamentRoom(tournamentId)).emit(event,payload);
+  if(payload?.matchId){
+    const match=db.prepare('SELECT team_a_id,team_b_id FROM matches WHERE id=? AND tournament_id=?').get(Number(payload.matchId),Number(tournamentId));
+    if(match?.team_a_id)io.to(internalTeamRoom(match.team_a_id)).emit(event,payload);
+    if(match?.team_b_id&&Number(match.team_b_id)!==Number(match.team_a_id))io.to(internalTeamRoom(match.team_b_id)).emit(event,payload);
+  }
 }
 
 const CLOSED_JOIN_STATUSES = new Set(['completed','finalized','archived','cancelled']);
@@ -998,11 +1016,11 @@ app.post('/api/tournaments',authRequired,emailVerifiedRequired,allowRoles('host'
 });
 app.get('/api/tournaments/:id',authRequired,requireTournamentPermission('match.read'),(req,res)=>{
   const tournament=db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId);if(!tournament)return res.status(404).json({error:'Tournament not found.'});
-  const teams=db.prepare(`SELECT t.*,u.username captain_username,u.display_name captain_display_name,u.email captain_email FROM teams t LEFT JOIN users u ON u.id=t.captain_user_id WHERE t.tournament_id=? ORDER BY CASE WHEN t.seed IS NULL THEN 1 ELSE 0 END,t.seed,t.name`).all(req.tournamentId);
+  const canManageStaff=req.permissionContext?.permissions?.includes('*')||req.permissionContext?.permissions?.includes('tournament.manage');
+  const teams=db.prepare(`SELECT t.*,u.username captain_username,u.display_name captain_display_name${canManageStaff?',u.email captain_email':''} FROM teams t LEFT JOIN users u ON u.id=t.captain_user_id WHERE t.tournament_id=? ORDER BY CASE WHEN t.seed IS NULL THEN 1 ELSE 0 END,t.seed,t.name`).all(req.tournamentId);
   const members=db.prepare(`SELECT tm.* FROM team_members tm JOIN teams t ON t.id=tm.team_id WHERE t.tournament_id=? ORDER BY tm.team_id,tm.is_captain DESC,tm.id`).all(req.tournamentId);
   const grouped=new Map(teams.map(team=>[team.id,{...team,members:[]}])) ;members.forEach(member=>grouped.get(member.team_id)?.members.push(member));
-  const matches=listMatches(req.tournamentId);
-  const canManageStaff=req.permissionContext?.permissions?.includes('*')||req.permissionContext?.permissions?.includes('tournament.manage');
+  const matches=listMatches(req.tournamentId).map(match=>serializeTournamentMatchForUser(match,req.permissionContext));
   const staff=db.prepare(`SELECT s.tournament_id,s.user_id,s.role,s.permissions_json,u.username,u.email,u.display_name FROM tournament_staff s JOIN users u ON u.id=s.user_id WHERE s.tournament_id=? ORDER BY s.role,u.display_name`).all(req.tournamentId).map(item=>({tournament_id:item.tournament_id,user_id:item.user_id,role:item.role,username:item.username,display_name:item.display_name,...(canManageStaff?{email:item.email}:{}),permissions:jsonParse(item.permissions_json,[])}));
   const unreadRows=db.prepare(`SELECT m.id match_id,MAX(0,COUNT(mm.id)-COALESCE((SELECT COUNT(*) FROM match_messages old WHERE old.match_id=m.id AND old.id<=COALESCE(r.last_message_id,0)),0)) unread_count FROM matches m LEFT JOIN match_messages mm ON mm.match_id=m.id AND mm.deleted_at IS NULL LEFT JOIN match_message_reads r ON r.match_id=m.id AND r.user_id=? WHERE m.tournament_id=? GROUP BY m.id`).all(req.user.id,req.tournamentId);
   const unread=new Map(unreadRows.map(row=>[row.match_id,row.unread_count]));
@@ -1039,6 +1057,20 @@ app.post('/api/tournaments/:id/unpublish',authRequired,requireTournamentPermissi
   res.json({tournament:db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId)});
 });
 app.get('/api/tournaments/:id/preflight',authRequired,requireTournamentPermission('bracket.generate'),(req,res)=>res.json(preflightTournament(req.tournamentId)));
+app.post('/api/tournaments/:id/start',authRequired,emailVerifiedRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{
+  const check=preflightTournament(req.tournamentId);
+  if(!check.ok)return res.status(409).json({error:'Tournament preflight must pass before starting.',preflight:check});
+  const matchCount=Number(db.prepare('SELECT COUNT(*) count FROM matches WHERE tournament_id=?').get(req.tournamentId)?.count||0);
+  if(!matchCount)return res.status(409).json({error:'Generate the bracket before starting the tournament.'});
+  transaction(()=>{
+    db.prepare(`UPDATE tournaments SET status='ongoing',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(req.tournamentId);
+    db.prepare(`UPDATE matches SET status='checkin_open',match_status='checkin_open',updated_at=CURRENT_TIMESTAMP
+      WHERE tournament_id=? AND team_a_id IS NOT NULL AND team_b_id IS NOT NULL AND result_status!='final' AND match_status='available'`).run(req.tournamentId);
+    logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'tournament.started',details:{matchCount}});
+  });
+  const matches=listMatches(req.tournamentId);emitBracketUpdated(req.tournamentId,matches);
+  res.json({tournament:db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId),matches});
+});
 app.get('/api/tournaments/:id/audit',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{
   const logs=db.prepare(`SELECT a.*,u.display_name user_name FROM audit_logs a LEFT JOIN users u ON u.id=a.user_id WHERE a.tournament_id=? ORDER BY a.id DESC LIMIT 300`).all(req.tournamentId).map(row=>({...row,details:jsonParse(row.details_json)}));res.json({logs});
 });
@@ -1104,6 +1136,37 @@ app.delete('/api/tournaments/:id/teams/:teamId/members/:memberId',authRequired,r
   const effectiveLock=team.roster_locked_at||db.prepare('SELECT roster_lock_at FROM tournaments WHERE id=?').get(req.tournamentId)?.roster_lock_at;if(effectiveLock&&Date.parse(effectiveLock)<=Date.now())return res.status(409).json({error:'Roster is locked. Use an administrative override instead.'});
   db.prepare('DELETE FROM team_members WHERE id=?').run(member.id);logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'team.member_removed',details:{teamId:team.id,memberId:member.id,displayName:member.display_name}});res.json({deleted:true});
 });
+app.post('/api/portal/teams/:teamId/invitations',authRequired,emailVerifiedRequired,(req,res)=>{
+  try{
+    const team=assertCaptainRosterAccess(req.user.id,req.params.teamId);
+    const identity=String(req.body.identity||'').trim();
+    const role=['player','substitute','coach'].includes(String(req.body.role||''))?String(req.body.role):'player';
+    if(!identity)return res.status(400).json({error:'Enter the member username to invite.'});
+    const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND username=? COLLATE NOCASE`).get(identity);
+    if(!user)return res.status(404).json({error:'Member account not found. Ask the player to register a username first.'});
+    if(Number(user.id)===Number(req.user.id))return res.status(400).json({error:'The Captain is already linked to this team.'});
+    const membership=existingTournamentMembership(user.id,team.tournament_id);
+    if(membership)return res.status(409).json({error:`This account is already linked to ${membership.team_name}.`});
+    db.prepare(`UPDATE team_invitations SET status='cancelled' WHERE team_id=? AND invited_user_id=? AND status='pending'`).run(team.id,user.id);
+    const raw=randomCode(48);const hash=crypto.createHash('sha256').update(raw).digest('hex');const expires=new Date(Date.now()+7*86400000).toISOString();
+    db.prepare(`INSERT INTO team_invitations(tournament_id,team_id,invited_user_id,email,role,token_hash,status,expires_at,created_by) VALUES (?,?,?,'',?,?,'pending',?,?)`)
+      .run(team.tournament_id,team.id,user.id,role,hash,expires,req.user.id);
+    const inviteLink=`${req.protocol}://${req.get('host')}/portal.html?invite=${encodeURIComponent(raw)}`;
+    logAction({tournamentId:team.tournament_id,userId:req.user.id,action:'team.member_invited',details:{teamId:team.id,invitedUserId:user.id,role}});
+    res.status(201).json({inviteLink,expiresAt:expires,user:{id:user.id,username:user.username,displayName:user.display_name},role});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
+});
+app.delete('/api/portal/teams/:teamId/members/:memberId',authRequired,emailVerifiedRequired,(req,res)=>{
+  try{
+    const team=assertCaptainRosterAccess(req.user.id,req.params.teamId);
+    const member=db.prepare('SELECT * FROM team_members WHERE id=? AND team_id=?').get(Number(req.params.memberId),team.id);
+    if(!member)return res.status(404).json({error:'Roster member not found.'});
+    if(member.is_captain||(team.captain_user_id&&Number(member.user_id)===Number(team.captain_user_id)))return res.status(409).json({error:'The Captain cannot remove their own roster entry.'});
+    db.prepare('DELETE FROM team_members WHERE id=?').run(member.id);
+    logAction({tournamentId:team.tournament_id,userId:req.user.id,action:'team.member_removed_by_captain',details:{teamId:team.id,memberId:member.id,removedUserId:member.user_id||null}});
+    res.json({deleted:true});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
+});
 app.post('/api/tournaments/:id/teams/:teamId/captain/assign',authRequired,requireTournamentPermission('team.transfer_captain'),(req,res)=>{
   const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(Number(req.params.teamId),req.tournamentId);if(!team)return res.status(404).json({error:'Team not found.'});
   const identity=String(req.body.identity||'').trim();const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND username=? COLLATE NOCASE`).get(identity);if(!user)return res.status(404).json({error:'Captain account not found. Ask the Captain to register a username first.'});
@@ -1120,7 +1183,32 @@ app.post('/api/tournaments/:id/teams/:teamId/captain/invite',authRequired,requir
 app.post('/api/team-invitations/accept',authRequired,emailVerifiedRequired,(req,res)=>{
   const hash=crypto.createHash('sha256').update(String(req.body.token||'')).digest('hex');const invitation=db.prepare(`SELECT * FROM team_invitations WHERE token_hash=? AND status='pending' AND datetime(expires_at)>datetime('now')`).get(hash);if(!invitation)return res.status(400).json({error:'Invitation is invalid or expired.'});
   if(invitation.invited_user_id&&invitation.invited_user_id!==req.user.id)return res.status(403).json({error:'This invitation belongs to another account.'});if(invitation.email&&invitation.email.toLowerCase()!==req.user.email.toLowerCase())return res.status(403).json({error:'Use the invited email account.'});
-  transaction(()=>{db.prepare(`UPDATE team_invitations SET status='accepted',accepted_at=CURRENT_TIMESTAMP,invited_user_id=? WHERE id=?`).run(req.user.id,invitation.id);db.prepare(`UPDATE teams SET captain_user_id=?,team_status='ready',status='approved',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(req.user.id,invitation.team_id);db.prepare('UPDATE team_members SET is_captain=0 WHERE team_id=?').run(invitation.team_id);const member=db.prepare('SELECT * FROM team_members WHERE team_id=? AND user_id=?').get(invitation.team_id,req.user.id);if(member)db.prepare(`UPDATE team_members SET is_captain=1,member_role='captain' WHERE id=?`).run(member.id);else db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,is_captain) VALUES (?,?,?,?, 'captain',1)`).run(invitation.team_id,req.user.id,req.user.display_name,req.user.username);});res.json({accepted:true,teamId:invitation.team_id});
+  try{
+    const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(invitation.team_id,invitation.tournament_id);if(!team)throw new Error('Invited team no longer exists.');
+    const effectiveLock=team.roster_locked_at||db.prepare('SELECT roster_lock_at FROM tournaments WHERE id=?').get(team.tournament_id)?.roster_lock_at;
+    if(effectiveLock&&Date.parse(effectiveLock)<=Date.now())throw new Error('Roster is locked. Ask the Host for help.');
+    const existing=existingTournamentMembership(req.user.id,team.tournament_id);
+    if(existing&&Number(existing.team_id)!==Number(team.id))throw new Error(`This account is already linked to ${existing.team_name}.`);
+    const invitedRole=['player','substitute','coach'].includes(String(invitation.role||''))?String(invitation.role):'captain';
+    transaction(()=>{
+      db.prepare(`UPDATE team_invitations SET status='accepted',accepted_at=CURRENT_TIMESTAMP,invited_user_id=? WHERE id=?`).run(req.user.id,invitation.id);
+      const member=db.prepare('SELECT * FROM team_members WHERE team_id=? AND user_id=?').get(team.id,req.user.id);
+      if(invitedRole==='captain'){
+        db.prepare(`UPDATE teams SET captain_user_id=?,team_status='ready',status='approved',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(req.user.id,team.id);
+        db.prepare('UPDATE team_members SET is_captain=0 WHERE team_id=?').run(team.id);
+        if(member)db.prepare(`UPDATE team_members SET is_captain=1,member_role='captain',membership_status='active',is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(member.id);
+        else db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,is_captain) VALUES (?,?,?,?, 'captain',1)`).run(team.id,req.user.id,req.user.display_name,req.user.gamer_tag||req.user.username);
+      }else if(member){
+        db.prepare(`UPDATE team_members SET display_name=?,gamer_tag=?,member_role=?,membership_status='active',is_captain=0,is_substitute=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+          .run(req.user.display_name,req.user.gamer_tag||req.user.username,invitedRole,invitedRole==='substitute'?1:0,member.id);
+      }else{
+        db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,is_captain,is_substitute) VALUES (?,?,?,?,?,0,?)`)
+          .run(team.id,req.user.id,req.user.display_name,req.user.gamer_tag||req.user.username,invitedRole,invitedRole==='substitute'?1:0);
+      }
+    });
+    logAction({tournamentId:team.tournament_id,userId:req.user.id,action:'team.invitation_accepted',details:{teamId:team.id,role:invitedRole}});
+    res.json({accepted:true,teamId:team.id,role:invitedRole});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
 });
 app.post('/api/tournaments/:id/teams/:teamId/terminal',authRequired,requireTournamentPermission('team.edit'),(req,res)=>{
   try{const team=processTeamTerminalState(Number(req.params.teamId),String(req.body.teamStatus),String(req.body.reason||''),req.user.id);emitBracketUpdated(req.tournamentId);res.json({team,matches:listMatches(req.tournamentId)});}catch(error){res.status(400).json({error:clientErrorMessage(error)});}
@@ -1256,6 +1344,15 @@ app.post('/api/matches/:matchId/results/recommend',authRequired,requireMatchAcce
 app.post('/api/matches/:matchId/results/verify',authRequired,requireMatchAccess,(req,res)=>{if(!hasTournamentPermission(req.user.id,req.match.tournament_id,'result.verify'))return res.status(403).json({error:'Result verify permission required.'});try{const payload=verifyDispute({matchId:req.match.id,userId:req.user.id,scoreA:req.body.scoreA,scoreB:req.body.scoreB,resolutionNote:req.body.resolutionNote,resolutionType:req.body.resolutionType});addSystemMessage(req.match.id,'Administrative result was finalized.');emitBracketUpdated(req.match.tournament_id);res.json(payload);}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
 app.post('/api/matches/:matchId/results/reopen',authRequired,requireMatchAccess,(req,res)=>{if(!hasTournamentPermission(req.user.id,req.match.tournament_id,'result.verify'))return res.status(403).json({error:'Result verify permission required.'});try{const match=reopenResult({matchId:req.match.id,userId:req.user.id,reason:req.body.reason});addSystemMessage(req.match.id,`Final result reopened: ${req.body.reason}`);emitBracketUpdated(req.match.tournament_id);res.json({match});}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
 app.post('/api/matches/:matchId/results/correct',authRequired,requireMatchAccess,(req,res)=>{if(!hasTournamentPermission(req.user.id,req.match.tournament_id,'result.verify'))return res.status(403).json({error:'Result verify permission required.'});try{const payload=correctFinalResult({matchId:req.match.id,userId:req.user.id,reason:req.body.reason,scoreA:req.body.scoreA,scoreB:req.body.scoreB});addSystemMessage(req.match.id,`Final result correction submitted: ${req.body.scoreA}-${req.body.scoreB}.`);emitBracketUpdated(req.match.tournament_id);res.json(payload);}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
+app.post('/api/matches/:matchId/results/request-reconfirmation',authRequired,emailVerifiedRequired,requireMatchAccess,(req,res)=>{
+  if(!hasTournamentPermission(req.user.id,req.match.tournament_id,'result.verify'))return res.status(403).json({error:'Result verify permission required.'});
+  try{
+    const payload=requestResultReconfirmation({matchId:req.match.id,userId:req.user.id,reason:req.body.reason,scoreA:req.body.scoreA,scoreB:req.body.scoreB});
+    addSystemMessage(req.match.id,`Host requested both Captains to confirm the result again: ${String(req.body.reason||'').trim()}`);
+    emitBracketUpdated(req.match.tournament_id);
+    res.json(payload);
+  }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
+});
 
 // Match Chat and shared attachment/evidence pipeline
 app.get('/api/matches/:matchId/messages',authRequired,requireMatchAccess,(req,res)=>{const messages=db.prepare(`SELECT mm.id,mm.sender_user_id,mm.sender_role,mm.sender_name,mm.message,mm.message_type,mm.file_id,mm.pinned,mm.edited_at,mm.deleted_at,mm.created_at,f.original_name file_name,f.mime_type file_mime FROM match_messages mm LEFT JOIN files f ON f.id=mm.file_id WHERE mm.match_id=? ORDER BY mm.pinned DESC,mm.id ASC LIMIT 500`).all(req.match.id);const last=messages.at(-1)?.id||0;db.prepare(`INSERT INTO match_message_reads(match_id,user_id,last_message_id) VALUES (?,?,?) ON CONFLICT(match_id,user_id) DO UPDATE SET last_message_id=excluded.last_message_id,updated_at=CURRENT_TIMESTAMP`).run(req.match.id,req.user.id,last);res.json({messages});});
@@ -1263,10 +1360,30 @@ app.post('/api/matches/:matchId/messages',authRequired,requireMatchAccess,(req,r
 app.patch('/api/matches/:matchId/messages/:messageId',authRequired,requireMatchAccess,(req,res)=>{const message=db.prepare('SELECT * FROM match_messages WHERE id=? AND match_id=?').get(Number(req.params.messageId),req.match.id);if(!message)return res.status(404).json({error:'Message not found.'});const canModerate=hasTournamentPermission(req.user.id,req.match.tournament_id,'chat.moderate');if(message.sender_user_id!==req.user.id&&!canModerate)return res.status(403).json({error:'You cannot edit this message.'});if(req.body.pinned!==undefined&&!canModerate)return res.status(403).json({error:'Only staff can pin messages.'});if(req.body.message!==undefined){if(message.message_type==='system')return res.status(400).json({error:'System messages cannot be edited.'});db.prepare('UPDATE match_messages SET message=?,edited_at=CURRENT_TIMESTAMP WHERE id=?').run(String(req.body.message||'').trim().slice(0,1000),message.id);}if(req.body.pinned!==undefined)db.prepare('UPDATE match_messages SET pinned=? WHERE id=?').run(req.body.pinned?1:0,message.id);res.json({message:db.prepare('SELECT * FROM match_messages WHERE id=?').get(message.id)});});
 app.delete('/api/matches/:matchId/messages/:messageId',authRequired,requireMatchAccess,(req,res)=>{const message=db.prepare('SELECT * FROM match_messages WHERE id=? AND match_id=?').get(Number(req.params.messageId),req.match.id);if(!message)return res.status(404).json({error:'Message not found.'});const canModerate=hasTournamentPermission(req.user.id,req.match.tournament_id,'chat.moderate');if(message.sender_user_id!==req.user.id&&!canModerate)return res.status(403).json({error:'You cannot delete this message.'});if(message.message_type==='system')return res.status(400).json({error:'System messages cannot be deleted.'});db.prepare('UPDATE match_messages SET deleted_at=CURRENT_TIMESTAMP,message=\'[deleted]\' WHERE id=?').run(message.id);res.json({deleted:true});});
 app.post('/api/matches/:matchId/files',authRequired,requireMatchAccess,(req,res)=>{try{const purpose=String(req.body.purpose||'evidence');let entityType='match',entityId=req.match.id,visibility='match_members';if(purpose==='evidence'){if(!req.matchTeamId&&!hasTournamentPermission(req.user.id,req.match.tournament_id,'evidence.read'))return res.status(403).json({error:'Evidence permission required.'});const dispute=db.prepare(`SELECT id FROM disputes WHERE match_id=? AND status IN ('open','under_review','recommended') ORDER BY id DESC LIMIT 1`).get(req.match.id);if(!dispute)return res.status(409).json({error:'Evidence can only be uploaded while a dispute is open.'});entityType='dispute';entityId=dispute.id;visibility='staff_only';}else if(purpose!=='chat_attachment')return res.status(400).json({error:'Unsupported file purpose.'});const file=saveFile({userId:req.user.id,tournamentId:req.match.tournament_id,entityType,entityId,purpose,originalName:req.body.originalName,mimeType:req.body.mimeType,dataBase64:req.body.dataBase64,visibility});res.status(201).json({file:{id:file.id,originalName:file.original_name,mimeType:file.mime_type,sizeBytes:file.size_bytes,visibility:file.visibility}});}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
-app.get('/api/files/:fileId',authRequired,(req,res)=>{const file=fileRecord(Number(req.params.fileId));if(!file)return res.status(404).json({error:'File not found.'});let allowed=false;if(file.entity_type==='match'||file.entity_type==='dispute'||file.entity_type==='match_chat_message'){const matchId=file.entity_type==='match'?file.entity_id:file.entity_type==='dispute'?db.prepare('SELECT match_id FROM disputes WHERE id=?').get(file.entity_id)?.match_id:db.prepare('SELECT match_id FROM match_messages WHERE id=?').get(file.entity_id)?.match_id;const context=canAccessMatch(req.user.id,matchId);allowed=context.allowed&&(file.visibility!=='staff_only'||hasTournamentPermission(req.user.id,context.match.tournament_id,'evidence.read'));}if(!allowed)return res.status(403).json({error:'File access denied.'});const full=filePath(file);if(!full||!fs.existsSync(full))return res.status(410).json({error:'File has expired or was removed.'});res.type(file.mime_type);res.setHeader('Content-Disposition',`attachment; filename="${String(file.original_name).replace(/["\r\n]/g,'')}"`);res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");res.setHeader('Content-Length',String(file.size_bytes));res.sendFile(full);});
+app.get('/api/files/:fileId',authRequired,(req,res)=>{const file=fileRecord(Number(req.params.fileId));if(!file)return res.status(404).json({error:'File not found.'});let allowed=false;if(file.entity_type==='match'||file.entity_type==='dispute'||file.entity_type==='match_chat_message'){const matchId=file.entity_type==='match'?file.entity_id:file.entity_type==='dispute'?db.prepare('SELECT match_id FROM disputes WHERE id=?').get(file.entity_id)?.match_id:db.prepare('SELECT match_id FROM match_messages WHERE id=?').get(file.entity_id)?.match_id;const context=canAccessMatch(req.user.id,matchId);allowed=context.allowed&&(file.visibility!=='staff_only'||hasTournamentPermission(req.user.id,context.match.tournament_id,'evidence.read'));}if(!allowed)return res.status(403).json({error:'File access denied.'});const full=filePath(file);if(!full||!fs.existsSync(full))return res.status(410).json({error:'File has expired or was removed.'});const fileName=String(file.original_name).replace(/["\r\n]/g,'');const inline=req.query.inline==='1'&&String(file.mime_type||'').startsWith('image/');res.type(file.mime_type);res.setHeader('Content-Disposition',`${inline?'inline':'attachment'}; filename="${fileName}"`);res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");res.setHeader('Cache-Control','private, max-age=300');res.setHeader('Content-Length',String(file.size_bytes));res.sendFile(full);});
 
-// Captain portal
-app.get('/api/portal',authRequired,(req,res)=>{const teams=db.prepare(`SELECT DISTINCT t.*,tr.name tournament_name,tr.slug tournament_slug,tm.member_role my_member_role,tm.is_captain my_is_captain FROM teams t JOIN tournaments tr ON tr.id=t.tournament_id JOIN team_members tm ON tm.team_id=t.id AND tm.user_id=? AND tm.membership_status='active' ORDER BY tr.updated_at DESC`).all(req.user.id);const teamIds=teams.map(team=>team.id);let matches=[];if(teamIds.length){const placeholders=teamIds.map(()=>'?').join(',');matches=db.prepare(`SELECT m.*,a.name team_a_name,a.tag team_a_tag,b.name team_b_name,b.tag team_b_tag,t.name tournament_name,t.slug tournament_slug,COALESCE(m.scheduled_at,ss.scheduled_at,t.start_at) effective_scheduled_at FROM matches m JOIN tournaments t ON t.id=m.tournament_id LEFT JOIN stage_schedules ss ON ss.tournament_id=m.tournament_id AND ss.stage_key=m.stage LEFT JOIN teams a ON a.id=m.team_a_id LEFT JOIN teams b ON b.id=m.team_b_id WHERE m.team_a_id IN (${placeholders}) OR m.team_b_id IN (${placeholders}) ORDER BY m.updated_at DESC`).all(...teamIds,...teamIds);}const joinRequests=db.prepare(`SELECT jr.*,t.name tournament_name,tm.name team_name FROM tournament_join_requests jr JOIN tournaments t ON t.id=jr.tournament_id LEFT JOIN teams tm ON tm.id=jr.team_id WHERE jr.user_id=? ORDER BY jr.id DESC LIMIT 50`).all(req.user.id);res.json({user:cleanUser(req.user),teams,matches,joinRequests,history:userTournamentHistory(req.user.id)});});
+// Player & Captain portal
+app.get('/api/portal',authRequired,(req,res)=>{
+  const teams=db.prepare(`SELECT DISTINCT t.*,tr.name tournament_name,tr.slug tournament_slug,tr.roster_lock_at tournament_roster_lock_at,tm.member_role my_member_role,tm.is_captain my_is_captain
+    FROM teams t JOIN tournaments tr ON tr.id=t.tournament_id JOIN team_members tm ON tm.team_id=t.id AND tm.user_id=? AND tm.membership_status='active'
+    ORDER BY tr.updated_at DESC`).all(req.user.id);
+  const teamIds=teams.map(team=>team.id);let matches=[];
+  if(teamIds.length){
+    const placeholders=teamIds.map(()=>'?').join(',');
+    matches=db.prepare(`SELECT m.*,a.name team_a_name,a.tag team_a_tag,b.name team_b_name,b.tag team_b_tag,t.name tournament_name,t.slug tournament_slug,
+      COALESCE(m.scheduled_at,ss.scheduled_at,t.start_at) effective_scheduled_at,
+      EXISTS(SELECT 1 FROM draft_rooms dr WHERE dr.match_id=m.id) draft_room_ready
+      FROM matches m JOIN tournaments t ON t.id=m.tournament_id LEFT JOIN stage_schedules ss ON ss.tournament_id=m.tournament_id AND ss.stage_key=m.stage
+      LEFT JOIN teams a ON a.id=m.team_a_id LEFT JOIN teams b ON b.id=m.team_b_id
+      WHERE m.team_a_id IN (${placeholders}) OR m.team_b_id IN (${placeholders}) ORDER BY m.updated_at DESC`).all(...teamIds,...teamIds)
+      .map(match=>serializeTournamentMatchForUser(match,permissionsForUser(req.user.id,match.tournament_id)));
+    const members=db.prepare(`SELECT id,team_id,user_id,display_name,gamer_tag,member_role,membership_status,is_captain,is_substitute
+      FROM team_members WHERE team_id IN (${placeholders}) ORDER BY team_id,is_captain DESC,id`).all(...teamIds);
+    teams.forEach(team=>{team.members=members.filter(member=>Number(member.team_id)===Number(team.id));});
+  }
+  const joinRequests=db.prepare(`SELECT jr.*,t.name tournament_name,tm.name team_name FROM tournament_join_requests jr JOIN tournaments t ON t.id=jr.tournament_id LEFT JOIN teams tm ON tm.id=jr.team_id WHERE jr.user_id=? ORDER BY jr.id DESC LIMIT 50`).all(req.user.id);
+  res.json({user:cleanUser(req.user),teams,matches,joinRequests,history:userTournamentHistory(req.user.id)});
+});
 
 // Draft rooms and series game progression
 function findDraftRoom(roomCode) {
@@ -1287,6 +1404,12 @@ function aggregateSeriesPicks(matchId) {
     picksB.push(...jsonParse(game.picks_b_json, []));
   });
   return { games, picksA, picksB };
+}
+function serializeTournamentMatchForUser(match,permissionContext) {
+  const permissions=permissionContext?.permissions||[];
+  if(permissions.includes('*')||permissions.includes('match.notes.private.read'))return match;
+  const {room_code:_roomCode,private_notes:_privateNotes,notes:_notes,...safe}=match;
+  return safe;
 }
 
 function squadraBlastPhase(gameNumber = 1) {
@@ -2192,13 +2315,17 @@ io.on('connection',socket=>{
     let role='spectator';
     if(tournament.is_public)socket.join(publicTournamentRoom(tournamentId));
     const context=permissionsForUser(socket.user.id,tournamentId);
-    const member=db.prepare(`SELECT 1 FROM team_members tm JOIN teams t ON t.id=tm.team_id
-      WHERE tm.user_id=? AND t.tournament_id=? AND tm.membership_status='active' LIMIT 1`).get(socket.user.id,tournamentId);
-    if(context.permissions.includes('*')||context.permissions.includes('match.read')||member){
+    const memberships=db.prepare(`SELECT DISTINCT tm.team_id FROM team_members tm JOIN teams t ON t.id=tm.team_id
+      WHERE tm.user_id=? AND t.tournament_id=? AND tm.membership_status='active'`).all(socket.user.id,tournamentId);
+    const staffAccess=context.permissions.includes('*')||context.permissions.includes('match.read');
+    if(staffAccess){
       socket.join(internalTournamentRoom(tournamentId));
       role=context.roles[0]||'player';
+    }else if(memberships.length){
+      memberships.forEach(member=>socket.join(internalTeamRoom(member.team_id)));
+      role=context.roles.includes('captain')?'captain':'player';
     }else if(!tournament.is_public)return ack({ok:false,error:'Tournament access denied.'});
-    ack({ok:true,role,public:Boolean(tournament.is_public),internal:role!=='spectator'});
+    ack({ok:true,role,public:Boolean(tournament.is_public),internal:staffAccess||memberships.length>0});
   });
 
   socket.on('draft:join',(payload={},ack=()=>{})=>{

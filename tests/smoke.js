@@ -86,6 +86,7 @@ function accessFromFragment(url) {
       method: 'POST',
       body: { displayName: 'Smoke Broadcaster', username: 'smokecast', password: 'Password123!', passwordConfirmation: 'Password123!', role: 'player' },
     });
+    const invitedPlayer = await register(7);
 
     const created = await request('/api/tournaments', {
       token: hostToken, method: 'POST',
@@ -120,6 +121,17 @@ function accessFromFragment(url) {
       teams.push({ ...team, captainToken: captains[i - 1].token, captainUser: captains[i - 1].user });
     }
 
+    const rosterInvitation = await request(`/api/portal/teams/${teams[0].id}/invitations`, {
+      token: captains[0].token, method: 'POST', body: { identity: invitedPlayer.user.username, role: 'player' },
+    });
+    const rosterInviteToken = new URL(rosterInvitation.inviteLink).searchParams.get('invite');
+    assert(rosterInviteToken, 'Captain roster invitation should return a private acceptance link.');
+    await request('/api/team-invitations/accept', {
+      token: invitedPlayer.token, method: 'POST', body: { token: rosterInviteToken },
+    });
+    const invitedPortal = await request('/api/portal', { token: invitedPlayer.token });
+    assert(invitedPortal.teams.some(team => team.id === teams[0].id), 'An invited player should gain access only after accepting the Captain invitation.');
+
     const rosterMember = await request(`/api/tournaments/${tournamentId}/teams/${teams[0].id}/members`, {
       token: hostToken, method: 'POST', body: { displayName: 'Roster Test', gamerTag: 'RT', gameId: 'game-1', memberRole: 'player' },
     });
@@ -145,10 +157,17 @@ function accessFromFragment(url) {
       token: hostToken, method: 'POST', body: { bestOf: 3, randomize: false, allowWarnings: true },
     });
     assert(bracket.matches.filter(match => match.stage === 'playoff').length === 7, 'Six-team single elimination should reserve seven matches.');
+    const started = await request(`/api/tournaments/${tournamentId}/start`, { token: hostToken, method: 'POST' });
+    assert(started.tournament.status === 'ongoing', 'Host should be able to start a preflight-ready generated tournament.');
     tournament = await request(`/api/tournaments/${tournamentId}`, { token: hostToken });
     const playable = tournament.matches.find(match => match.team_a_id && match.team_b_id && match.result_status !== 'final');
     assert(playable, 'A playable match should exist.');
     assert(playable.effective_scheduled_at === '2026-07-20T19:00', 'Fixed tournament start should be inherited by matches.');
+    const unrelatedMatch = tournament.matches.find(match => match.team_a_id && match.team_b_id && ![match.team_a_id, match.team_b_id].includes(teams[0].id));
+    if (unrelatedMatch) {
+      const denied = await request(`/api/matches/${unrelatedMatch.id}/results`, { token: captains[0].token, expectError: true });
+      assert(denied.response.status === 403, 'A Captain must not be able to open a match that does not involve their team.');
+    }
 
     await request(`/api/matches/${playable.id}`, {
       token: hostToken, method: 'PATCH',
@@ -175,6 +194,15 @@ function accessFromFragment(url) {
     await request(`/api/matches/${playable.id}/results/confirm`, { token: teamAToken, method: 'POST', body: { decision: 'confirm' } });
     result = await request(`/api/matches/${playable.id}/results/confirm`, { token: teamBToken, method: 'POST', body: { decision: 'confirm' } });
     assert(result.final && result.match.result_status === 'final', 'Matching Captain confirmations should auto-finalize without referee review.');
+
+    const reconfirmation = await request(`/api/matches/${playable.id}/results/request-reconfirmation`, {
+      token: hostToken, method: 'POST', body: { reason: 'Host asks both Captains to verify the result again.' },
+    });
+    assert(reconfirmation.match.result_status === 'awaiting_confirmation' && reconfirmation.requiredTeams.length === 2, 'Host reconfirmation should reopen the result for both Captains.');
+    const firstReapproval = await request(`/api/matches/${playable.id}/results/confirm`, { token: teamAToken, method: 'POST', body: { decision: 'confirm' } });
+    assert(!firstReapproval.final, 'One Captain approval must not finalize a Host reconfirmation.');
+    result = await request(`/api/matches/${playable.id}/results/confirm`, { token: teamBToken, method: 'POST', body: { decision: 'confirm' } });
+    assert(result.final && result.match.result_status === 'final', 'Both Captain reapprovals should finalize the reopened result.');
 
     // Correct a final result while the dependent match has not started.
     const wrongWinner = result.match.winner_team_id;

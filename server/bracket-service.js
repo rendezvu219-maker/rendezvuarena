@@ -401,7 +401,8 @@ function listMatches(tournamentId) {
   return db.prepare(`
     SELECT m.*,a.name team_a_name,a.tag team_a_tag,a.logo_url team_a_logo,b.name team_b_name,b.tag team_b_tag,b.logo_url team_b_logo,w.name winner_name,
       COALESCE(m.scheduled_at,ss.scheduled_at,t.start_at) effective_scheduled_at,
-      (SELECT COUNT(*) FROM match_messages mm WHERE mm.match_id=m.id AND mm.deleted_at IS NULL) message_count
+      (SELECT COUNT(*) FROM match_messages mm WHERE mm.match_id=m.id AND mm.deleted_at IS NULL) message_count,
+      EXISTS(SELECT 1 FROM draft_rooms dr WHERE dr.match_id=m.id) draft_room_ready
     FROM matches m
     JOIN tournaments t ON t.id=m.tournament_id
     LEFT JOIN stage_schedules ss ON ss.tournament_id=m.tournament_id AND ss.stage_key=m.stage

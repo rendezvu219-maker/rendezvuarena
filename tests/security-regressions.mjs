@@ -326,6 +326,10 @@ try {
   assert.equal(downloaded.headers.get('x-content-type-options'), 'nosniff');
   assert.match(String(downloaded.headers.get('content-security-policy')), /sandbox/);
   assert.equal(Number(downloaded.headers.get('content-length')), Buffer.from(onePixelPng, 'base64').length);
+  const inlineImage = await fetch(`${mainServer.base}/api/files/${validUpload.payload.file.id}?inline=1`, { headers: { Authorization: `Bearer ${hostToken}` } });
+  assert.equal(inlineImage.status, 200);
+  assert.match(String(inlineImage.headers.get('content-disposition')), /^inline;/i);
+  assert.equal(inlineImage.headers.get('content-type'), 'image/png');
 
   // CRITICAL: no unauthenticated Socket.IO connection is accepted.
   await expectSocketError(mainServer, {}, 'anonymous');

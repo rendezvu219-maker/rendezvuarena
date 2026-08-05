@@ -197,15 +197,48 @@ function correctFinalResult({matchId,userId,reason,scoreA,scoreB}) {
   return submitResult({matchId,userId,sourceType:'host',scoreA,scoreB,note:`Correction: ${reason}`});
 }
 
+function requestResultReconfirmation({matchId,userId,reason,scoreA=null,scoreB=null}) {
+  return transaction(() => {
+    let match=getMatch(matchId);if(!match)throw new Error('Match not found.');
+    const normalizedReason=String(reason||'').trim();
+    if(!normalizedReason)throw new Error('A reason is required before asking both teams to confirm again.');
+    const previous=activeSubmission(match.id)||db.prepare(`SELECT * FROM result_submissions WHERE match_id=? ORDER BY revision DESC LIMIT 1`).get(match.id);
+    if(!previous)throw new Error('No submitted result is available for re-confirmation.');
+    const requestedScoreA=scoreA==null||scoreA===''?Number(previous.score_a):Number(scoreA);
+    const requestedScoreB=scoreB==null||scoreB===''?Number(previous.score_b):Number(scoreB);
+    const validated=validateFinalScore(match,requestedScoreA,requestedScoreB);
+    if(match.result_status==='final'){
+      const finalizedAt=Date.parse(match.result_finalized_at||'');const maxHours=Number(match.result_reopen_hours||24);
+      if(!Number.isFinite(finalizedAt)||Date.now()-finalizedAt>maxHours*3600000)throw new Error(`The ${maxHours}-hour correction window has expired.`);
+      const dependency=canReopenMatch(match);if(!dependency.allowed)throw new Error(`Cannot request re-confirmation because a dependent match has already ${dependency.blocking[0].match_status}.`);
+      rollbackFinalResultUnsafe(match,userId);
+      match=getMatch(match.id);
+    }
+    db.prepare(`UPDATE disputes SET status='resolved',resolved_by_user_id=?,resolution_note=?,resolved_at=CURRENT_TIMESTAMP WHERE match_id=? AND status IN ('open','under_review','recommended')`)
+      .run(userId,`Host requested a fresh confirmation: ${normalizedReason}`,match.id);
+    db.prepare('UPDATE result_submissions SET active=0,superseded_at=COALESCE(superseded_at,CURRENT_TIMESTAMP) WHERE match_id=?').run(match.id);
+    const revision=Number(db.prepare('SELECT COALESCE(MAX(revision),0)+1 revision FROM result_submissions WHERE match_id=?').get(match.id).revision);
+    const inserted=db.prepare(`INSERT INTO result_submissions(match_id,revision,submitted_by_user_id,source_type,score_a,score_b,winner_team_id,note,active)
+      VALUES (?,?,?,'host',?,?,?,?,1)`).run(match.id,revision,userId,validated.scoreA,validated.scoreB,validated.winnerTeamId,`Re-confirmation requested: ${normalizedReason}`);
+    const submission=db.prepare('SELECT * FROM result_submissions WHERE id=?').get(Number(inserted.lastInsertRowid));
+    db.prepare(`UPDATE matches SET score_a=NULL,score_b=NULL,winner_team_id=NULL,result_status='awaiting_confirmation',match_status='completed',status='completed',resolution_type='normal',resolution_reason='',result_finalized_at=NULL,final_submission_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
+    db.prepare('INSERT INTO audit_logs(tournament_id,match_id,user_id,action,details_json) VALUES (?,?,?,?,?)')
+      .run(match.tournament_id,match.id,userId,'result.reconfirmation_requested',JSON.stringify({reason:normalizedReason,scoreA:validated.scoreA,scoreB:validated.scoreB,submissionId:submission.id}));
+    return{match:getMatch(match.id),submission,requiredTeams:requiredConfirmationTeams(match,submission)};
+  });
+}
+
 function getResultContext(matchId) {
   const match=getMatch(matchId);if(!match)return null;
   const submissions=db.prepare(`SELECT rs.*,u.display_name submitted_by_name,t.name submitted_by_team_name FROM result_submissions rs LEFT JOIN users u ON u.id=rs.submitted_by_user_id LEFT JOIN teams t ON t.id=rs.submitted_by_team_id WHERE rs.match_id=? ORDER BY rs.revision DESC`).all(matchId);
-  const confirmations=db.prepare(`SELECT rc.*,u.display_name confirmed_by_name,t.name team_name FROM result_confirmations rc LEFT JOIN users u ON u.id=rc.confirmed_by_user_id LEFT JOIN teams t ON t.id=rc.team_id WHERE rc.match_id=? ORDER BY rc.id`).all(matchId);
-  const dispute=db.prepare(`SELECT d.*,u.display_name recommended_by_name,r.display_name resolved_by_name FROM disputes d LEFT JOIN users u ON u.id=d.recommended_by_user_id LEFT JOIN users r ON r.id=d.resolved_by_user_id WHERE d.match_id=? ORDER BY d.id DESC LIMIT 1`).get(matchId)||null;
   const current=activeSubmission(matchId)||null;
-  return{match,currentSubmission:current,submissions,confirmations,dispute,requiredTeams:current?requiredConfirmationTeams(match,current):[]};
+  const confirmations=current?db.prepare(`SELECT rc.*,u.display_name confirmed_by_name,t.name team_name FROM result_confirmations rc LEFT JOIN users u ON u.id=rc.confirmed_by_user_id LEFT JOIN teams t ON t.id=rc.team_id WHERE rc.match_id=? AND rc.result_submission_id=? ORDER BY rc.id`).all(matchId,current.id):[];
+  const dispute=db.prepare(`SELECT d.*,u.display_name recommended_by_name,r.display_name resolved_by_name FROM disputes d LEFT JOIN users u ON u.id=d.recommended_by_user_id LEFT JOIN users r ON r.id=d.resolved_by_user_id WHERE d.match_id=? ORDER BY d.id DESC LIMIT 1`).get(matchId)||null;
+  const confirmedTeams=new Set(confirmations.filter(item=>item.decision==='confirm').map(item=>Number(item.team_id)));
+  const requiredTeams=current?requiredConfirmationTeams(match,current).filter(teamId=>!confirmedTeams.has(Number(teamId))):[];
+  return{match,currentSubmission:current,submissions,confirmations,dispute,requiredTeams};
 }
 
 module.exports={
-  getMatch,submitResult,confirmResult,reviewDispute,recommendDispute,verifyDispute,reopenResult,correctFinalResult,getResultContext,createDisputeUnsafe,
+  getMatch,submitResult,confirmResult,reviewDispute,recommendDispute,verifyDispute,reopenResult,correctFinalResult,requestResultReconfirmation,getResultContext,createDisputeUnsafe,
 };
