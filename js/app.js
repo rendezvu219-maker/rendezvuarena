@@ -1,4 +1,4 @@
-import { DraftEngine, draftActionPresentation } from './draft.js';
+import { DraftEngine, draftActionPresentation, squadraBlastPhase } from './draft.js';
 import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js';
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js';
@@ -108,8 +108,16 @@ export class DraftUI {
   }
 
   previousPicksForSide(side) {
+    if (this.config.seriesRule === 'squadra_blast' && squadraBlastPhase(this.config.gameNumber) !== 2) return [];
     const entrantKey = entrantForSide(this.sideAssignment, side);
     return entrantKey === 'teamA' ? (this.config.previousPicksA || []) : (this.config.previousPicksB || []);
+  }
+
+  previousBansForSide(side) {
+    if (this.config.seriesRule !== 'squadra_blast' || squadraBlastPhase(this.config.gameNumber) !== 2) return [];
+    if (this.config.squadraBlastCarryBans === false) return [];
+    const entrantKey = entrantForSide(this.sideAssignment, side);
+    return entrantKey === 'teamA' ? (this.config.previousBansA || []) : (this.config.previousBansB || []);
   }
 
   initials(name) {
@@ -163,6 +171,16 @@ export class DraftUI {
         this.engine.seriesPickedByTeam.A = new Set(previousA);
         this.engine.seriesPickedByTeam.B = new Set(previousB);
         this.engine.seriesPickedAll = new Set([...previousA, ...previousB]);
+        const previousBansA = this.previousBansForSide('A');
+        const previousBansB = this.previousBansForSide('B');
+        this.engine.config.previousBansA = [...previousBansA];
+        this.engine.config.previousBansB = [...previousBansB];
+        this.engine.teamA.bans = [...previousBansA];
+        this.engine.teamB.bans = [...previousBansB];
+        this.engine.blastBannedHeroes = new Set([...previousBansA, ...previousBansB]);
+        this.engine.heroes.forEach(hero => {
+          hero.status = this.engine.blastBannedHeroes.has(hero.id) ? 'banned' : 'available';
+        });
       }
     }
 
@@ -214,6 +232,7 @@ export class DraftUI {
     if (readOnly) {
       this.btnLock.disabled = true;
       this.btnLock.classList.remove('ready');
+      this.btnLock.setAttribute('data-i18n', 'viewOnly');
       this.btnLock.textContent = t('viewOnly');
     }
     this.renderGrid();
@@ -496,8 +515,11 @@ export class DraftUI {
       timerAuthority: this.isAuthoritativeHost,
       seriesRule: this.config.seriesRule || 'normal',
       gameNumber: Number(this.config.gameNumber || 1),
+      squadraBlastCarryBans: this.config.squadraBlastCarryBans !== false,
       previousPicksA: this.previousPicksForSide('A'),
       previousPicksB: this.previousPicksForSide('B'),
+      previousBansA: this.previousBansForSide('A'),
+      previousBansB: this.previousBansForSide('B'),
       protectList: this.config.enableProtect
         ? [
             ...(this.config.protectList || []),
@@ -532,6 +554,7 @@ export class DraftUI {
     this.bindSeriesControl();
     this.bindEvents();
     this.createSlots();
+    if (this.engine.teamA.bans.length || this.engine.teamB.bans.length) this.restoreDraftVisuals();
     this.bindRealtime();
 
     if (this.initialRoomState?.engine) {
@@ -580,7 +603,9 @@ export class DraftUI {
     const presentation = draftActionPresentation(action);
     const phaseText = t(presentation.phaseKey);
     if (showBanner) this.showPhaseBanner(phaseText, action.team);
+    this.phaseIndicator.setAttribute('data-i18n', presentation.phaseKey);
     this.phaseIndicator.textContent = phaseText;
+    this.btnLock.setAttribute('data-i18n', presentation.buttonKey);
     this.btnLock.textContent = t(presentation.buttonKey);
     this.btnLock.style.background = presentation.isBan
       ? 'linear-gradient(135deg, #8b0000, #cc0000)'
@@ -653,6 +678,7 @@ export class DraftUI {
     });
 
     this.engine.on('draftPaused', ({ remaining }) => {
+      this.phaseIndicator.setAttribute('data-i18n', 'paused');
       this.phaseIndicator.textContent = t('paused');
       this.publishRoomEvent('draft:paused', { remaining });
       this.publishRoomState(true);
@@ -665,6 +691,7 @@ export class DraftUI {
 
     this.engine.on('draftComplete', () => {
       this.showPhaseBanner(t('draftComplete'), null);
+      this.phaseIndicator.setAttribute('data-i18n', 'complete');
       this.phaseIndicator.textContent = t('complete');
       this.timerEl.textContent = '—';
       this.btnLock.disabled = true;
@@ -721,8 +748,13 @@ export class DraftUI {
     this.slotsB.innerHTML = makePickSlots('B');
     // Divine Draw bans belong to the separate Divine Draw screen and must not
     // appear as extra hero-ban slots. This keeps 2 hero bans displayed as 2.
-    this.bansA.innerHTML = makeBanSlots('A', this.engine.config.heroBans);
-    this.bansB.innerHTML = makeBanSlots('B', this.engine.config.heroBans);
+    const visibleBanCount = Math.max(
+      this.engine.config.heroBans,
+      this.engine.teamA.bans.length,
+      this.engine.teamB.bans.length,
+    );
+    this.bansA.innerHTML = makeBanSlots('A', visibleBanCount);
+    this.bansB.innerHTML = makeBanSlots('B', visibleBanCount);
   }
 
   renderGrid() {
@@ -1140,6 +1172,9 @@ if (this.engine.selectedHero === h.id) {
   }
 
   showPhaseBanner(text, team) {
+    // This banner contains runtime phase text. A static data-i18n="banPhase"
+    // attribute would let the i18n observer overwrite PICK PHASE after bans.
+    this.banner.removeAttribute('data-i18n');
     this.banner.textContent = text;
     this.banner.className = 'phase-banner';
     if (team === 'A') this.banner.style.color = 'var(--team-left-primary)';
@@ -1974,6 +2009,13 @@ if (this.engine.selectedHero === h.id) {
         ? 'TEAM NO REPEAT is enabled. From Game 2 onward, each team cannot reuse its own earlier picks.'
         : `TEAM NO REPEAT is active for Game ${gameNumber}. Each team is locked out of its own previous picks.`;
     }
+    if (this.config.seriesRule === 'squadra_blast') {
+      const phase = squadraBlastPhase(gameNumber);
+      const carryBans = this.config.squadraBlastCarryBans !== false;
+      if (phase === 1) return t(carryBans ? 'squadraBlastGame1' : 'squadraBlastGame1NoCarry');
+      if (phase === 2) return t(carryBans ? 'squadraBlastGame2' : 'squadraBlastGame2NoCarry');
+      return t('squadraBlastGame3');
+    }
     return 'NORMAL series rule is active. Heroes may be picked again in later games.';
   }
 
@@ -2105,9 +2147,28 @@ if (this.engine.selectedHero === h.id) {
       const sideBPicks = this.engine.teamB.picks || [];
       const entrantAPicks = entrantForSide(this.sideAssignment, 'A') === 'teamA' ? sideAPicks : sideBPicks;
       const entrantBPicks = entrantForSide(this.sideAssignment, 'A') === 'teamB' ? sideAPicks : sideBPicks;
-      this.config.previousPicksA = [...new Set([...(this.config.previousPicksA || []), ...entrantAPicks])];
-      this.config.previousPicksB = [...new Set([...(this.config.previousPicksB || []), ...entrantBPicks])];
-      this.config.gameNumber = Number(this.config.gameNumber || 1) + 1;
+      const sideABans = this.engine.teamA.bans || [];
+      const sideBBans = this.engine.teamB.bans || [];
+      const entrantABans = entrantForSide(this.sideAssignment, 'A') === 'teamA' ? sideABans : sideBBans;
+      const entrantBBans = entrantForSide(this.sideAssignment, 'A') === 'teamB' ? sideABans : sideBBans;
+      const nextGameNumber = Number(this.config.gameNumber || 1) + 1;
+      if (this.config.seriesRule === 'squadra_blast') {
+        if (squadraBlastPhase(nextGameNumber) === 2) {
+          this.config.previousPicksA = [...new Set(entrantAPicks)];
+          this.config.previousPicksB = [...new Set(entrantBPicks)];
+          this.config.previousBansA = this.config.squadraBlastCarryBans === false ? [] : [...new Set(entrantABans)];
+          this.config.previousBansB = this.config.squadraBlastCarryBans === false ? [] : [...new Set(entrantBBans)];
+        } else {
+          this.config.previousPicksA = [];
+          this.config.previousPicksB = [];
+          this.config.previousBansA = [];
+          this.config.previousBansB = [];
+        }
+      } else {
+        this.config.previousPicksA = [...new Set([...(this.config.previousPicksA || []), ...entrantAPicks])];
+        this.config.previousPicksB = [...new Set([...(this.config.previousPicksB || []), ...entrantBPicks])];
+      }
+      this.config.gameNumber = nextGameNumber;
 
       const nextConfig = serializableDraftConfig(this.config);
       this.sync?.publishState({

@@ -1,4 +1,5 @@
 import { api, getToken, setToken } from './api.js';
+import { eventCardSummary } from './public-event-content.js';
 
 const state = { events: [], filter: 'all', user: null };
 const $ = selector => document.querySelector(selector);
@@ -21,7 +22,7 @@ function renderEvents() {
     const kind = eventKind(event);
     const publicUrl = `/public.html?slug=${encodeURIComponent(event.slug)}`;
     const joinUrl = `/join-tournament.html?slug=${encodeURIComponent(event.slug)}`;
-    return `<article class="home-event-card ${kind}"><span class="event-status"><i></i>${kind.toUpperCase()}</span><h3>${escapeHtml(event.name)}</h3><p>${escapeHtml(event.description || 'Public tournament information and bracket updates.')}</p><div class="event-meta"><span>${escapeHtml(formatDate(event.start_at))}</span><span>${escapeHtml(event.timezone || '')}</span></div><div class="event-actions"><a class="btn btn-primary btn-sm" href="${publicUrl}">VIEW EVENT</a>${kind!=='completed'?`<a class="btn btn-ghost btn-sm" href="${joinUrl}">JOIN / LINK ACCOUNT</a>`:''}${event.source_url ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(event.source_url)}" target="_blank" rel="noopener">${escapeHtml((event.source_platform||'source').toUpperCase())} ↗</a>` : ''}${event.public_stream_url ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(event.public_stream_url)}" target="_blank" rel="noopener">STREAM ↗</a>` : ''}</div></article>`;
+    return `<article class="home-event-card ${kind}"><span class="event-status"><i></i>${kind.toUpperCase()}</span><h3>${escapeHtml(event.name)}</h3><p>${escapeHtml(eventCardSummary(event.description))}</p><div class="event-meta"><span>${escapeHtml(formatDate(event.start_at))}</span><span>${escapeHtml(event.timezone || '')}</span></div><div class="event-actions"><a class="btn btn-primary btn-sm" href="${publicUrl}">VIEW EVENT</a>${kind!=='completed'?`<a class="btn btn-ghost btn-sm" href="${joinUrl}">JOIN / LINK ACCOUNT</a>`:''}${event.source_url ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(event.source_url)}" target="_blank" rel="noopener">${escapeHtml((event.source_platform||'source').toUpperCase())} ↗</a>` : ''}${event.public_stream_url ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(event.public_stream_url)}" target="_blank" rel="noopener">STREAM ↗</a>` : ''}</div></article>`;
   }).join('') : '<div class="home-event-empty">No public tournaments match this filter yet.</div>';
 }
 async function loadEvents() {

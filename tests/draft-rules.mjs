@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { DraftEngine, draftActionPresentation } from '../js/draft.js';
+import { DraftEngine, draftActionPresentation, seriesHeroBanCount, squadraBlastPhase } from '../js/draft.js';
 import { HEROES, generateDraftSequence } from '../js/heroes.js';
 
 const summarize = sequence => sequence.map(step => `${step.team}${step.type === 'ban' ? 'B' : 'P'}`);
@@ -7,6 +7,10 @@ const summarize = sequence => sequence.map(step => `${step.team}${step.type === 
 assert.deepEqual(draftActionPresentation({ type:'ban' }), { phaseKey:'banPhase', buttonKey:'ban', isBan:true });
 assert.deepEqual(draftActionPresentation({ type:'divine-ban' }), { phaseKey:'divineBan', buttonKey:'ban', isBan:true });
 assert.deepEqual(draftActionPresentation({ type:'pick' }), { phaseKey:'pickPhase', buttonKey:'lockIn', isBan:false });
+assert.deepEqual([1,2,3,4,5,6].map(squadraBlastPhase), [1,2,3,1,2,3]);
+assert.equal(seriesHeroBanCount('squadra_blast', 1, 3), 3, 'Squadra Blast Game 1 must use the Host-configured ban count.');
+assert.equal(seriesHeroBanCount('squadra_blast', 2, 3), 0, 'Squadra Blast Game 2 must not add new bans.');
+assert.equal(seriesHeroBanCount('squadra_blast', 3, 3), 0, 'Squadra Blast Game 3 must not add new bans.');
 
 const twoBan = generateDraftSequence(2, 1, 4);
 assert.deepEqual(summarize(twoBan), [
@@ -219,5 +223,57 @@ assert.equal(
   null,
   'Normal series should allow earlier picks to be reused.'
 );
+
+const blastBanA = HEROES.find(hero => ![damage.id, tank.id, technical.id, fearlessLockedHero.id].includes(hero.id));
+const blastBanB = HEROES.find(hero => ![damage.id, tank.id, technical.id, fearlessLockedHero.id, blastBanA?.id].includes(hero.id));
+assert(blastBanA && blastBanB, 'Squadra Blast tests require two distinct banned heroes.');
+const blastGame2 = new DraftEngine({
+  seriesRule: 'squadra_blast',
+  gameNumber: 2,
+  heroBans: 3,
+  previousPicksA: [damage.id],
+  previousPicksB: [tank.id],
+  previousBansA: [blastBanA.id],
+  previousBansB: [blastBanB.id],
+  timerAuthority: false,
+});
+assert.equal(blastGame2.config.heroBans, 0);
+assert.equal(blastGame2.getHeroUnavailableReason(blastBanA.id, { type: 'pick', team: 'A' })?.code, 'blast_ban');
+assert.equal(blastGame2.getHeroUnavailableReason(blastBanB.id, { type: 'pick', team: 'B' })?.code, 'blast_ban');
+assert.equal(blastGame2.getHeroUnavailableReason(damage.id, { type: 'pick', team: 'A' })?.code, 'team_lock');
+assert.equal(blastGame2.getHeroUnavailableReason(damage.id, { type: 'pick', team: 'B' }), null, 'The opposing team may pick a hero used only by Team A in Game 1.');
+assert.equal(blastGame2.getHeroUnavailableReason(tank.id, { type: 'pick', team: 'B' })?.code, 'team_lock');
+
+const blastGame2WithoutCarriedBans = new DraftEngine({
+  seriesRule: 'squadra_blast',
+  gameNumber: 2,
+  squadraBlastCarryBans: false,
+  previousPicksA: [damage.id],
+  previousPicksB: [tank.id],
+  previousBansA: [blastBanA.id],
+  previousBansB: [blastBanB.id],
+  timerAuthority: false,
+});
+assert.deepEqual(blastGame2WithoutCarriedBans.config.previousBansA, []);
+assert.deepEqual(blastGame2WithoutCarriedBans.config.previousBansB, []);
+assert.equal(blastGame2WithoutCarriedBans.getHeroUnavailableReason(blastBanA.id, { type: 'pick', team: 'A' }), null, 'Game 1 bans must be reusable in Game 2 when carry-over is disabled.');
+assert.equal(blastGame2WithoutCarriedBans.getHeroUnavailableReason(blastBanB.id, { type: 'pick', team: 'B' }), null);
+assert.equal(blastGame2WithoutCarriedBans.getHeroUnavailableReason(damage.id, { type: 'pick', team: 'A' })?.code, 'team_lock', 'Disabling ban carry-over must not unlock a team’s own Game 1 picks.');
+assert.equal(blastGame2WithoutCarriedBans.getHeroUnavailableReason(damage.id, { type: 'pick', team: 'B' }), null);
+
+const blastGame3 = new DraftEngine({
+  seriesRule: 'squadra_blast',
+  gameNumber: 3,
+  heroBans: 3,
+  previousPicksA: [damage.id],
+  previousPicksB: [tank.id],
+  previousBansA: [blastBanA.id],
+  previousBansB: [blastBanB.id],
+  timerAuthority: false,
+});
+assert.equal(blastGame3.config.heroBans, 0);
+assert.equal(blastGame3.getHeroUnavailableReason(damage.id, { type: 'pick', team: 'A' }), null);
+assert.equal(blastGame3.getHeroUnavailableReason(tank.id, { type: 'pick', team: 'B' }), null);
+assert.equal(blastGame3.getHeroUnavailableReason(blastBanA.id, { type: 'pick', team: 'A' }), null);
 
 console.log('Draft sequence, fixed roles, All Random Mirror Pick, fair rerolls, timer, Fearless and late-ban role rules passed.');

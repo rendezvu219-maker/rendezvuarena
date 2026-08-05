@@ -2139,8 +2139,10 @@ body[data-draft-role="referee"] .action-bar { opacity:.72; }
 .hero-unavailable-reason.reason-current_game_pick { background: rgba(30,75,150,.92); border-color: rgba(90,155,255,.72); }
 .hero-unavailable-reason.reason-fearless_lock { background: rgba(90,35,135,.94); border-color: rgba(205,130,255,.8); }
 .hero-unavailable-reason.reason-team_lock { background: rgba(120,85,10,.94); border-color: rgba(255,205,70,.8); }
+.hero-unavailable-reason.reason-blast_ban { background: rgba(172,48,22,.95); border-color: rgba(255,151,92,.85); }
 .hero-card.unavailable:has(.reason-fearless_lock),
-.hero-card.unavailable:has(.reason-team_lock) { filter: grayscale(.65) brightness(.62); }
+.hero-card.unavailable:has(.reason-team_lock),
+.hero-card.unavailable:has(.reason-blast_ban) { filter: grayscale(.65) brightness(.62); }
 
 /* v0.7: distinguish tournament-level Global Ban and Protected heroes. */
 .hero-unavailable-reason.reason-global_ban {

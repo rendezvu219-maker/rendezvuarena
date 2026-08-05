@@ -16,6 +16,19 @@ const FIXED_ROLE_LIMITS = Object.freeze({
   Technical: 1,
 });
 
+const SERIES_RULES = new Set(['normal', 'team_no_repeat', 'fearless', 'squadra_blast']);
+
+export function squadraBlastPhase(gameNumber = 1) {
+  const normalized = Math.max(1, Math.floor(Number(gameNumber) || 1));
+  return ((normalized - 1) % 3) + 1;
+}
+
+export function seriesHeroBanCount(seriesRule, gameNumber, configuredCount = 2) {
+  const count = Math.min(4, Math.max(0, Math.floor(Number(configuredCount ?? 2))));
+  if (seriesRule === 'squadra_blast') return squadraBlastPhase(gameNumber) === 1 ? count : 0;
+  return count;
+}
+
 export function draftActionPresentation(action = null) {
   const type = String(action?.type || 'pick');
   const isBan = type === 'ban' || type === 'divine-ban';
@@ -85,19 +98,26 @@ export class DraftEngine {
   constructor(config = {}) {
     const picksPerTeam = config.picksPerTeam ?? 4;
     const mirrorPickMode = normalizeMirrorPickMode(config);
+    const seriesRule = SERIES_RULES.has(config.seriesRule) ? config.seriesRule : 'normal';
+    const gameNumber = Math.max(1, Number(config.gameNumber || 1));
+    const blastHistoryActive = seriesRule === 'squadra_blast' && squadraBlastPhase(gameNumber) === 2;
+    const squadraBlastCarryBans = config.squadraBlastCarryBans !== false;
 
     this.config = {
       teamA: config.teamA || 'TEAM A',
       teamB: config.teamB || 'TEAM B',
-      heroBans: Math.min(4, Math.max(0, Math.floor(Number(config.heroBans ?? 2)))),
+      heroBans: seriesHeroBanCount(seriesRule, gameNumber, config.heroBans),
       divineBans: config.divineBans ?? 0,
       picksPerTeam,
       timerSeconds: Math.min(90, Math.max(30, Math.floor(Number(config.timerSeconds ?? 30)))),
       timerAuthority: config.timerAuthority !== false,
-      seriesRule: ['normal','team_no_repeat','fearless'].includes(config.seriesRule) ? config.seriesRule : 'normal',
-      gameNumber: Math.max(1, Number(config.gameNumber || 1)),
-      previousPicksA: Array.isArray(config.previousPicksA) ? [...new Set(config.previousPicksA)] : [],
-      previousPicksB: Array.isArray(config.previousPicksB) ? [...new Set(config.previousPicksB)] : [],
+      seriesRule,
+      gameNumber,
+      squadraBlastCarryBans,
+      previousPicksA: Array.isArray(config.previousPicksA) && (seriesRule !== 'squadra_blast' || blastHistoryActive) ? [...new Set(config.previousPicksA)] : [],
+      previousPicksB: Array.isArray(config.previousPicksB) && (seriesRule !== 'squadra_blast' || blastHistoryActive) ? [...new Set(config.previousPicksB)] : [],
+      previousBansA: Array.isArray(config.previousBansA) && blastHistoryActive && squadraBlastCarryBans ? [...new Set(config.previousBansA)] : [],
+      previousBansB: Array.isArray(config.previousBansB) && blastHistoryActive && squadraBlastCarryBans ? [...new Set(config.previousBansB)] : [],
       protectList: Array.isArray(config.protectList) ? [...new Set(config.protectList)] : [],
       globalBanList: Array.isArray(config.globalBanList) ? [...new Set(config.globalBanList)] : [],
       mirrorPickMode,
@@ -127,6 +147,17 @@ export class DraftEngine {
     this.seriesPickedAll = new Set([...this.seriesPickedByTeam.A, ...this.seriesPickedByTeam.B]);
     this.protectedHeroes = new Set(this.config.protectList);
     this.globalBannedHeroes = new Set(this.config.globalBanList);
+    this.blastBannedHeroes = new Set([
+      ...this.config.previousBansA,
+      ...this.config.previousBansB,
+    ]);
+    if (this.config.seriesRule === 'squadra_blast' && this.blastBannedHeroes.size) {
+      this.teamA.bans = [...this.config.previousBansA];
+      this.teamB.bans = [...this.config.previousBansB];
+      this.heroes.forEach(hero => {
+        if (this.blastBannedHeroes.has(hero.id)) hero.status = 'banned';
+      });
+    }
   }
 
   makeTeam(name) {
@@ -180,6 +211,10 @@ export class DraftEngine {
   getHeroUnavailableReason(heroId, action = this.currentAction) {
     const hero = this.heroes.find(item => item.id === heroId);
     if (!hero) return { code: 'missing', label: 'Unavailable' };
+
+    if (this.blastBannedHeroes.has(heroId)) {
+      return { code: 'blast_ban', label: 'blast_ban' };
+    }
 
     if (this.globalBannedHeroes.has(heroId)) {
       return { code: 'global_ban', label: 'Global Ban — unavailable to both teams' };
@@ -243,7 +278,7 @@ export class DraftEngine {
 
     // Team No Repeat only prevents the same team from PICKING the hero again.
     // A team may still ban its old hero to stop the opponent from selecting it.
-    if (this.config.seriesRule === 'team_no_repeat' && action?.type === 'pick') {
+    if (['team_no_repeat', 'squadra_blast'].includes(this.config.seriesRule) && action?.type === 'pick') {
       const teamKey = action.team === 'B' ? 'B' : 'A';
       if (this.seriesPickedByTeam[teamKey].has(heroId)) {
         return { code: 'team_lock', label: 'Team Lock — your team picked this hero earlier' };
@@ -529,7 +564,7 @@ export class DraftEngine {
 
   exportState() {
     return {
-      version: 3,
+      version: 4,
       state: this.state,
       currentStep: this.currentStep,
       sequence: structuredClone(this.sequence),
@@ -540,8 +575,11 @@ export class DraftEngine {
       heroStatuses: Object.fromEntries(this.heroes.map(hero => [hero.id, hero.status])),
       seriesRule: this.config.seriesRule,
       gameNumber: this.config.gameNumber,
+      squadraBlastCarryBans: this.config.squadraBlastCarryBans,
       previousPicksA: [...this.seriesPickedByTeam.A],
       previousPicksB: [...this.seriesPickedByTeam.B],
+      previousBansA: [...this.config.previousBansA],
+      previousBansB: [...this.config.previousBansB],
       protectList: [...this.protectedHeroes],
       globalBanList: [...this.globalBannedHeroes],
       mirrorPickMode: this.config.mirrorPickMode,
@@ -572,11 +610,33 @@ export class DraftEngine {
     if (snapshot.teamA) this.teamA = structuredClone(snapshot.teamA);
     if (snapshot.teamB) this.teamB = structuredClone(snapshot.teamB);
 
-    if (['normal','team_no_repeat','fearless'].includes(snapshot.seriesRule)) this.config.seriesRule = snapshot.seriesRule;
+    if (SERIES_RULES.has(snapshot.seriesRule)) this.config.seriesRule = snapshot.seriesRule;
     if (Number.isInteger(Number(snapshot.gameNumber))) this.config.gameNumber = Math.max(1, Number(snapshot.gameNumber));
+    if (typeof snapshot.squadraBlastCarryBans === 'boolean') this.config.squadraBlastCarryBans = snapshot.squadraBlastCarryBans;
     if (Array.isArray(snapshot.previousPicksA)) this.seriesPickedByTeam.A = new Set(snapshot.previousPicksA);
     if (Array.isArray(snapshot.previousPicksB)) this.seriesPickedByTeam.B = new Set(snapshot.previousPicksB);
+    if (this.config.seriesRule === 'squadra_blast' && squadraBlastPhase(this.config.gameNumber) !== 2) {
+      this.seriesPickedByTeam.A.clear();
+      this.seriesPickedByTeam.B.clear();
+    }
     this.seriesPickedAll = new Set([...this.seriesPickedByTeam.A, ...this.seriesPickedByTeam.B]);
+    if (Array.isArray(snapshot.previousBansA)) this.config.previousBansA = [...new Set(snapshot.previousBansA)];
+    if (Array.isArray(snapshot.previousBansB)) this.config.previousBansB = [...new Set(snapshot.previousBansB)];
+    const blastCarryDisabled = this.config.seriesRule === 'squadra_blast'
+      && squadraBlastPhase(this.config.gameNumber) === 2
+      && !this.config.squadraBlastCarryBans;
+    if (this.config.seriesRule !== 'squadra_blast' || squadraBlastPhase(this.config.gameNumber) !== 2 || blastCarryDisabled) {
+      this.config.previousBansA = [];
+      this.config.previousBansB = [];
+      if (blastCarryDisabled) {
+        this.teamA.bans = [];
+        this.teamB.bans = [];
+      }
+    }
+    this.blastBannedHeroes = new Set([
+      ...(this.config.previousBansA || []),
+      ...(this.config.previousBansB || []),
+    ]);
     if (Array.isArray(snapshot.protectList)) this.protectedHeroes = new Set(snapshot.protectList);
     if (Array.isArray(snapshot.globalBanList)) this.globalBannedHeroes = new Set(snapshot.globalBanList);
     this.config.mirrorPickMode = normalizeMirrorPickMode(snapshot);
@@ -585,6 +645,7 @@ export class DraftEngine {
     const statuses = snapshot.heroStatuses || {};
     this.heroes.forEach(hero => {
       hero.status = statuses[hero.id] || 'available';
+      if (blastCarryDisabled && hero.status === 'banned' && !this.globalBannedHeroes.has(hero.id)) hero.status = 'available';
       if (hero.status !== 'banned') this.refreshPickedStatus(hero.id);
     });
 

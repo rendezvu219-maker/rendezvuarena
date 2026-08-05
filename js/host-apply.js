@@ -1,4 +1,5 @@
 import { api, getToken } from './api.js';
+import { discordInviteFromText } from './public-event-content.js';
 
 const $ = selector => document.querySelector(selector);
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({
@@ -30,6 +31,7 @@ function renderPreview(payload) {
   const warnings = preview.warnings || [];
   const previewEl = $('#tournament-import-preview');
   const alreadyImported = Boolean(existing);
+  const detectedDiscordInvite = discordInviteFromText(preview.description);
 
   previewEl.innerHTML = `
     <div class="import-preview-head">
@@ -44,6 +46,7 @@ function renderPreview(payload) {
       <div><small>EXTERNAL ID</small><b>${escapeHtml(preview.externalId)}</b></div>
       <div class="wide"><small>SOURCE URL</small><a href="${escapeHtml(preview.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(preview.sourceUrl)} ↗</a></div>
       <div class="wide"><small>TOURNAMENT NAME</small><input id="import-tournament-name" maxlength="160" value="${escapeHtml(preview.name)}"></div>
+      <div class="wide"><small>Discord invite link</small><input id="import-discord-url" type="url" placeholder="https://discord.gg/..." value="${escapeHtml(detectedDiscordInvite)}"></div>
     </div>
     ${preview.description ? `<p class="import-preview-description">${escapeHtml(preview.description)}</p>` : ''}
     ${warnings.length ? `<div class="import-warning"><b>LIMITED METADATA</b>${warnings.map(item => `<span>${escapeHtml(item)}</span>`).join('')}</div>` : ''}
@@ -104,6 +107,7 @@ async function importTournament() {
       body: {
         url: currentPreview.sourceUrl,
         name: $('#import-tournament-name').value.trim(),
+        discordUrl: $('#import-discord-url').value.trim(),
         confirmOwnership: $('#tournament-owner-confirm').checked,
       }
     });

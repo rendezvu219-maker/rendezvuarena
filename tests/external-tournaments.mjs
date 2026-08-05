@@ -5,10 +5,29 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import {
+  canonicalDiscordInvite,
+  discordInviteFromText,
+  eventCardSummary,
+  linkifyDiscordInvitesOnly,
+  renderPublicEventDescription,
+} from '../js/public-event-content.js';
 
 const require = createRequire(import.meta.url);
 const { detectTournamentPlatform, isPrivateAddress, assertPublicNetworkTarget } = require('../server/external-tournaments');
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+
+const importedDescription = 'Community tournament on the NA server. Start Time: 8/9/2026 at 6:00 PM EDT How to Enter: - Join https://discord.gg/KZQrHyn2G - Ignore https://fake.example/phish Tournament Rules: - Best of 3.';
+assert.equal(canonicalDiscordInvite('https://discord.gg/KZQrHyn2G'), 'https://discord.gg/KZQrHyn2G');
+assert.equal(canonicalDiscordInvite('https://discord.gg.fake.example/KZQrHyn2G'), '');
+assert.equal(canonicalDiscordInvite('http://discord.gg/KZQrHyn2G'), '');
+assert.equal(discordInviteFromText(importedDescription), 'https://discord.gg/KZQrHyn2G');
+const linkedDescription = linkifyDiscordInvitesOnly(importedDescription);
+assert.match(linkedDescription, /href="https:\/\/discord\.gg\/KZQrHyn2G"/);
+assert.doesNotMatch(linkedDescription, /href="https:\/\/fake\.example/);
+assert.match(linkedDescription, /https:\/\/fake\.example\/phish/);
+assert.match(renderPublicEventDescription(importedDescription), /<h3>How to Enter<\/h3>[\s\S]*<ul>/);
+assert.equal(eventCardSummary(importedDescription), 'Community tournament on the NA server.');
 
 const startgg = detectTournamentPlatform('https://www.start.gg/tournament/rising-squadra-asia-tournament-s6/details');
 assert.ok(startgg.valid && startgg.platform === 'startgg', 'start.gg URL should be detected.');
@@ -35,6 +54,9 @@ await assert.rejects(() => assertPublicNetworkTarget('http://challonge.com/test'
 const externalSource=fs.readFileSync(path.join(root,'server','external-tournaments.js'),'utf8');
 assert.match(externalSource,/redirect:\s*'manual'/,'External metadata fetch must manually validate every redirect.');
 assert.doesNotMatch(externalSource,/redirect:\s*'follow'/,'Automatic redirect following must stay disabled.');
+const hostApplySource=fs.readFileSync(path.join(root,'js','host-apply.js'),'utf8');
+assert.match(hostApplySource,/id="import-discord-url"/,'Tournament creation preview must expose a dedicated Discord invite field.');
+assert.match(hostApplySource,/discordUrl:\s*\$\('#import-discord-url'\)/,'The creation flow must submit the dedicated Discord invite.');
 
 const tempDir=fs.mkdtempSync(path.join(os.tmpdir(),'gekishin-external-import-'));
 const dbPath=path.join(tempDir,'external.sqlite');
@@ -65,10 +87,11 @@ try{
   const token=registered.payload.token;
   const preview=await request('/api/tournament-import/preview',{token,method:'POST',body:{url:'https://tonamel.com/competition/UNVERIFIED-TEST'}});
   assert.equal(preview.payload.preview.syncStatus,'url_verified','Failed metadata fetch must remain importable but explicitly unverified.');
-  const imported=await request('/api/tournament-import',{token,method:'POST',body:{url:'https://tonamel.com/competition/UNVERIFIED-TEST',confirmOwnership:true}});
+  const imported=await request('/api/tournament-import',{token,method:'POST',body:{url:'https://tonamel.com/competition/UNVERIFIED-TEST',discordUrl:'https://discord.gg/CreateCode',confirmOwnership:true}});
   assert.equal(imported.response.status,201);
   assert.equal(imported.payload.requiresVerification,true,'Import response must tell the client that Host verification is required.');
   assert.equal(imported.payload.tournament.source_sync_status,'url_verified');
+  assert.equal(imported.payload.tournament.discord_url,'https://discord.gg/CreateCode');
   assert.equal(imported.payload.tournament.unverified,true);
   const tournamentId=imported.payload.tournament.id;
   const listed=await request('/api/tournaments',{token});
@@ -84,6 +107,17 @@ try{
   const verifiedDetail=await request(`/api/tournaments/${tournamentId}`,{token});
   assert.equal(verifiedDetail.payload.tournament.sourceSyncStatus,'host_confirmed');
   assert.equal(verifiedDetail.payload.tournament.unverified,false);
+  const discordUpdated=await request(`/api/tournaments/${tournamentId}`,{token,method:'PATCH',body:{discordUrl:'discord.com/invite/Real_Code-42'}});
+  assert.equal(discordUpdated.payload.tournament.discord_url,'https://discord.gg/Real_Code-42','Dedicated Discord invites must be canonicalized before storage.');
+  const rejectedDiscord=await fetch(`${base}/api/tournaments/${tournamentId}`,{
+    method:'PATCH',
+    headers:{Authorization:`Bearer ${token}`,'X-CSRF-Token':'1','Content-Type':'application/json'},
+    body:JSON.stringify({discordUrl:'https://discord.gg.fake.example/scam'}),
+  });
+  assert.equal(rejectedDiscord.status,400,'Lookalike Discord domains must be rejected.');
+  await request(`/api/tournaments/${tournamentId}/publish`,{token,method:'POST',body:{confirm:true}});
+  const publicDetail=await request(`/api/public/tournaments/${encodeURIComponent(verified.payload.tournament.slug)}`);
+  assert.equal(publicDetail.payload.tournament.discord_url,'https://discord.gg/Real_Code-42','The validated Discord invite must be available to the public event page.');
   const audit=await request(`/api/tournaments/${tournamentId}/audit`,{token});
   assert.ok(audit.payload.logs.some(log=>log.action==='tournament.source_verified'),'Host verification must create an audit entry.');
   console.log('External tournament URL, unverified import and Host verification tests passed.');

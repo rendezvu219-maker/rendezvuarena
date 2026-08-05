@@ -308,6 +308,7 @@ select.form-control, select.premium-select {
 .draft-rule-choice-fieldset { min-width: 0; padding: 0; border: 0; }
 .draft-rule-choice-fieldset legend { margin-bottom: var(--space-3); }
 .draft-rule-choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.draft-rule-series-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .draft-rule-choice { position: relative; min-width: 0; cursor: pointer; }
 .draft-rule-choice input { position: absolute; opacity: 0; pointer-events: none; }
 .draft-rule-choice > span { min-height: 86px; display: grid; align-content: center; gap: var(--space-1); padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-raised); transition: border-color var(--duration-normal), background var(--duration-normal); }

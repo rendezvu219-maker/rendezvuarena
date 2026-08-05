@@ -279,6 +279,32 @@ function cleanUser(user) {
   const internalEmail=/@accounts\.rendezvu\.invalid$/i.test(String(user.email||''));
   return { id:user.id,username:user.username,email:internalEmail?'':user.email,displayName:user.display_name,role:user.role,isActive:Boolean(user.is_active),emailVerified:true,emailVerifiedAt:user.email_verified_at||null,gamerTag:user.gamer_tag||'',bio:user.bio||'',profileVisibility:user.profile_visibility==='private'?'private':'public',showExternalProfiles:Boolean(user.show_external_profiles),canOrganize:true,canManageDivineCards:isDivineCardAdmin(user),createdAt:user.created_at };
 }
+function normalizeDiscordInviteUrl(value = '') {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const url = new URL(candidate);
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    if (url.protocol !== 'https:' || !['discord.gg','discord.com','discordapp.com'].includes(host) || url.username || url.password || url.port) return '';
+    const parts = url.pathname.split('/').filter(Boolean);
+    const code = host === 'discord.gg'
+      ? (parts.length === 1 ? parts[0] : '')
+      : (parts.length === 2 && parts[0].toLowerCase() === 'invite' ? parts[1] : '');
+    return /^[A-Za-z0-9_-]{2,64}$/.test(code || '') ? `https://discord.gg/${code}` : '';
+  } catch {
+    return '';
+  }
+}
+function discordInviteFromText(value = '') {
+  const candidates=String(value||'').match(/(?:https?:\/\/)?(?:www\.)?(?:discord\.gg|discord(?:app)?\.com\/invite)\/[^\s<>"']+/gi)||[];
+  for(const candidate of candidates){
+    const cleaned=candidate.replace(/[),.;!?]+$/g,'');
+    const normalized=normalizeDiscordInviteUrl(cleaned);
+    if(normalized)return normalized;
+  }
+  return '';
+}
 function sourceVerificationFields(tournament) {
   const sourceSyncStatus=String(tournament?.source_sync_status||'');
   return {sourceSyncStatus,unverified:sourceSyncStatus==='url_verified'};
@@ -581,14 +607,18 @@ app.post('/api/tournament-import', authRequired, emailVerifiedRequired, async (r
       claimedByUserId: req.user.id,
       claimedAt: new Date().toISOString(),
     };
+    const requestedDiscordUrl=String(req.body.discordUrl||'').trim();
+    const normalizedDiscordUrl=normalizeDiscordInviteUrl(requestedDiscordUrl);
+    if(requestedDiscordUrl&&!normalizedDiscordUrl)throw new Error('Discord invite must be a valid discord.gg or discord.com/invite HTTPS link.');
+    const discordUrl=normalizedDiscordUrl||discordInviteFromText(preview.description);
 
     const result = transaction(() => {
       const inserted = db.prepare(`INSERT INTO tournaments(
-        host_user_id,name,slug,description,startgg_url,startgg_slug,startgg_tournament_id,
+        host_user_id,name,slug,description,discord_url,startgg_url,startgg_slug,startgg_tournament_id,
         source_platform,source_url,source_external_id,source_metadata_json,source_last_synced_at,source_sync_status,
         status,timezone,default_server,start_at,schedule_mode,is_public,rules_json
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
-        req.user.id,name,slug,preview.description || '',startggUrl,startggSlug,providerTournamentId,
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        req.user.id,name,slug,preview.description || '',discordUrl,startggUrl,startggSlug,providerTournamentId,
         preview.platform,preview.sourceUrl,preview.externalId,JSON.stringify(metadata),new Date().toISOString(),preview.syncStatus,
         'preparing',String(req.body.timezone || 'Asia/Ho_Chi_Minh'),String(req.body.defaultServer || 'Asia'),preview.startAt || null,
         'fixed_tournament_start',0,'{}'
@@ -805,14 +835,14 @@ app.get('/api/public/tournaments',(req,res)=>{
   // Offset pagination preserves the existing `tournaments` array while exposing navigation metadata.
   const limit=Math.min(60,Math.max(1,Number.parseInt(req.query.limit,10)||60));
   const offset=Math.max(0,Number.parseInt(req.query.offset,10)||0);
-  const tournaments=db.prepare(`SELECT id,name,slug,description,status,timezone,start_at,public_stream_platform,public_stream_url,public_stream_label,source_platform,source_url,updated_at FROM tournaments WHERE is_public=1 ORDER BY CASE status WHEN 'running' THEN 0 WHEN 'live' THEN 0 WHEN 'registration_open' THEN 1 WHEN 'preparing' THEN 2 WHEN 'completed' THEN 3 ELSE 2 END,start_at IS NULL,start_at DESC,updated_at DESC LIMIT ? OFFSET ?`).all(limit,offset);
+  const tournaments=db.prepare(`SELECT id,name,slug,description,discord_url,status,timezone,start_at,public_stream_platform,public_stream_url,public_stream_label,source_platform,source_url,updated_at FROM tournaments WHERE is_public=1 ORDER BY CASE status WHEN 'running' THEN 0 WHEN 'live' THEN 0 WHEN 'registration_open' THEN 1 WHEN 'preparing' THEN 2 WHEN 'completed' THEN 3 ELSE 2 END,start_at IS NULL,start_at DESC,updated_at DESC LIMIT ? OFFSET ?`).all(limit,offset);
   const total=Number(db.prepare('SELECT COUNT(*) count FROM tournaments WHERE is_public=1').get().count||0);
   res.json({tournaments,total,limit,offset});
 });
 
 // Public bracket and external stream links. No spectator account and no embedded watch page.
 app.get('/api/public/tournaments/:slug',(req,res)=>{
-  const tournament=db.prepare(`SELECT id,name,slug,description,status,timezone,start_at,public_stream_platform,public_stream_url,public_stream_label,source_platform,source_url FROM tournaments WHERE slug=? AND is_public=1`).get(req.params.slug);
+  const tournament=db.prepare(`SELECT id,name,slug,description,discord_url,status,timezone,start_at,public_stream_platform,public_stream_url,public_stream_label,source_platform,source_url FROM tournaments WHERE slug=? AND is_public=1`).get(req.params.slug);
   if(!tournament)return res.status(404).json({error:'Tournament not found.'});
   res.json({tournament,matches:listMatches(tournament.id).map(serializePublicMatch),groupStandings:calculateGroupStandings(tournament.id)});
 });
@@ -820,7 +850,7 @@ app.get('/api/public/tournaments/:slug',(req,res)=>{
 
 // Public event joining links a normal account to an already-listed external entrant/team.
 app.get('/api/public/tournaments/:slug/join-options',(req,res)=>{
-  const tournament=db.prepare(`SELECT id,name,slug,description,status,timezone,start_at,is_public,source_platform,source_url,roster_lock_at FROM tournaments WHERE slug=? AND is_public=1`).get(req.params.slug);
+  const tournament=db.prepare(`SELECT id,name,slug,description,discord_url,status,timezone,start_at,is_public,source_platform,source_url,roster_lock_at FROM tournaments WHERE slug=? AND is_public=1`).get(req.params.slug);
   if(!tournament)return res.status(404).json({error:'Tournament not found.'});
   const teams=db.prepare(`SELECT id,name,tag,logo_url,source,team_status,captain_user_id FROM teams WHERE tournament_id=? AND team_status NOT IN ('withdrawn','disqualified') ORDER BY name`).all(tournament.id);
   const members=db.prepare(`SELECT tm.id,tm.team_id,tm.display_name,tm.gamer_tag,tm.member_role,tm.is_captain,tm.is_substitute,tm.user_id FROM team_members tm JOIN teams t ON t.id=tm.team_id WHERE t.tournament_id=? ORDER BY tm.team_id,tm.is_captain DESC,tm.id`).all(tournament.id);
@@ -958,8 +988,11 @@ app.post('/api/tournaments',authRequired,emailVerifiedRequired,allowRoles('host'
     const name=String(req.body.name||'').trim();if(!name)return res.status(400).json({error:'Tournament name is required.'});
     let slug=slugify(req.body.slug||name),suffix=2;while(db.prepare('SELECT 1 FROM tournaments WHERE slug=?').get(slug))slug=`${slugify(name)}-${suffix++}`;
     const rules=req.body.rules&&typeof req.body.rules==='object'?req.body.rules:{};
-    const result=db.prepare(`INSERT INTO tournaments(host_user_id,name,slug,description,startgg_url,startgg_slug,status,timezone,default_server,start_at,schedule_mode,is_public,rules_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-      .run(req.user.id,name,slug,String(req.body.description||''),req.body.startggUrl||null,req.body.startggUrl?extractTournamentSlug(req.body.startggUrl):null,String(req.body.status||'preparing'),String(req.body.timezone||'Asia/Ho_Chi_Minh'),String(req.body.defaultServer||'Asia'),req.body.startAt||null,'fixed_tournament_start',0,JSON.stringify(rules));
+    const requestedDiscordUrl=String(req.body.discordUrl||'').trim();
+    const discordUrl=normalizeDiscordInviteUrl(requestedDiscordUrl);
+    if(requestedDiscordUrl&&!discordUrl)return res.status(400).json({error:'Discord invite must be a valid discord.gg or discord.com/invite HTTPS link.'});
+    const result=db.prepare(`INSERT INTO tournaments(host_user_id,name,slug,description,discord_url,startgg_url,startgg_slug,status,timezone,default_server,start_at,schedule_mode,is_public,rules_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .run(req.user.id,name,slug,String(req.body.description||''),discordUrl,req.body.startggUrl||null,req.body.startggUrl?extractTournamentSlug(req.body.startggUrl):null,String(req.body.status||'preparing'),String(req.body.timezone||'Asia/Ho_Chi_Minh'),String(req.body.defaultServer||'Asia'),req.body.startAt||null,'fixed_tournament_start',0,JSON.stringify(rules));
     const tournament=db.prepare('SELECT * FROM tournaments WHERE id=?').get(Number(result.lastInsertRowid));logAction({tournamentId:tournament.id,userId:req.user.id,action:'tournament.created',details:{name}});res.status(201).json({tournament:{...tournament,rules}});
   }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
@@ -983,9 +1016,12 @@ app.patch('/api/tournaments/:id',authRequired,requireTournamentPermission('tourn
   const rules=req.body.rules??jsonParse(current.rules_json);const status=req.body.status??current.status;
   const finalizedAt=status==='completed'&&!current.finalized_at?new Date().toISOString():current.finalized_at;
   if(req.body.publicStreamUrl!==undefined&&!isSafeExternalUrl(req.body.publicStreamUrl))return res.status(400).json({error:isProduction?'Stream URL must use HTTPS.':'Stream URL must use HTTP or HTTPS.'});
+  const requestedDiscordUrl=req.body.discordUrl===undefined?current.discord_url:String(req.body.discordUrl||'').trim();
+  const discordUrl=normalizeDiscordInviteUrl(requestedDiscordUrl);
+  if(requestedDiscordUrl&&!discordUrl)return res.status(400).json({error:'Discord invite must be a valid discord.gg or discord.com/invite HTTPS link.'});
   const isPublic=req.body.isPublic===undefined?Number(current.is_public):(req.body.isPublic?1:0);
-  db.prepare(`UPDATE tournaments SET name=?,description=?,status=?,timezone=?,default_server=?,start_at=?,schedule_mode=?,roster_lock_at=?,finalized_at=?,result_reopen_hours=?,evidence_retention_days=?,chat_retention_days=?,public_stream_platform=?,public_stream_url=?,public_stream_label=?,is_public=?,rules_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-    .run(sanitizeText(req.body.name??current.name,160),sanitizeText(req.body.description??current.description,2000),status,sanitizeText(req.body.timezone??current.timezone,80),sanitizeText(req.body.defaultServer??current.default_server,80),req.body.startAt===undefined?current.start_at:(req.body.startAt||null),req.body.scheduleMode??current.schedule_mode,req.body.rosterLockAt===undefined?current.roster_lock_at:(req.body.rosterLockAt||null),finalizedAt,Number(req.body.resultReopenHours??current.result_reopen_hours),Number(req.body.evidenceRetentionDays??current.evidence_retention_days),Number(req.body.chatRetentionDays??current.chat_retention_days),sanitizeText(req.body.publicStreamPlatform??current.public_stream_platform,40),String(req.body.publicStreamUrl??current.public_stream_url).trim(),sanitizeText(req.body.publicStreamLabel??current.public_stream_label,100),isPublic,JSON.stringify(rules),req.tournamentId);
+  db.prepare(`UPDATE tournaments SET name=?,description=?,discord_url=?,status=?,timezone=?,default_server=?,start_at=?,schedule_mode=?,roster_lock_at=?,finalized_at=?,result_reopen_hours=?,evidence_retention_days=?,chat_retention_days=?,public_stream_platform=?,public_stream_url=?,public_stream_label=?,is_public=?,rules_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+    .run(sanitizeText(req.body.name??current.name,160),sanitizeText(req.body.description??current.description,2000),discordUrl,status,sanitizeText(req.body.timezone??current.timezone,80),sanitizeText(req.body.defaultServer??current.default_server,80),req.body.startAt===undefined?current.start_at:(req.body.startAt||null),req.body.scheduleMode??current.schedule_mode,req.body.rosterLockAt===undefined?current.roster_lock_at:(req.body.rosterLockAt||null),finalizedAt,Number(req.body.resultReopenHours??current.result_reopen_hours),Number(req.body.evidenceRetentionDays??current.evidence_retention_days),Number(req.body.chatRetentionDays??current.chat_retention_days),sanitizeText(req.body.publicStreamPlatform??current.public_stream_platform,40),String(req.body.publicStreamUrl??current.public_stream_url).trim(),sanitizeText(req.body.publicStreamLabel??current.public_stream_label,100),isPublic,JSON.stringify(rules),req.tournamentId);
   if(finalizedAt)refreshTournamentRetention(req.tournamentId);logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'tournament.updated',details:req.body});res.json({tournament:db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId)});
 });
 app.post('/api/tournaments/:id/publish',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{
@@ -1253,6 +1289,33 @@ function aggregateSeriesPicks(matchId) {
   return { games, picksA, picksB };
 }
 
+function squadraBlastPhase(gameNumber = 1) {
+  const normalized = Math.max(1, Math.floor(Number(gameNumber) || 1));
+  return ((normalized - 1) % 3) + 1;
+}
+
+function seriesDraftHistory(matchId, seriesRule, gameNumber) {
+  if (seriesRule !== 'squadra_blast') {
+    const history = aggregateSeriesPicks(matchId);
+    return { ...history, bansA: [], bansB: [] };
+  }
+  if (squadraBlastPhase(gameNumber) !== 2) {
+    return { games: [], picksA: [], picksB: [], bansA: [], bansB: [] };
+  }
+  const previousGame = db.prepare(`
+    SELECT * FROM match_games
+    WHERE match_id=? AND game_number=? AND status IN ('draft_complete','completed')
+  `).get(matchId, Math.max(1, Number(gameNumber) - 1));
+  if (!previousGame) return { games: [], picksA: [], picksB: [], bansA: [], bansB: [] };
+  return {
+    games: [previousGame],
+    picksA: jsonParse(previousGame.picks_a_json, []),
+    picksB: jsonParse(previousGame.picks_b_json, []),
+    bansA: jsonParse(previousGame.bans_a_json, []),
+    bansB: jsonParse(previousGame.bans_b_json, []),
+  };
+}
+
 function seriesGameScore(match) {
   const games = db.prepare(`SELECT * FROM match_games WHERE match_id=? ORDER BY game_number`).all(match.id);
   let scoreA = 0;
@@ -1312,7 +1375,7 @@ function quickDraftConfig(input = {}) {
     .slice(0, 80))];
   const format = ['BO1','BO3','BO5','BO7'].includes(String(input.format || '').toUpperCase())
     ? String(input.format).toUpperCase() : 'BO3';
-  const seriesRule = ['normal','fearless','team_no_repeat'].includes(String(input.seriesRule || ''))
+  const seriesRule = ['normal','fearless','team_no_repeat','squadra_blast'].includes(String(input.seriesRule || ''))
     ? String(input.seriesRule) : 'normal';
   const mirrorPickMode = normalizeMirrorPickMode(input);
   const draftStyle = input.draftStyle === 'all-random' ? 'all-random' : 'standard';
@@ -1333,6 +1396,9 @@ function quickDraftConfig(input = {}) {
     seriesScoreB: Math.max(0, Math.min(99, Number(input.seriesScoreB || 0))),
     previousPicksA: cleanIds(input.previousPicksA),
     previousPicksB: cleanIds(input.previousPicksB),
+    previousBansA: cleanIds(input.previousBansA),
+    previousBansB: cleanIds(input.previousBansB),
+    squadraBlastCarryBans: input.squadraBlastCarryBans !== false,
     timerSeconds: Math.max(10, Math.min(90, Number(input.timerSeconds || 30))),
     heroBans: Math.max(0, Math.min(12, Number(input.heroBans || 0))),
     divineBans: Math.max(0, Math.min(12, Number(input.divineBans || 0))),
@@ -1432,6 +1498,8 @@ app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, re
           seriesScoreB: Number(oldConfig.seriesScoreB || 0),
           previousPicksA: oldConfig.previousPicksA || config.previousPicksA,
           previousPicksB: oldConfig.previousPicksB || config.previousPicksB,
+          previousBansA: oldConfig.previousBansA || config.previousBansA,
+          previousBansB: oldConfig.previousBansB || config.previousBansB,
         };
         db.prepare(`UPDATE draft_rooms SET config_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
           .run(JSON.stringify(storedConfig), room.id);
@@ -1498,8 +1566,9 @@ function saveDraftSnapshotToGame({ match, room, state, winnerTeamId = null, stat
 
 function refreshedDraftConfig(match, room) {
   const config = jsonParse(room.config_json);
-  const series = aggregateSeriesPicks(match.id);
+  const series = seriesDraftHistory(match.id, match.series_rule, match.current_game_number);
   const score = seriesGameScore(match);
+  const squadraBlastCarryBans = config.squadraBlastCarryBans !== false;
   Object.assign(config, {
     teamA: match.team_a_name,
     teamB: match.team_b_name,
@@ -1510,10 +1579,13 @@ function refreshedDraftConfig(match, room) {
     format: `BO${match.best_of}`,
     gameNumber: Number(match.current_game_number || 1),
     seriesRule: match.series_rule,
+    squadraBlastCarryBans,
     seriesScoreA: score.scoreA,
     seriesScoreB: score.scoreB,
     previousPicksA: series.picksA,
     previousPicksB: series.picksB,
+    previousBansA: squadraBlastCarryBans ? series.bansA : [],
+    previousBansB: squadraBlastCarryBans ? series.bansB : [],
   });
   return config;
 }
@@ -1799,7 +1871,7 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
     const roomCode = randomCode(8);
     access = { host: randomCode(32), teamA: randomCode(32), teamB: randomCode(32), referee: randomCode(32), broadcaster: randomCode(32) };
     const effectiveRules = { ...jsonParse(match.tournament_rules_json), ...jsonParse(match.rules_json) };
-    const series = aggregateSeriesPicks(match.id);
+    const series = seriesDraftHistory(match.id, match.series_rule, match.current_game_number);
     const score = seriesGameScore(match);
     const game = db.prepare(`
       INSERT INTO match_games(match_id,game_number,status,server_region,room_code)
@@ -1817,10 +1889,13 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
       format: `BO${match.best_of}`,
       gameNumber: game.game_number,
       seriesRule: match.series_rule,
+      squadraBlastCarryBans: effectiveRules.squadraBlastCarryBans !== false,
       seriesScoreA: score.scoreA,
       seriesScoreB: score.scoreB,
       previousPicksA: series.picksA,
       previousPicksB: series.picksB,
+      previousBansA: effectiveRules.squadraBlastCarryBans === false ? [] : series.bansA,
+      previousBansB: effectiveRules.squadraBlastCarryBans === false ? [] : series.bansB,
       timerSeconds: Math.min(90, Math.max(30, Math.floor(Number(effectiveRules.timerSeconds ?? 30)))),
       heroBans: Number(effectiveRules.heroBans ?? 2),
       divineBans: Number(effectiveRules.divineBans ?? 0),
@@ -1979,7 +2054,7 @@ const PRE_COIN_FLIP_DATA_KEYS=new Set(['teamKey']);
 const PRE_SIDE_SELECT_DATA_KEYS=new Set(['side','teamKey']);
 const PRE_DIVINE_SELECT_DATA_KEYS=new Set(['index','teamSide']);
 const STATE_KEYS=new Set(['status','engine','chosenDivineRules','hostBannedHeroIds','preDraft','seriesComplete','gameNumber','seriesScoreA','seriesScoreB','seriesRule','reloadRequired','nextConfig']);
-const ENGINE_STATE_KEYS=new Set(['version','state','currentStep','sequence','selectedHero','timerRemaining','teamA','teamB','heroStatuses','seriesRule','gameNumber','previousPicksA','previousPicksB','protectList','globalBanList','mirrorPickMode','roleLimits']);
+const ENGINE_STATE_KEYS=new Set(['version','state','currentStep','sequence','selectedHero','timerRemaining','teamA','teamB','heroStatuses','seriesRule','gameNumber','squadraBlastCarryBans','previousPicksA','previousPicksB','previousBansA','previousBansB','protectList','globalBanList','mirrorPickMode','roleLimits']);
 function validDraftCommandPayload(payload){
   if(!hasOnlyKeys(payload,DRAFT_COMMAND_KEYS)||!validRoomCode(payload.roomCode)||typeof payload.action!=='string')return false;
   const data=payload.data??{};

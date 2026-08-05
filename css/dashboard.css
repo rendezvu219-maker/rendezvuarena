@@ -309,9 +309,20 @@ textarea:focus { border-color:var(--interactive-primary); }
 
 /* Public bracket page — external stream links only */
 .public-shell { max-width:1800px; margin:0 auto; }
-.public-hero { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:24px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:rgba(13,13,30,.9); }
+.public-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:32px; padding:24px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:rgba(13,13,30,.9); }
 .public-hero h2 { margin:5px 0; font-family:var(--font-display); font-size:1.6rem; }
 .public-hero p { color:var(--text-muted); max-width:800px; }
+.public-event-main { min-width:0; flex:1; }
+.public-event-description { display:grid; gap:10px; max-width:900px; margin:16px 0; color:var(--text-secondary); font-size:.72rem; line-height:1.65; }
+.public-event-description > p, .public-event-description section > p { max-width:none; margin:0; }
+.public-event-description section { display:grid; gap:7px; padding-top:10px; border-top:1px solid var(--border-subtle); }
+.public-event-description h3 { margin:0; color:var(--text-primary); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; }
+.public-event-description ul { display:grid; gap:6px; margin:0; padding-left:20px; }
+.public-event-description li { padding-left:2px; }
+.public-discord-invite { display:inline-flex; align-items:center; padding:2px 7px; border:1px solid rgba(88,101,242,.5); border-radius:999px; color:#c9ceff; background:rgba(88,101,242,.14); font-weight:800; text-decoration:none; }
+.public-discord-invite:hover { border-color:#7289da; background:rgba(88,101,242,.25); }
+.btn-discord { color:#fff; border-color:#7289da; background:#5865f2; }
+.btn-discord:hover { border-color:#8ea1e1; background:#4752c4; }
 .public-hero + .ops-section { margin-top:18px; }
 .ops-live-badge { text-decoration:none; }
 @media (max-width:720px){.public-hero{align-items:flex-start;flex-direction:column}}

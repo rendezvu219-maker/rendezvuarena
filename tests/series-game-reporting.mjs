@@ -82,7 +82,7 @@ async function tokenFromAccessUrl(url) {
   return exchanged.payload.token;
 }
 
-function setDraftComplete(db, matchId, gameNumber) {
+function setDraftComplete(db, matchId, gameNumber, { bansA = [], bansB = [] } = {}) {
   const room = db.prepare('SELECT id,state_json FROM draft_rooms WHERE match_id=?').get(matchId);
   assert.ok(room, 'Draft room must exist.');
   const state = {
@@ -90,8 +90,8 @@ function setDraftComplete(db, matchId, gameNumber) {
     gameNumber,
     engine: {
       state: 'complete',
-      teamA: { picks: ['0001', '0002', '0003', '0004'], bans: [] },
-      teamB: { picks: ['0005', '0006', '0007', '0008'], bans: [] },
+      teamA: { picks: ['0001', '0002', '0003', '0004'], bans: bansA },
+      teamB: { picks: ['0005', '0006', '0007', '0008'], bans: bansB },
     },
     chosenDivineRules: [],
     preDraft: { sideAssignment: { A: 'teamA', B: 'teamB' } },
@@ -134,7 +134,15 @@ try {
   const captainAToken = await tokenFromAccessUrl(captainAPersona.accessUrl);
   const captainBToken = await tokenFromAccessUrl(captainBPersona.accessUrl);
 
-  setDraftComplete(db, match.id, 1);
+  db.prepare("UPDATE matches SET series_rule='squadra_blast' WHERE id=?").run(match.id);
+  const initialRoom = db.prepare('SELECT id,config_json FROM draft_rooms WHERE match_id=?').get(match.id);
+  const initialConfig = JSON.parse(initialRoom.config_json);
+  initialConfig.seriesRule = 'squadra_blast';
+  initialConfig.heroBans = 1;
+  initialConfig.squadraBlastCarryBans = false;
+  db.prepare('UPDATE draft_rooms SET config_json=? WHERE id=?').run(JSON.stringify(initialConfig), initialRoom.id);
+
+  setDraftComplete(db, match.id, 1, { bansA: ['0009'], bansB: ['0010'] });
 
   const blockedWholeSeries = await request(`/api/matches/${match.id}/results/submit`, {
     token: captainAToken,
@@ -187,6 +195,12 @@ try {
   assert.equal(nextGameExchange.response.status, 200, JSON.stringify(nextGameExchange.payload));
   assert.equal(nextGameExchange.payload.room.role, 'teamB');
   assert.equal(nextGameExchange.payload.room.config.gameNumber, 2);
+  assert.equal(nextGameExchange.payload.room.config.seriesRule, 'squadra_blast');
+  assert.equal(nextGameExchange.payload.room.config.squadraBlastCarryBans, false);
+  assert.deepEqual(nextGameExchange.payload.room.config.previousPicksA, ['0001', '0002', '0003', '0004']);
+  assert.deepEqual(nextGameExchange.payload.room.config.previousPicksB, ['0005', '0006', '0007', '0008']);
+  assert.deepEqual(nextGameExchange.payload.room.config.previousBansA, []);
+  assert.deepEqual(nextGameExchange.payload.room.config.previousBansB, []);
 
   setDraftComplete(db, match.id, 2);
   const reportGame2 = await request(`/api/matches/${match.id}/games/current/report`, {
@@ -204,6 +218,18 @@ try {
   assert.equal(confirmGame2.payload.nextGameNumber, 3);
   assert.equal(confirmGame2.payload.scoreA, 1);
   assert.equal(confirmGame2.payload.scoreB, 1);
+  const game3Url = new URL(confirmGame2.payload.nextDraftUrl);
+  const game3Access = new URLSearchParams(game3Url.hash.slice(1));
+  const game3Exchange = await request(`/api/public/draft-rooms/${game3Access.get('room')}/access`, {
+    method: 'POST',
+    body: { accessToken: game3Access.get('access') },
+  });
+  assert.equal(game3Exchange.response.status, 200, JSON.stringify(game3Exchange.payload));
+  assert.equal(game3Exchange.payload.room.config.gameNumber, 3);
+  assert.deepEqual(game3Exchange.payload.room.config.previousPicksA, []);
+  assert.deepEqual(game3Exchange.payload.room.config.previousPicksB, []);
+  assert.deepEqual(game3Exchange.payload.room.config.previousBansA, []);
+  assert.deepEqual(game3Exchange.payload.room.config.previousBansB, []);
 
   setDraftComplete(db, match.id, 3);
   const reportGame3 = await request(`/api/matches/${match.id}/games/current/report`, {

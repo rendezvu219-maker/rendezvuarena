@@ -44,7 +44,23 @@ const UI_EXTRA = Object.freeze({
     "clickKeepOpen": "CLICK THE CARD TO KEEP THIS OPEN",
     "tankTechnical": "Tank + Technical",
     "allRoles": "All roles",
-    "roleLimitReached": "{role} limit reached ({limit})"
+    "roleLimitReached": "{role} limit reached ({limit})",
+    "squadraBlast": "Squadra Blast",
+    "squadraBlastOption": "Squadra Blast — own Game 1 picks affect Game 2; ban carry-over is configurable; Game 3 resets",
+    "squadraBlastRuleDesc": "Game 1 uses the configured bans. Game 2 adds no new bans: each team cannot reuse only its own Game 1 picks, while a separate toggle controls whether Game 1 bans stay active for both teams. Game 3 resets both.",
+    "squadraBlastRemember": "Each team’s own Game 1 picks always affect Game 2; carrying Game 1 bans is optional; Game 3 starts fresh.",
+    "squadraBlastBanException": "Outside Squadra Blast, banned heroes do not carry into later games.",
+    "squadraBlastGame1": "SQUADRA BLAST · Game 1 uses the configured bans. Those bans and each team’s own picks carry into Game 2.",
+    "squadraBlastGame2": "SQUADRA BLAST · No new bans. Game 1 bans still affect both teams, while each team is locked only from its own Game 1 picks.",
+    "squadraBlastGame3": "SQUADRA BLAST · Game 3 resets the earlier bans and picks. Only the configured Mirror Pick rule remains.",
+    "squadraBlastPanel": "Squadra Blast: each team loses only its own Game 1 picks in Game 2; the Host can choose whether Game 1 bans also stay active. Game 3 resets both histories.",
+    "blastBanReason": "Squadra Blast Ban — active through this game",
+    "squadraBlastCarryBans": "Carry Game 1 bans into Game 2",
+    "squadraBlastCarryBansDesc": "Squadra Blast only. Turn this off to make Game 1 bans usable again in Game 2; each team’s own Game 1 picks still remain locked.",
+    "squadraBlastGame1NoCarry": "SQUADRA BLAST · Game 1 uses the configured bans. Only each team’s own picks carry into Game 2; these bans do not.",
+    "squadraBlastGame2NoCarry": "SQUADRA BLAST · No new bans. Game 1 bans are available again, while each team is locked only from its own Game 1 picks.",
+    "discordInviteField": "Discord invite link",
+    "joinDiscordServer": "Join Discord server ↗"
   },
   "ja": {
     "viewOnly": "閲覧のみ",
@@ -63,7 +79,23 @@ const UI_EXTRA = Object.freeze({
     "clickKeepOpen": "クリックすると表示を固定",
     "tankTechnical": "タンク＋テクニカル",
     "allRoles": "すべてのロール",
-    "roleLimitReached": "{role}の上限に達しました（{limit}）"
+    "roleLimitReached": "{role}の上限に達しました（{limit}）",
+    "squadraBlast": "Squadra Blast",
+    "squadraBlastOption": "Squadra Blast — 自チームのゲーム1ピックはゲーム2に適用、BANの持ち越しは設定可能、ゲーム3でリセット",
+    "squadraBlastRuleDesc": "ゲーム1では設定されたBANを行います。ゲーム2では新たなBANはなく、各チームはゲーム1で自分が選んだヒーローだけ再選択できません。ゲーム1のBANを両チームに継続するかは別のスイッチで設定できます。ゲーム3ですべてリセットされます。",
+    "squadraBlastRemember": "各チーム自身のゲーム1ピックは常にゲーム2へ適用され、ゲーム1のBAN持ち越しは任意です。ゲーム3は新しく開始します。",
+    "squadraBlastBanException": "Squadra Blast以外では、BANされたヒーローは次のゲームに持ち越されません。",
+    "squadraBlastGame1": "SQUADRA BLAST · ゲーム1では設定されたBANを行い、そのBANと各チーム自身のピックがゲーム2に持ち越されます。",
+    "squadraBlastGame2": "SQUADRA BLAST · 新たなBANはありません。ゲーム1のBANは両チームに継続し、各チームはゲーム1で自分が選んだヒーローだけ使用できません。",
+    "squadraBlastGame3": "SQUADRA BLAST · ゲーム3では以前のBANとピック履歴をリセットし、設定されたミラーピックルールだけが残ります。",
+    "squadraBlastPanel": "Squadra Blast：ゲーム2では各チームがゲーム1で自分が選んだヒーローだけ使用できず、ゲーム1のBANを継続するかはホストが選べます。ゲーム3ですべてリセットされます。",
+    "blastBanReason": "Squadra Blast BAN — このゲーム終了まで有効",
+    "squadraBlastCarryBans": "ゲーム1のBANをゲーム2へ持ち越す",
+    "squadraBlastCarryBansDesc": "Squadra Blast専用。オフにするとゲーム1のBANはゲーム2で再使用できますが、各チーム自身のゲーム1ピックは引き続き使用できません。",
+    "squadraBlastGame1NoCarry": "SQUADRA BLAST · ゲーム1では設定されたBANを行います。ゲーム2へ持ち越されるのは各チーム自身のピックだけで、BANは持ち越されません。",
+    "squadraBlastGame2NoCarry": "SQUADRA BLAST · 新たなBANはありません。ゲーム1のBANは再び使用でき、各チームは自分がゲーム1で選んだヒーローだけ使用できません。",
+    "discordInviteField": "Discord招待リンク",
+    "joinDiscordServer": "Discordサーバーに参加 ↗"
   },
   "zh-CN": {
     "viewOnly": "仅查看",
@@ -82,7 +114,23 @@ const UI_EXTRA = Object.freeze({
     "clickKeepOpen": "点击卡片可保持展开",
     "tankTechnical": "坦克＋技巧",
     "allRoles": "全部职责",
-    "roleLimitReached": "{role}已达到上限（{limit}）"
+    "roleLimitReached": "{role}已达到上限（{limit}）",
+    "squadraBlast": "Squadra Blast",
+    "squadraBlastOption": "Squadra Blast — 本队第1局选择影响第2局；禁用延续可配置；第3局重置",
+    "squadraBlastRuleDesc": "第1局使用已配置的禁用次数。第2局不新增禁用，每队只能被限制自己在第1局选择过的英雄；第1局禁用是否继续对双方生效由单独开关控制。第3局全部重置。",
+    "squadraBlastRemember": "各队自己的第1局选择始终影响第2局；第1局禁用是否延续可选；第3局重新开始。",
+    "squadraBlastBanException": "除Squadra Blast外，被禁用的英雄不会延续到后续对局。",
+    "squadraBlastGame1": "SQUADRA BLAST · 第1局使用已配置的禁用；这些禁用和各队自己的选择会延续到第2局。",
+    "squadraBlastGame2": "SQUADRA BLAST · 不新增禁用。第1局禁用继续对双方生效，每队只会被限制自己在第1局选择过的英雄。",
+    "squadraBlastGame3": "SQUADRA BLAST · 第3局重置此前的禁用和选择记录，只保留已配置的镜像选择规则。",
+    "squadraBlastPanel": "Squadra Blast：第2局每队只失去自己在第1局选择过的英雄；主持人可选择第1局禁用是否继续生效。第3局重置两类记录。",
+    "blastBanReason": "Squadra Blast禁用 — 本局结束前持续生效",
+    "squadraBlastCarryBans": "将第1局禁用延续到第2局",
+    "squadraBlastCarryBansDesc": "仅适用于Squadra Blast。关闭后，第1局禁用的英雄可在第2局重新使用，但每队自己在第1局选择的英雄仍会被锁定。",
+    "squadraBlastGame1NoCarry": "SQUADRA BLAST · 第1局使用已配置的禁用。第2局只延续各队自己的选择，不延续禁用。",
+    "squadraBlastGame2NoCarry": "SQUADRA BLAST · 不新增禁用。第1局禁用的英雄可再次使用，每队仍只会被限制自己在第1局选择过的英雄。",
+    "discordInviteField": "Discord邀请链接",
+    "joinDiscordServer": "加入Discord服务器 ↗"
   },
   "ko": {
     "viewOnly": "보기 전용",
@@ -101,7 +149,23 @@ const UI_EXTRA = Object.freeze({
     "clickKeepOpen": "카드를 클릭하면 계속 열어 둡니다",
     "tankTechnical": "탱커 + 테크니컬",
     "allRoles": "모든 역할",
-    "roleLimitReached": "{role} 한도 도달 ({limit})"
+    "roleLimitReached": "{role} 한도 도달 ({limit})",
+    "squadraBlast": "Squadra Blast",
+    "squadraBlastOption": "Squadra Blast — 각 팀의 게임 1 픽은 게임 2에 적용, 밴 유지 여부 설정 가능, 게임 3 초기화",
+    "squadraBlastRuleDesc": "게임 1에서는 설정된 밴을 진행합니다. 게임 2에는 새 밴이 없고 각 팀은 게임 1에서 자신이 선택한 영웅만 다시 고를 수 없습니다. 게임 1 밴을 양 팀에 유지할지는 별도 스위치로 정합니다. 게임 3에서 모두 초기화됩니다.",
+    "squadraBlastRemember": "각 팀 자신의 게임 1 픽은 항상 게임 2에 적용되고, 게임 1 밴 유지 여부는 선택할 수 있습니다. 게임 3은 새로 시작합니다.",
+    "squadraBlastBanException": "Squadra Blast 외 규칙에서는 밴된 영웅이 다음 게임으로 이어지지 않습니다.",
+    "squadraBlastGame1": "SQUADRA BLAST · 게임 1에서 설정된 밴을 진행하며, 그 밴과 각 팀 자신의 픽이 게임 2로 이어집니다.",
+    "squadraBlastGame2": "SQUADRA BLAST · 새 밴은 없습니다. 게임 1 밴은 양 팀에 유지되고 각 팀은 게임 1에서 자신이 선택한 영웅만 사용할 수 없습니다.",
+    "squadraBlastGame3": "SQUADRA BLAST · 게임 3에서 이전 밴과 픽 기록을 초기화하고 설정된 미러 픽 규칙만 유지합니다.",
+    "squadraBlastPanel": "Squadra Blast: 게임 2에서 각 팀은 게임 1의 자기 픽만 잃고, 게임 1 밴 유지 여부는 호스트가 선택합니다. 게임 3에서 두 기록을 모두 초기화합니다.",
+    "blastBanReason": "Squadra Blast 밴 — 이번 게임 종료까지 적용",
+    "squadraBlastCarryBans": "게임 1 밴을 게임 2에 유지",
+    "squadraBlastCarryBansDesc": "Squadra Blast 전용입니다. 끄면 게임 1 밴 영웅을 게임 2에서 다시 사용할 수 있지만 각 팀의 게임 1 픽은 계속 잠깁니다.",
+    "squadraBlastGame1NoCarry": "SQUADRA BLAST · 게임 1에서 설정된 밴을 진행합니다. 게임 2에는 각 팀 자신의 픽만 이어지고 밴은 이어지지 않습니다.",
+    "squadraBlastGame2NoCarry": "SQUADRA BLAST · 새 밴은 없습니다. 게임 1 밴 영웅은 다시 사용할 수 있고 각 팀은 자신이 게임 1에서 선택한 영웅만 사용할 수 없습니다.",
+    "discordInviteField": "Discord 초대 링크",
+    "joinDiscordServer": "Discord 서버 참가 ↗"
   },
   "es": {
     "viewOnly": "SOLO LECTURA",
@@ -120,7 +184,23 @@ const UI_EXTRA = Object.freeze({
     "clickKeepOpen": "HAZ CLIC EN LA CARTA PARA MANTENERLA ABIERTA",
     "tankTechnical": "Tanque + Técnico",
     "allRoles": "Todos los roles",
-    "roleLimitReached": "Se alcanzó el límite de {role} ({limit})"
+    "roleLimitReached": "Se alcanzó el límite de {role} ({limit})",
+    "squadraBlast": "Squadra Blast",
+    "squadraBlastOption": "Squadra Blast — las elecciones propias de la partida 1 afectan a la 2; mantener los bloqueos es configurable; la 3 se reinicia",
+    "squadraBlastRuleDesc": "La partida 1 usa los bloqueos configurados. En la partida 2 no hay bloqueos nuevos y cada equipo solo pierde sus propias elecciones de la partida 1; un interruptor aparte decide si los bloqueos de la partida 1 siguen activos para ambos. La partida 3 reinicia ambos historiales.",
+    "squadraBlastRemember": "Las elecciones propias de cada equipo en la partida 1 siempre afectan a la 2; mantener los bloqueos es opcional; la partida 3 empieza de cero.",
+    "squadraBlastBanException": "Fuera de Squadra Blast, los héroes bloqueados no pasan a partidas posteriores.",
+    "squadraBlastGame1": "SQUADRA BLAST · La partida 1 usa los bloqueos configurados; esos bloqueos y las elecciones propias de cada equipo pasan a la partida 2.",
+    "squadraBlastGame2": "SQUADRA BLAST · No hay bloqueos nuevos. Los de la partida 1 siguen activos para ambos equipos y cada equipo solo pierde sus propias elecciones de la partida 1.",
+    "squadraBlastGame3": "SQUADRA BLAST · La partida 3 reinicia los bloqueos y elecciones anteriores; solo permanece la regla de elección espejo configurada.",
+    "squadraBlastPanel": "Squadra Blast: en la partida 2 cada equipo solo pierde sus propias elecciones de la partida 1; el Host decide si los bloqueos también siguen activos. La partida 3 reinicia ambos historiales.",
+    "blastBanReason": "Bloqueo Squadra Blast — activo hasta terminar esta partida",
+    "squadraBlastCarryBans": "Mantener los bloqueos de la partida 1 en la 2",
+    "squadraBlastCarryBansDesc": "Solo para Squadra Blast. Al desactivarlo, los héroes bloqueados en la partida 1 vuelven a estar disponibles en la 2; las elecciones propias de cada equipo siguen bloqueadas.",
+    "squadraBlastGame1NoCarry": "SQUADRA BLAST · La partida 1 usa los bloqueos configurados. Solo las elecciones propias pasan a la partida 2; los bloqueos no.",
+    "squadraBlastGame2NoCarry": "SQUADRA BLAST · No hay bloqueos nuevos. Los bloqueos de la partida 1 vuelven a estar disponibles y cada equipo solo pierde sus propias elecciones de la partida 1.",
+    "discordInviteField": "Enlace de invitación de Discord",
+    "joinDiscordServer": "Unirse al servidor de Discord ↗"
   },
   "vi": {
     "viewOnly": "CHỈ XEM",
@@ -139,7 +219,23 @@ const UI_EXTRA = Object.freeze({
     "clickKeepOpen": "NHẤP VÀO THẺ ĐỂ GIỮ BẢNG NÀY MỞ",
     "tankTechnical": "Đỡ đòn + Kỹ thuật",
     "allRoles": "Tất cả vai trò",
-    "roleLimitReached": "Đã đạt giới hạn {role} ({limit})"
+    "roleLimitReached": "Đã đạt giới hạn {role} ({limit})",
+    "squadraBlast": "Squadra Blast",
+    "squadraBlastOption": "Squadra Blast — lựa chọn riêng ở Ván 1 áp dụng cho Ván 2; lượt cấm có thể bật/tắt duy trì; Ván 3 đặt lại",
+    "squadraBlastRuleDesc": "Ván 1 dùng số lượt cấm đã cấu hình. Ván 2 không có lượt cấm mới và mỗi đội chỉ không được dùng lại các tướng chính mình đã chọn ở Ván 1; một công tắc riêng quyết định lượt cấm Ván 1 có tiếp tục áp dụng cho cả hai đội hay không. Ván 3 đặt lại cả hai.",
+    "squadraBlastRemember": "Lựa chọn riêng của mỗi đội ở Ván 1 luôn áp dụng cho Ván 2; duy trì lượt cấm Ván 1 là tùy chọn; Ván 3 bắt đầu lại.",
+    "squadraBlastBanException": "Ngoài Squadra Blast, chiến binh bị cấm không bị khóa sang các ván sau.",
+    "squadraBlastGame1": "SQUADRA BLAST · Ván 1 dùng số lượt cấm đã cấu hình; các lượt cấm đó và lựa chọn riêng của mỗi đội sẽ áp dụng cho Ván 2.",
+    "squadraBlastGame2": "SQUADRA BLAST · Không có lượt cấm mới. Lượt cấm Ván 1 vẫn áp dụng cho cả hai đội, còn mỗi đội chỉ bị khóa các lựa chọn của chính mình ở Ván 1.",
+    "squadraBlastGame3": "SQUADRA BLAST · Ván 3 xóa lịch sử cấm và chọn trước đó; chỉ còn luật chọn trùng đối thủ đã cấu hình.",
+    "squadraBlastPanel": "Squadra Blast: ở Ván 2 mỗi đội chỉ mất lựa chọn của chính mình từ Ván 1; Host quyết định lượt cấm Ván 1 có tiếp tục áp dụng hay không. Ván 3 xóa cả hai lịch sử.",
+    "blastBanReason": "Cấm Squadra Blast — áp dụng đến hết ván này",
+    "squadraBlastCarryBans": "Áp dụng lượt cấm Ván 1 sang Ván 2",
+    "squadraBlastCarryBansDesc": "Chỉ dành cho Squadra Blast. Tắt mục này để các tướng bị cấm ở Ván 1 được dùng lại trong Ván 2; các tướng do chính mỗi đội chọn ở Ván 1 vẫn bị khóa.",
+    "squadraBlastGame1NoCarry": "SQUADRA BLAST · Ván 1 dùng số lượt cấm đã cấu hình. Sang Ván 2 chỉ giữ khóa lựa chọn riêng của mỗi đội, không giữ lượt cấm.",
+    "squadraBlastGame2NoCarry": "SQUADRA BLAST · Không có lượt cấm mới. Tướng bị cấm ở Ván 1 được dùng lại, còn mỗi đội chỉ bị khóa các tướng chính mình đã chọn ở Ván 1.",
+    "discordInviteField": "Link mời Discord",
+    "joinDiscordServer": "Vào server Discord ↗"
   }
 });
 
@@ -258,7 +354,7 @@ export function localizeDraftReason(reason, role = '') {
   if (!reason) return '';
   const code = typeof reason === 'string' ? reason : reason.code;
   const label = typeof reason === 'string' ? reason : reason.label;
-  const keys = { missing:'unavailable', unavailable:'unavailable', global_ban:'globalBanReason', protected_hero:'protectedReason', current_game_ban:'currentGameBanReason', current_game_pick:'currentGamePickReason', same_team_duplicate:'sameTeamDuplicateReason', mirror_disabled:'mirrorDisabledReason', mirror_not_allowed:'mirrorDisabledReason', fearless_lock:'fearlessLockReason', team_lock:'teamLockReason', role_complete_ban:'roleBanReason', target_role_complete:'roleBanReason' };
+  const keys = { missing:'unavailable', unavailable:'unavailable', global_ban:'globalBanReason', protected_hero:'protectedReason', current_game_ban:'currentGameBanReason', current_game_pick:'currentGamePickReason', same_team_duplicate:'sameTeamDuplicateReason', mirror_disabled:'mirrorDisabledReason', mirror_not_allowed:'mirrorDisabledReason', fearless_lock:'fearlessLockReason', team_lock:'teamLockReason', blast_ban:'blastBanReason', role_complete_ban:'roleBanReason', target_role_complete:'roleBanReason' };
   const key = keys[code];
   return key ? t(key, { role: roleLabel(role || String(label || '').split(' ')[0]) }) : label;
 }

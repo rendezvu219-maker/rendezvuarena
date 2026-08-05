@@ -1,4 +1,5 @@
 import { HEROES, ROLES, getHeroImg, getHeroImgSp, roleIconMarkup } from './heroes.js';
+import { t } from './i18n.js';
 
 const SECTIONS = new Set(['core', 'bans', 'protection', 'presentation']);
 
@@ -32,7 +33,8 @@ export function normalizeDraftRules(input = {}) {
     heroBans: Math.min(4, Math.max(0, Number(input.heroBans ?? 2))),
     divineBans: Math.min(3, Math.max(0, Number(input.divineBans ?? 0))),
     divineDrawMode: ['random', 'pickban', 'ban-random'].includes(input.divineDrawMode) ? input.divineDrawMode : 'random',
-    seriesRule: ['normal', 'team_no_repeat', 'fearless'].includes(input.seriesRule) ? input.seriesRule : 'normal',
+    seriesRule: ['normal', 'team_no_repeat', 'fearless', 'squadra_blast'].includes(input.seriesRule) ? input.seriesRule : 'normal',
+    squadraBlastCarryBans: input.squadraBlastCarryBans !== false,
     mirrorPickMode: ['none', 'tank', 'technical', 'damage', 'tank-technical', 'all'].includes(input.mirrorPickMode) ? input.mirrorPickMode : legacyMirror,
     enableCoinFlip: input.enableCoinFlip !== false,
     enableDivineDraw: input.enableDivineDraw !== false,
@@ -75,6 +77,7 @@ function coreSection(rules) {
     ['normal', 'Normal', 'Every game starts fresh. Both teams may reuse heroes from earlier games in the same BO series.'],
     ['team_no_repeat', 'Team No Repeat', 'Each team blocks only its own earlier picks. Example: if your team used Goku in Game 1, your team cannot use Goku again—but the other team still can.'],
     ['fearless', 'Fearless Draft', 'Both teams share one used-hero list. Example: if either team used Goku in Game 1, neither team can use Goku again later in the series.'],
+    ['squadra_blast', t('squadraBlast'), t('squadraBlastRuleDesc')],
   ];
   const mirrorOptions = [
     ['none', 'No Mirror Picks', 'Every hero remains unique across both teams.'],
@@ -105,7 +108,8 @@ function coreSection(rules) {
       <strong>Easy way to remember</strong>
       <span><b>Team No Repeat:</b> your team loses only the heroes your team already used.</span>
       <span><b>Fearless Draft:</b> both teams lose every hero that either team already used.</span>
-      <small>Only completed picks carry into the next game. Banned heroes do not become permanently locked.</small>
+      <span><b>${t('squadraBlast')}:</b> ${t('squadraBlastRemember')}</span>
+      <small>${t('squadraBlastBanException')}</small>
     </div></fieldset>
     <fieldset class="draft-rule-choice-fieldset"><legend>Cross-team Mirror Pick</legend><div class="draft-rule-choice-grid">
       ${mirrorOptions.map(([value, label, desc]) => `<label class="draft-rule-choice"><input type="radio" name="mirrorPickMode" value="${value}" data-rule-field="mirrorPickMode" ${checked(rules.mirrorPickMode === value)}><span>${mirrorRoleIcon(value)}<b>${label}</b><small>${desc}</small></span></label>`).join('')}
@@ -124,6 +128,9 @@ function banSection(rules) {
         <option value="pickban" ${selected(rules.divineDrawMode, 'pickban')}>Pick / Ban</option>
         <option value="ban-random" ${selected(rules.divineDrawMode, 'ban-random')}>Ban + Random</option>
       </select><small>Does not modify the hero draft pool.</small></label>
+    </div>
+    <div class="draft-rule-toggle-stack">
+      ${toggle('squadraBlastCarryBans', t('squadraBlastCarryBans'), t('squadraBlastCarryBansDesc'), rules.squadraBlastCarryBans)}
     </div>
   </section>`;
 }
