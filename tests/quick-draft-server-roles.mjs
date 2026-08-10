@@ -90,7 +90,7 @@ try {
     token, method: 'POST',
     body: { config: {
       sessionId: 'quick-role-session-001', teamA: 'Blue Warriors', teamB: 'Red Warriors',
-      format: 'BO3', seriesRule: 'normal', timerSeconds: 30, heroBans: 2,
+      format: 'BO3', seriesRule: 'squadra_blast', timerSeconds: 30, heroBans: 1,
       enableCoinFlip: false, enableDivineDraw: false,
     } },
   });
@@ -173,7 +173,102 @@ try {
   });
   assert.match((await broadcastCoinError).message, /cannot perform/i, 'Broadcast role cannot interact with the pre-draft flow.');
 
-  console.log('Quick Draft server-backed role links, coin-call authorization and side controls passed.');
+  const hostAccess = fragmentValue(room.links.host, 'access');
+  const teamAAccess = fragmentValue(room.links.teamA, 'access');
+  const gameOneStateSeen = waitForEvent(teamA.socket, 'draft:state');
+  host.socket.emit('draft:state', {
+    roomCode: room.roomCode,
+    state: {
+      status: 'complete',
+      preDraft: { stage: 'complete', sideAssignment: { A: 'teamA', B: 'teamB' } },
+      engine: {
+        state: 'complete', gameNumber: 1,
+        teamA: { picks: ['0001','0002','0003','0004'], bans: ['0009'] },
+        teamB: { picks: ['0005','0006','0007','0008'], bans: ['0010'] },
+      },
+    },
+  });
+  await gameOneStateSeen;
+
+  const broadcasterResultAttempt = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
+    method: 'POST', allowError: true,
+    body: { accessToken: fragmentValue(room.links.broadcaster, 'access'), winnerSide: 'A' },
+  });
+  assert.equal(broadcasterResultAttempt.response.status, 403, 'A Broadcast link must never record Quick Draft results.');
+  const nonAuthorityTeamAttempt = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
+    method: 'POST', allowError: true, body: { accessToken: teamAAccess, winnerSide: 'A' },
+  });
+  assert.equal(nonAuthorityTeamAttempt.response.status, 409, 'A team link cannot record a result while the Host link controls the room.');
+
+  const gameOneResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
+    method: 'POST', body: { accessToken: hostAccess, winnerSide: 'A' },
+  });
+  assert.equal(gameOneResult.response.status, 200, JSON.stringify(gameOneResult.payload));
+  assert.equal(gameOneResult.payload.nextGameNumber, 2, 'A shared Quick Draft controller link must advance to Game 2.');
+  assert.match(gameOneResult.payload.nextDraftUrl, /\/draft-room\.html#room=/);
+
+  const gameTwoRoom = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    method: 'POST', body: { accessToken: hostAccess },
+  });
+  assert.equal(gameTwoRoom.payload.room.config.gameNumber, 2);
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksA, ['0001','0002','0003','0004']);
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksB, ['0005','0006','0007','0008']);
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousBansA, ['0009']);
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousBansB, ['0010']);
+
+  const authorityShift = waitForEvent(teamA.socket, 'draft:authority');
+  host.socket.disconnect();
+  assert.equal((await authorityShift).role, 'teamA', 'A shared team link must take authority when the Quick Draft Host is absent.');
+
+  const gameTwoStateSeen = waitForEvent(teamB.socket, 'draft:state');
+  teamA.socket.emit('draft:state', {
+    roomCode: room.roomCode,
+    state: {
+      status: 'complete',
+      engine: {
+        state: 'complete', gameNumber: 2,
+        teamA: { picks: ['0011','0012','0013','0014'], bans: ['0009'] },
+        teamB: { picks: ['0015','0016','0017','0018'], bans: ['0010'] },
+      },
+    },
+  });
+  await gameTwoStateSeen;
+  const gameTwoResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
+    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'B' },
+  });
+  assert.equal(gameTwoResult.response.status, 200, JSON.stringify(gameTwoResult.payload));
+  assert.equal(gameTwoResult.payload.nextGameNumber, 3, 'The shared team controller link must advance to Game 3.');
+
+  const gameThreeRoom = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    method: 'POST', body: { accessToken: teamAAccess },
+  });
+  assert.equal(gameThreeRoom.payload.room.config.gameNumber, 3);
+  assert.deepEqual(gameThreeRoom.payload.room.config.previousPicksA, [], 'Squadra Blast Game 3 must clear prior picks.');
+  assert.deepEqual(gameThreeRoom.payload.room.config.previousPicksB, []);
+  assert.deepEqual(gameThreeRoom.payload.room.config.previousBansA, [], 'Squadra Blast Game 3 must clear prior bans.');
+  assert.deepEqual(gameThreeRoom.payload.room.config.previousBansB, []);
+
+  const gameThreeStateSeen = waitForEvent(teamB.socket, 'draft:state');
+  teamA.socket.emit('draft:state', {
+    roomCode: room.roomCode,
+    state: {
+      status: 'complete',
+      engine: {
+        state: 'complete', gameNumber: 3,
+        teamA: { picks: ['0019','0020','0021','0022'], bans: ['0027'] },
+        teamB: { picks: ['0023','0024','0025','0026'], bans: ['0028'] },
+      },
+    },
+  });
+  await gameThreeStateSeen;
+  const gameThreeResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
+    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'A' },
+  });
+  assert.equal(gameThreeResult.response.status, 200, JSON.stringify(gameThreeResult.payload));
+  assert.equal(gameThreeResult.payload.seriesComplete, true);
+  assert.equal(gameThreeResult.payload.final, true, 'The shared Quick Draft controller must finalize the BO series.');
+
+  console.log('Quick Draft shared links, role controls, next-game history and BO finalization passed.');
 } finally {
   sockets.forEach(socket => socket.disconnect());
   if (!child.killed) child.kill('SIGTERM');

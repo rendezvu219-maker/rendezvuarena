@@ -2098,11 +2098,15 @@ if (this.engine.selectedHero === h.id) {
 
     try {
       if (this.sync && this.config.matchId) {
-        const payload = await api(`/api/matches/${this.config.matchId}/draft-room/game-result`, {
+        const quickSharedRoom = this.config.quickDraft === true && this.sync instanceof DraftRoomSync;
+        const endpoint = quickSharedRoom
+          ? `/api/public/draft-rooms/${encodeURIComponent(this.sync.roomCode)}/game-result`
+          : `/api/matches/${this.config.matchId}/draft-room/game-result`;
+        const payload = await api(endpoint, {
           method: 'POST',
           // The server records the original bracket Team A / Team B, not the
           // temporary Blue / Red placement selected after the coin toss.
-          body: { winnerSide: winnerSideForApi },
+          body: { winnerSide: winnerSideForApi, ...(quickSharedRoom ? { accessToken: this.sync.accessToken } : {}) },
         });
         this.config.seriesScoreA = Number(payload.scoreA || 0);
         this.config.seriesScoreB = Number(payload.scoreB || 0);

@@ -1737,7 +1737,7 @@ function refreshedDraftConfig(match, room) {
   return config;
 }
 
-function recordDraftGameWinner(req, winnerSide) {
+function recordDraftGameWinner(req, winnerSide, { nextDraftUrl = null } = {}) {
   const match = draftMatchContext(req.match.id);
   if (!match) throw new Error('Match not found.');
   if (!match.team_a_id || !match.team_b_id) throw new Error('Both teams must be assigned.');
@@ -1829,7 +1829,7 @@ function recordDraftGameWinner(req, winnerSide) {
   io.to(`draft:${room.room_code}`).emit('draft:state', nextState);
   emitBracketUpdated(match.tournament_id);
   const savedRoom = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id);
-  const nextAccess = draftRoomAccessForRequest(req, savedRoom, access);
+  const nextAccess = nextDraftUrl ? { url: nextDraftUrl } : draftRoomAccessForRequest(req, savedRoom, access);
   return {
     room: draftRoomResultPayload(savedRoom),
     seriesComplete: false,
@@ -1849,13 +1849,14 @@ function finalizeSeriesFromVerifiedGames(req, payload) {
   const match = draftMatchContext(req.match.id);
   if (!match || match.result_status === 'final') return { ...payload, final: match?.result_status === 'final' };
   const winnerTeamId = Number(payload.scoreA) > Number(payload.scoreB) ? Number(match.team_a_id) : Number(match.team_b_id);
+  const actorUserId = Number(req.user?.id || req.draftActorUserId || 0) || null;
   const finalized = transaction(() => {
     db.prepare(`UPDATE result_submissions SET active=0,superseded_at=COALESCE(superseded_at,CURRENT_TIMESTAMP) WHERE match_id=?`).run(match.id);
     const revision = Number(db.prepare('SELECT COALESCE(MAX(revision),0)+1 revision FROM result_submissions WHERE match_id=?').get(match.id).revision);
     const inserted = db.prepare(`INSERT INTO result_submissions(
       match_id,revision,submitted_by_user_id,source_type,score_a,score_b,winner_team_id,note,active
     ) VALUES (?,?,?,'verified_games',?,?,?,?,1)`).run(
-      match.id, revision, req.user.id, Number(payload.scoreA), Number(payload.scoreB), winnerTeamId,
+      match.id, revision, actorUserId, Number(payload.scoreA), Number(payload.scoreB), winnerTeamId,
       'Automatically finalized from game-by-game Captain confirmations.'
     );
     return applyFinalResultUnsafe(match, {
@@ -1865,7 +1866,7 @@ function finalizeSeriesFromVerifiedGames(req, payload) {
       resolutionType: 'verified_games',
       resolutionReason: 'Every game result was confirmed before the next game opened.',
       submissionId: Number(inserted.lastInsertRowid),
-      userId: req.user.id,
+      userId: actorUserId,
     });
   });
   addSystemMessage(match.id, `Series finalized from confirmed game results: ${match.team_a_name} ${payload.scoreA} - ${payload.scoreB} ${match.team_b_name}.`);
@@ -2188,6 +2189,26 @@ app.post('/api/public/draft-rooms/:roomCode/access',(req,res)=>{
     room:{roomCode:room.room_code,role,matchId:room.match_id,tournamentId:room.tournament_id,status:room.status,
       config:jsonParse(room.config_json),state:jsonParse(room.state_json),messages},
   });
+});
+app.post('/api/public/draft-rooms/:roomCode/game-result',(req,res)=>{
+  const room=db.prepare(`SELECT dr.*,m.tournament_id,t.source_platform FROM draft_rooms dr JOIN matches m ON m.id=dr.match_id JOIN tournaments t ON t.id=m.tournament_id WHERE dr.room_code=?`)
+    .get(String(req.params.roomCode||'').toUpperCase());
+  if(!room)return res.status(404).json({error:'Draft room not found.'});
+  if(room.source_platform!=='quick_draft')return res.status(403).json({error:'Tournament game results must be reported by Captains in Player Portal.'});
+  const accessToken=String(req.body.accessToken||'');
+  const role=resolveDraftRole(room,accessToken);
+  if(!['host','teamA','teamB'].includes(role||''))return res.status(403).json({error:'A controlling Quick Draft link is required to record the game winner.'});
+  const authority=draftAuthority(room.room_code);
+  if(!authority||authority.role!==role)return res.status(409).json({error:'Only the Quick Draft link currently controlling this room can record the game winner.'});
+  try{
+    req.match=draftMatchContext(room.match_id);
+    req.draftActorUserId=room.created_by;
+    const nextDraftUrl=draftRoomPayload(req,room,{[role]:accessToken}).links[role];
+    let payload=recordDraftGameWinner(req,req.body.winnerSide,{nextDraftUrl});
+    payload=finalizeSeriesFromVerifiedGames(req,payload);
+    securityLog('quick_draft.game_result_recorded',{roomId:room.id,role,gameNumber:payload.currentGameNumber,seriesComplete:Boolean(payload.seriesComplete)},'info');
+    res.json(payload);
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
 });
 app.get('/api/public/draft-rooms/:roomCode',(_req,res)=>res.status(405).json({error:'Use POST access exchange; credentials are not accepted in URL query strings.'}));
 
