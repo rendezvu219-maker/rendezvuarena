@@ -1,6 +1,6 @@
 import { DraftEngine } from './draft.js';
 import { HEROES, PICKS_PER_TEAM } from './heroes.js';
-import { BroadcastUI } from './broadcast.js?v=0.6.41-broadcast-hero-hold';
+import { BroadcastUI } from './broadcast.js?v=0.6.43-broadcast-reveal-queue';
 import { loadDraftConfigFromUrl } from './app.js';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';

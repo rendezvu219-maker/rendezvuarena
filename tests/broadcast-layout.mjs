@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { BroadcastUI } from '../js/broadcast.js';
 
 const script = await readFile(new URL('../js/broadcast.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../css/broadcast.css', import.meta.url), 'utf8');
@@ -8,6 +9,7 @@ const page = await readFile(new URL('../js/broadcast-page.js', import.meta.url),
 const heroes = await readFile(new URL('../js/heroes.js', import.meta.url), 'utf8');
 const draftRoomApp = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const draftRoomHtml = await readFile(new URL('../draft-room.html', import.meta.url), 'utf8');
+const broadcastHtml = await readFile(new URL('../broadcast.html', import.meta.url), 'utf8');
 
 const aLineup = script.match(/<section class="bc-team-lineup bc-team-lineup-a">([\s\S]*?)<\/section>/)?.[1] || '';
 const bLineup = script.match(/<section class="bc-team-lineup bc-team-lineup-b">([\s\S]*?)<\/section>/)?.[1] || '';
@@ -40,10 +42,19 @@ assert.doesNotMatch(script, /teamA\.bans, \.\.\.this\.engine\.teamA\.divineBans/
 assert.match(script, /getHeroTrailerUrls/);
 assert.match(heroes, /\/assets\/trailers\/\$\{heroId\}\.mp4/);
 assert.match(heroes, /\/assets\/trailers\/\$\{heroId\}\.png/);
-assert.match(script, /const BROADCAST_HERO_REVEAL_SECONDS = 3;/);
-assert.match(script, /video\.ontimeupdate = \(\) =>/);
-assert.match(script, /video\.currentTime >= BROADCAST_HERO_REVEAL_SECONDS/);
+assert.match(script, /const BROADCAST_HERO_HOLD_MS = 3000;/);
+assert.match(script, /stage\.classList\.add\('media-switching'\)/);
+assert.ok(script.indexOf("image.classList.remove('visible')") < script.indexOf('image.src = candidate.src'), 'The old poster must be hidden before the next hero image source is assigned.');
+assert.match(script, /if \(!posterReady\) \{\s*heroHoldRequested = true;/, 'The held hero image must never show a stale frame while its new poster is still loading.');
+assert.match(css, /\.bc-hero-stage\.media-switching \.bc-trailer-video,[\s\S]*opacity:0 !important; transition:none !important;/, 'Media switching must suppress stale video and poster frames without a fade.');
 assert.match(script, /video\.onended = showLockedHero/);
+assert.match(script, /this\.revealQueue\.push\(\{ hero, team, action \}\)/);
+assert.match(script, /this\.revealHoldUntil = Date\.now\(\) \+ BROADCAST_HERO_HOLD_MS/);
+assert.match(script, /this\.revealTimer = setTimeout\(\(\) => this\.scheduleNextHeroReveal\(\), delay\)/);
+assert.match(script, /if \(this\.hasLockedHeroReveal\) \{\s*this\.pendingWaitingAction = action \|\| null;\s*return;/, 'Late state snapshots must not cancel active or queued hero reveals.');
+assert.match(broadcastHtml, /broadcast-page\.js\?v=0\.6\.44-broadcast-reveal-queue/, 'Broadcast HTML must cache-bust the queued reveal controller.');
+assert.match(broadcastHtml, /broadcast\.css\?v=0\.6\.44-broadcast-reveal-queue/, 'Broadcast HTML must cache-bust the media-switching styles.');
+assert.doesNotMatch(script, /video\.currentTime >=/, 'Broadcast must play the full trailer instead of cutting it at three seconds.');
 assert.match(script, /copy\.classList\.remove\('hidden'\)/);
 assert.match(script, /this\.hasLockedHeroReveal = true/);
 assert.match(script, /this\.engine\.state === 'active' && !this\.hasLockedHeroReveal/);
@@ -74,5 +85,37 @@ assert.match(page, /overlay\.renderPreDraftState\(state\.preDraft, entrants\)/, 
 assert.match(css, /\.bc-side-orbit::before[^}]*border-radius: 50%/s, 'The side reveal must use a horizontal oval track.');
 assert.match(css, /\.broadcast-view\.side-pending \.bc-lineup-dock/, 'Blue and Red setup must stay hidden before side selection.');
 assert.doesNotMatch(draftRoomApp, /animateSideAssignment\(/, 'Team/Host Draft Room POV must not run the Broadcast oval animation.');
+
+const queueHarness = Object.create(BroadcastUI.prototype);
+Object.assign(queueHarness, {
+  revealTimer: null,
+  revealInProgress: false,
+  revealHoldUntil: 0,
+  revealQueue: [],
+  played: [],
+});
+queueHarness.playHeroReveal = function playHeroReveal(item) {
+  this.played.push(item.hero.id);
+  this.revealInProgress = true;
+};
+queueHarness.revealHero({ id: 'first' }, 'A', 'pick');
+queueHarness.revealHero({ id: 'second' }, 'B', 'pick');
+assert.deepEqual(queueHarness.played, ['first'], 'A rapid second lock must not interrupt the active trailer.');
+assert.deepEqual(queueHarness.revealQueue.map(item => item.hero.id), ['second']);
+queueHarness.revealInProgress = false;
+queueHarness.revealHoldUntil = Date.now() + 35;
+queueHarness.scheduleNextHeroReveal();
+assert.deepEqual(queueHarness.played, ['first'], 'The next trailer must wait through the poster hold.');
+await new Promise(resolve => setTimeout(resolve, 55));
+assert.deepEqual(queueHarness.played, ['first', 'second'], 'The queued trailer must start after the minimum hold.');
+
+const snapshotHarness = Object.create(BroadcastUI.prototype);
+Object.assign(snapshotHarness, {
+  hasLockedHeroReveal: true,
+  pendingWaitingAction: null,
+  revealQueue: [{ hero: { id: 'queued' }, team: 'B', action: 'pick' }],
+});
+snapshotHarness.setWaitingForAction({ team: 'B', type: 'pick' });
+assert.equal(snapshotHarness.revealQueue.length, 1, 'A late state snapshot must preserve queued locks.');
 
 console.log('Broadcast event rail, side-orbit reveal, phase/timer separation, ban counts and local trailer paths passed.');

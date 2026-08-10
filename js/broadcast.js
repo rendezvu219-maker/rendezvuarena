@@ -8,7 +8,7 @@ import { normalizeSideAssignment, sideForEntrant } from './pre-draft.js';
 const BROADCAST_SIDE_ORBIT_LOOPS = 4;
 const BROADCAST_SIDE_ORBIT_DURATION_MS = 2400;
 const BROADCAST_SIDE_ALIGNMENT_DURATION_MS = 360;
-const BROADCAST_HERO_REVEAL_SECONDS = 3;
+const BROADCAST_HERO_HOLD_MS = 3000;
 
 function initials(name) {
   const parts = String(name || 'TEAM').trim().split(/\s+/).filter(Boolean);
@@ -33,6 +33,9 @@ export class BroadcastUI {
     this.revealTimer = null;
     this.revealRequest = 0;
     this.hasLockedHeroReveal = false;
+    this.revealInProgress = false;
+    this.revealHoldUntil = 0;
+    this.revealQueue = [];
     this.pendingWaitingAction = null;
     this.hostBannedHeroIds = Array.isArray(this.config.hostBannedHeroIds) ? this.config.hostBannedHeroIds : [];
     this.originalEntrants = options.originalEntrants || {};
@@ -536,8 +539,29 @@ export class BroadcastUI {
   }
 
   revealHero(hero, team, action) {
+    if (!hero) return;
+    this.revealQueue.push({ hero, team, action });
+    this.scheduleNextHeroReveal();
+  }
+
+  scheduleNextHeroReveal() {
     clearTimeout(this.revealTimer);
     this.revealTimer = null;
+    if (this.revealInProgress || !this.revealQueue.length) return;
+    const delay = Math.max(0, this.revealHoldUntil - Date.now());
+    if (delay > 0) {
+      this.revealTimer = setTimeout(() => this.scheduleNextHeroReveal(), delay);
+      return;
+    }
+    const nextReveal = this.revealQueue.shift();
+    this.playHeroReveal(nextReveal);
+  }
+
+  playHeroReveal({ hero, team, action }) {
+    clearTimeout(this.revealTimer);
+    this.revealTimer = null;
+    this.revealInProgress = true;
+    this.revealHoldUntil = 0;
     const requestId = ++this.revealRequest;
     this.hasLockedHeroReveal = true;
     const stage = document.getElementById('bc-hero-stage');
@@ -545,6 +569,7 @@ export class BroadcastUI {
     const image = document.getElementById('bc-hero-image');
     const waiting = document.getElementById('bc-waiting');
     const copy = document.getElementById('bc-reveal-copy');
+    stage.classList.add('media-switching');
     stage.classList.remove('waiting-with-poster');
     stage.classList.toggle('ban-reveal', action === 'ban');
     stage.dataset.revealTeam = team;
@@ -556,10 +581,11 @@ export class BroadcastUI {
 
     image.onerror = null;
     image.onload = null;
-    image.classList.remove('poster-frame');
-    image.src = getHeroFullImg(hero.id);
-    image.alt = heroName(hero.id, hero.name);
     image.classList.remove('visible');
+    image.classList.remove('poster-frame');
+    image.alt = heroName(hero.id, hero.name);
+    image.removeAttribute('src');
+    image.src = getHeroFullImg(hero.id);
 
     video.classList.remove('visible');
     video.pause();
@@ -576,6 +602,9 @@ export class BroadcastUI {
       { src: getHeroFullImg(hero.id), poster: false },
     ];
     let posterIndex = 0;
+    let posterReady = false;
+    let heroHoldRequested = false;
+    let heroHoldShown = false;
     const loadPoster = () => {
       if (requestId !== this.revealRequest) return;
       const candidate = posterSources[posterIndex++];
@@ -584,19 +613,33 @@ export class BroadcastUI {
       image.onerror = loadPoster;
       image.src = candidate.src;
     };
-    loadPoster();
 
     const showLockedHero = () => {
-      if (requestId !== this.revealRequest) return;
+      if (requestId !== this.revealRequest || heroHoldShown) return;
       clearTimeout(this.revealTimer);
       this.revealTimer = null;
       video.pause();
       video.ontimeupdate = null;
+      if (!posterReady) {
+        heroHoldRequested = true;
+        return;
+      }
+      heroHoldShown = true;
+      this.revealInProgress = false;
+      this.revealHoldUntil = Date.now() + BROADCAST_HERO_HOLD_MS;
       video.classList.remove('visible');
+      stage.classList.remove('media-switching');
       image.classList.add('visible');
       waiting.classList.add('hidden');
       copy.classList.remove('hidden');
+      this.scheduleNextHeroReveal();
     };
+    image.onload = () => {
+      if (requestId !== this.revealRequest) return;
+      posterReady = true;
+      if (heroHoldRequested) showLockedHero();
+    };
+    loadPoster();
 
     const sources = getHeroTrailerUrls(hero.id, this.configuredHeroTrailer(hero.id));
     let sourceIndex = 0;
@@ -620,11 +663,8 @@ export class BroadcastUI {
         image.classList.remove('visible');
         copy.classList.add('hidden');
         waiting.classList.add('hidden');
+        stage.classList.remove('media-switching');
         video.classList.add('visible');
-        video.ontimeupdate = () => {
-          if (video.currentTime >= BROADCAST_HERO_REVEAL_SECONDS) showLockedHero();
-        };
-        this.revealTimer = setTimeout(showLockedHero, BROADCAST_HERO_REVEAL_SECONDS * 1000);
       }).catch(showLockedHero);
     };
     video.onended = showLockedHero;
@@ -640,6 +680,13 @@ export class BroadcastUI {
 
   setWaitingForAction(action, { preserveMedia = false, requestId = null } = {}) {
     if (requestId !== null && requestId !== this.revealRequest) return;
+    // Authoritative state snapshots can arrive milliseconds after hero:locked.
+    // They may update the next turn, but must never cancel the reveal currently
+    // playing or discard locks already queued behind it.
+    if (this.hasLockedHeroReveal) {
+      this.pendingWaitingAction = action || null;
+      return;
+    }
     const video = document.getElementById('bc-hero-video');
     const image = document.getElementById('bc-hero-image');
     const waiting = document.getElementById('bc-waiting');
@@ -647,8 +694,12 @@ export class BroadcastUI {
     const stage = document.getElementById('bc-hero-stage');
     clearTimeout(this.revealTimer);
     this.revealTimer = null;
+    this.revealRequest += 1;
     this.hasLockedHeroReveal = false;
-    stage.classList.remove('ban-reveal');
+    this.revealInProgress = false;
+    this.revealHoldUntil = 0;
+    this.revealQueue.length = 0;
+    stage.classList.remove('ban-reveal', 'media-switching');
     stage.classList.toggle('waiting-with-poster', preserveMedia);
     delete stage.dataset.revealTeam;
     video.pause();
@@ -673,11 +724,14 @@ export class BroadcastUI {
     clearTimeout(this.revealTimer);
     this.revealTimer = null;
     this.hasLockedHeroReveal = false;
+    this.revealInProgress = false;
+    this.revealHoldUntil = 0;
+    this.revealQueue.length = 0;
     this.revealRequest += 1;
     const stage = document.getElementById('bc-hero-stage');
     const video = document.getElementById('bc-hero-video');
     const image = document.getElementById('bc-hero-image');
-    stage.classList.remove('waiting-with-poster', 'ban-reveal');
+    stage.classList.remove('waiting-with-poster', 'ban-reveal', 'media-switching');
     video.pause();
     video.loop = false;
     video.oncanplay = null;

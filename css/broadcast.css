@@ -24,6 +24,10 @@ body.broadcast-page { background: transparent; }
 .bc-hero-fallback { object-fit: contain; object-position: center 24%; filter: drop-shadow(0 12px 42px rgba(0,0,0,.72)); }
 .bc-hero-fallback.poster-frame { object-fit: cover; object-position: center -16px; filter: none; }
 .bc-trailer-video.visible, .bc-hero-fallback.visible { opacity: .9; transform: scale(1); }
+/* A new lock reuses the same media elements. Kill the previous fade immediately
+   so a cached poster or stale video frame can never flash before the next trailer. */
+.bc-hero-stage.media-switching .bc-trailer-video,
+.bc-hero-stage.media-switching .bc-hero-fallback { opacity:0 !important; transition:none !important; }
 .bc-hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,7,15,.72), transparent 22%, transparent 78%, rgba(15,4,8,.72)), linear-gradient(0deg, rgba(2,4,9,.9), transparent 38%, rgba(2,4,9,.32)); }
 .bc-hero-stage[data-reveal-team="A"]::before, .bc-hero-stage[data-reveal-team="B"]::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .bc-hero-stage[data-reveal-team="A"]::before { background: linear-gradient(90deg, color-mix(in srgb, var(--team-left-primary) 23%, transparent), transparent 45%); }
