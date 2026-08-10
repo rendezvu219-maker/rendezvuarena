@@ -187,6 +187,7 @@ async function createTestSuite(adminUserId) {
     addStaff(live.id,referee.id,'referee'); addStaff(live.id,broadcaster.id,'broadcaster');
     for(let i=0;i<8;i++) insertTeam({tournamentId:live.id,name:TEAM_BLUEPRINTS[i][0],tag:TEAM_BLUEPRINTS[i][1],seed:i+1,captain:captains[i],player:players[i],ready:true});
     generateSingleElimination(live.id,{bestOf:3,userId:host.id,allowWarnings:true});
+    db.prepare(`UPDATE matches SET status='checkin_open',match_status='checkin_open' WHERE tournament_id=? AND team_a_id IS NOT NULL AND team_b_id IS NOT NULL AND match_status='available'`).run(live.id);
     assignMatchStaff(live.id,referee.id,broadcaster.id);
     const draft = createDraftRoomForFirstMatch(live.id,host.id);
 

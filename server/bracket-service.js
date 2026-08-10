@@ -341,14 +341,26 @@ function generatePlayoffsFromGroups(tournamentId,{topPerGroup=2,bestOf=3,force=f
   return createKnockout(tournamentId,ordered,{bestOf,preserveGroups:true,userId});
 }
 
+function openCheckinWhenMatchIsAssigned(matchId, tournamentId) {
+  const tournament = db.prepare('SELECT status FROM tournaments WHERE id=?').get(tournamentId);
+  const matchStatus = ['ongoing', 'running', 'live', 'checkin_open'].includes(String(tournament?.status || '').toLowerCase())
+    ? 'checkin_open'
+    : 'available';
+  db.prepare(`UPDATE matches
+    SET status=CASE WHEN team_a_id IS NOT NULL AND team_b_id IS NOT NULL THEN ? ELSE status END,
+        match_status=CASE WHEN team_a_id IS NOT NULL AND team_b_id IS NOT NULL THEN ? ELSE match_status END,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE id=?`).run(matchStatus, matchStatus, matchId);
+}
+
 function advanceWinner(match,winnerTeamId) {
   const nextId=match.feeds_into_winner_match_id||match.next_match_id;const slot=match.feeds_into_winner_slot||match.next_slot;if(!nextId||!slot)return;
   const column=slot==='A'?'team_a_id':'team_b_id';db.prepare(`UPDATE matches SET ${column}=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(winnerTeamId,nextId);
-  db.prepare(`UPDATE matches SET status=CASE WHEN team_a_id IS NOT NULL AND team_b_id IS NOT NULL THEN 'available' ELSE status END,match_status=CASE WHEN team_a_id IS NOT NULL AND team_b_id IS NOT NULL THEN 'available' ELSE match_status END WHERE id=?`).run(nextId);
+  openCheckinWhenMatchIsAssigned(nextId,match.tournament_id);
 }
 
 function advanceLoser(match,loserTeamId) {
-  if(!match.feeds_into_loser_match_id||!match.feeds_into_loser_slot)return;const column=match.feeds_into_loser_slot==='A'?'team_a_id':'team_b_id';db.prepare(`UPDATE matches SET ${column}=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(loserTeamId,match.feeds_into_loser_match_id);
+  if(!match.feeds_into_loser_match_id||!match.feeds_into_loser_slot)return;const column=match.feeds_into_loser_slot==='A'?'team_a_id':'team_b_id';db.prepare(`UPDATE matches SET ${column}=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(loserTeamId,match.feeds_into_loser_match_id);openCheckinWhenMatchIsAssigned(match.feeds_into_loser_match_id,match.tournament_id);
 }
 
 function applyFinalResultUnsafe(match,{scoreA,scoreB,winnerTeamId,resolutionType='normal',resolutionReason='',submissionId=null,userId=null}) {

@@ -44,9 +44,12 @@ try{
   }
   const generated=await request(`/api/tournaments/${tournament.id}/bracket/generate`,{token:admin,method:'POST',body:{bestOf:1,allowWarnings:true}});
   assert.equal(generated.matches.length,3);
+  const started=await request(`/api/tournaments/${tournament.id}/start`,{token:admin,method:'POST',body:{}});
+  assert.equal(started.openedCheckinCount,2,'Starting a four-team tournament must open Captain check-in for both semifinals.');
   let detail=await request(`/api/tournaments/${tournament.id}`,{token:admin});
   const semis=detail.matches.filter(match=>match.round_no===1).sort((a,b)=>a.position-b.position);
   const final=detail.matches.find(match=>match.round_no===2);
+  assert.ok(semis.every(match=>match.match_status==='checkin_open'),'Every playable first-round match must allow Captain check-in.');
   await playHostVerified(semis[0],admin,captainTokensByTeam);
   detail=await request(`/api/tournaments/${tournament.id}`,{token:admin});
   let waitingFinal=detail.matches.find(match=>match.id===final.id);
@@ -64,6 +67,7 @@ try{
   const playableFinal=detail.matches.find(match=>match.id===final.id);
   assert.ok(playableFinal.team_a_id&&playableFinal.team_b_id,'Final must receive both semifinal winners.');
   assert.notEqual(playableFinal.result_status,'final');
+  assert.equal(playableFinal.match_status,'checkin_open','A newly assigned later-round match must automatically open Captain check-in.');
   await play(playableFinal,captainTokensByTeam);
   detail=await request(`/api/tournaments/${tournament.id}`,{token:admin});
   assert.equal(detail.matches.filter(match=>match.result_status==='final').length,3,'All three matches must be finalized through submit + confirm.');

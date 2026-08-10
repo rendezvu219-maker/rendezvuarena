@@ -18,12 +18,18 @@ export class DraftRoomSync {
   }
 
   static async exchangeAccess(roomCode, accessToken) {
-    const response = await fetch(`/api/public/draft-rooms/${encodeURIComponent(roomCode)}/access`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
+    const url = `/api/public/draft-rooms/${encodeURIComponent(roomCode)}/access`;
+    const devToken = (() => { try { return sessionStorage.getItem('gs_dev_auth_token') || ''; } catch { return ''; } })();
+    const options = {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', ...(devToken ? { Authorization: `Bearer ${devToken}` } : {}) },
       body: JSON.stringify({ accessToken }),
-    });
+    };
+    let response = await fetch(url, options);
+    if (response.status === 401 && !devToken) {
+      const refreshed = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'same-origin' });
+      if (refreshed.ok) response = await fetch(url, options);
+    }
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || 'Unable to open draft room.');
     return payload;

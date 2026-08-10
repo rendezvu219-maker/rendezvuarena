@@ -68,7 +68,13 @@ const UI_EXTRA = Object.freeze({
     "portalYourTeamTag": "✓ Your team: {tag}",
     "submitApproveResultStep": "Submit & approve result",
     "submitApproveResultTitle": "Submit & Approve Result",
-    "matchChatScreenshotDesc": "Captains, Host, linked players and assigned referee. Result screenshots appear directly in chat."
+    "matchChatScreenshotDesc": "Captains, Host, linked players and assigned referee. Result screenshots appear directly in chat.",
+    "captainStartTitle": "Start Tournament & Captain Check-in",
+    "captainStartDescription": "Follow these steps in order. Starting opens check-in for every currently playable match; only each team's linked Captain checks in.",
+    "startOpenCaptainCheckinStep": "Start & open check-in",
+    "captainAccountRequirement": "Only one active Captain account per team is required for check-in, coin flip, Draft control and results. Other roster slots do not need linked accounts or Draft Room presence.",
+    "captainRunsDraft": "Captain runs ban/pick",
+    "memberViewOnlyMatchHelp": "You can view this match and use Match Chat. Only the linked Captain can check in, enter or control the Draft Room, run coin flip, and submit or verify results."
   },
   "ja": {
     "viewOnly": "閲覧のみ",
@@ -111,7 +117,13 @@ const UI_EXTRA = Object.freeze({
     "portalYourTeamTag": "✓ あなたのチーム: {tag}",
     "submitApproveResultStep": "結果を送信・承認",
     "submitApproveResultTitle": "結果の送信と承認",
-    "matchChatScreenshotDesc": "キャプテン、Host、連携済み選手、担当審判が参加できます。結果画像はチャット内に直接表示されます。"
+    "matchChatScreenshotDesc": "キャプテン、Host、連携済み選手、担当審判が参加できます。結果画像はチャット内に直接表示されます。",
+    "captainStartTitle": "トーナメント開始とキャプテンチェックイン",
+    "captainStartDescription": "手順に沿って進めてください。開始すると、現在対戦可能なすべての試合でチェックインが開き、各チームの連携済みキャプテンのみがチェックインします。",
+    "startOpenCaptainCheckinStep": "開始してチェックインを開く",
+    "captainAccountRequirement": "各チームで必要なのは有効なキャプテンアカウント1つだけです。チェックイン、コイントス、ドラフト操作、結果処理はキャプテンが行います。他のロースター枠はアカウント連携もドラフトルームへの参加も不要です。",
+    "captainRunsDraft": "キャプテンがBAN/PICKを操作",
+    "memberViewOnlyMatchHelp": "この試合の閲覧とマッチチャットの利用は可能です。チェックイン、ドラフトルームへの入室と操作、コイントス、結果の送信・確認は連携済みキャプテンのみ行えます。"
   },
   "zh-CN": {
     "viewOnly": "仅查看",
@@ -154,7 +166,13 @@ const UI_EXTRA = Object.freeze({
     "portalYourTeamTag": "✓ 你的队伍：{tag}",
     "submitApproveResultStep": "提交并批准结果",
     "submitApproveResultTitle": "提交与批准结果",
-    "matchChatScreenshotDesc": "队长、Host、已关联选手和指定裁判可参与。结果截图会直接显示在聊天中。"
+    "matchChatScreenshotDesc": "队长、Host、已关联选手和指定裁判可参与。结果截图会直接显示在聊天中。",
+    "captainStartTitle": "开始赛事与队长签到",
+    "captainStartDescription": "请按顺序完成这些步骤。开始赛事后，当前可进行的所有比赛都会开放签到，并且只有各队已关联的队长可以签到。",
+    "startOpenCaptainCheckinStep": "开始并开放签到",
+    "captainAccountRequirement": "每队只需要一个有效的队长账号来完成签到、抛硬币、选禁操作和结果处理。其他阵容名额无需关联账号，也无需进入选禁房间。",
+    "captainRunsDraft": "队长操作选禁",
+    "memberViewOnlyMatchHelp": "你可以查看本场比赛并使用比赛聊天。只有已关联的队长可以签到、进入或操作选禁房间、进行抛硬币，以及提交或确认结果。"
   },
   "ko": {
     "viewOnly": "보기 전용",
@@ -197,7 +215,13 @@ const UI_EXTRA = Object.freeze({
     "portalYourTeamTag": "✓ 내 팀: {tag}",
     "submitApproveResultStep": "결과 제출 및 승인",
     "submitApproveResultTitle": "결과 제출과 승인",
-    "matchChatScreenshotDesc": "주장, Host, 연결된 선수와 배정된 심판이 참여합니다. 결과 스크린샷은 채팅에 바로 표시됩니다."
+    "matchChatScreenshotDesc": "주장, Host, 연결된 선수와 배정된 심판이 참여합니다. 결과 스크린샷은 채팅에 바로 표시됩니다.",
+    "captainStartTitle": "토너먼트 시작 및 주장 체크인",
+    "captainStartDescription": "단계를 순서대로 진행하세요. 시작하면 현재 진행 가능한 모든 경기에 체크인이 열리며, 각 팀에 연결된 주장만 체크인합니다.",
+    "startOpenCaptainCheckinStep": "시작하고 체크인 열기",
+    "captainAccountRequirement": "팀마다 활성 주장 계정 하나만 있으면 체크인, 동전 던지기, 드래프트 조작과 결과 처리를 할 수 있습니다. 다른 로스터 슬롯은 계정 연결이나 드래프트 룸 입장이 필요하지 않습니다.",
+    "captainRunsDraft": "주장이 밴/픽 진행",
+    "memberViewOnlyMatchHelp": "이 경기를 보고 매치 채팅을 사용할 수 있습니다. 체크인, 드래프트 룸 입장 및 조작, 동전 던지기, 결과 제출 또는 확인은 연결된 주장만 할 수 있습니다."
   },
   "es": {
     "viewOnly": "SOLO LECTURA",
@@ -240,7 +264,13 @@ const UI_EXTRA = Object.freeze({
     "portalYourTeamTag": "✓ Tu equipo: {tag}",
     "submitApproveResultStep": "Enviar y aprobar resultado",
     "submitApproveResultTitle": "Enviar y aprobar resultado",
-    "matchChatScreenshotDesc": "Capitanes, Host, jugadores vinculados y árbitro asignado. Las capturas del resultado aparecen directamente en el chat."
+    "matchChatScreenshotDesc": "Capitanes, Host, jugadores vinculados y árbitro asignado. Las capturas del resultado aparecen directamente en el chat.",
+    "captainStartTitle": "Iniciar torneo y check-in de capitanes",
+    "captainStartDescription": "Sigue estos pasos en orden. Al iniciar se abre el check-in de todos los partidos disponibles; solo entra el Capitán vinculado de cada equipo.",
+    "startOpenCaptainCheckinStep": "Iniciar y abrir check-in",
+    "captainAccountRequirement": "Solo se requiere una cuenta de Capitán activa por equipo para el check-in, el lanzamiento de moneda, el control del Draft y los resultados. Los demás puestos del roster no necesitan una cuenta vinculada ni entrar en la sala de Draft.",
+    "captainRunsDraft": "El Capitán controla bans/picks",
+    "memberViewOnlyMatchHelp": "Puedes ver este partido y usar el chat. Solo el Capitán vinculado puede hacer check-in, entrar o controlar la sala de Draft, lanzar la moneda y enviar o verificar resultados."
   },
   "vi": {
     "viewOnly": "CHỈ XEM",
@@ -283,7 +313,13 @@ const UI_EXTRA = Object.freeze({
     "portalYourTeamTag": "✓ Đội của bạn: {tag}",
     "submitApproveResultStep": "Gửi và duyệt kết quả",
     "submitApproveResultTitle": "Gửi & Duyệt kết quả",
-    "matchChatScreenshotDesc": "Đội trưởng, Host, thành viên đã liên kết và trọng tài được chỉ định. Ảnh kết quả sẽ hiện trực tiếp trong chat."
+    "matchChatScreenshotDesc": "Đội trưởng, Host, thành viên đã liên kết và trọng tài được chỉ định. Ảnh kết quả sẽ hiện trực tiếp trong chat.",
+    "captainStartTitle": "Bắt đầu giải & Check-in Đội trưởng",
+    "captainStartDescription": "Làm lần lượt theo các bước này. Khi bắt đầu giải, mọi trận hiện có thể thi đấu sẽ mở check-in; chỉ Đội trưởng đã liên kết của mỗi đội được check-in.",
+    "startOpenCaptainCheckinStep": "Bắt đầu & mở check-in",
+    "captainAccountRequirement": "Mỗi đội chỉ cần một tài khoản Đội trưởng đang hoạt động để check-in, tung đồng xu, điều khiển Draft và xử lý kết quả. Các vị trí thành viên còn lại không cần liên kết tài khoản hoặc có mặt trong Draft Room.",
+    "captainRunsDraft": "Đội trưởng điều khiển ban/pick",
+    "memberViewOnlyMatchHelp": "Bạn có thể xem trận và dùng Match Chat. Chỉ Đội trưởng đã liên kết mới được check-in, vào hoặc điều khiển Draft Room, tung đồng xu và gửi hoặc xác nhận kết quả."
   }
 });
 

@@ -1062,14 +1062,15 @@ app.post('/api/tournaments/:id/start',authRequired,emailVerifiedRequired,require
   if(!check.ok)return res.status(409).json({error:'Tournament preflight must pass before starting.',preflight:check});
   const matchCount=Number(db.prepare('SELECT COUNT(*) count FROM matches WHERE tournament_id=?').get(req.tournamentId)?.count||0);
   if(!matchCount)return res.status(409).json({error:'Generate the bracket before starting the tournament.'});
+  let openedCheckinCount=0;
   transaction(()=>{
     db.prepare(`UPDATE tournaments SET status='ongoing',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(req.tournamentId);
-    db.prepare(`UPDATE matches SET status='checkin_open',match_status='checkin_open',updated_at=CURRENT_TIMESTAMP
-      WHERE tournament_id=? AND team_a_id IS NOT NULL AND team_b_id IS NOT NULL AND result_status!='final' AND match_status='available'`).run(req.tournamentId);
+    openedCheckinCount=Number(db.prepare(`UPDATE matches SET status='checkin_open',match_status='checkin_open',updated_at=CURRENT_TIMESTAMP
+      WHERE tournament_id=? AND team_a_id IS NOT NULL AND team_b_id IS NOT NULL AND result_status!='final' AND match_status='available'`).run(req.tournamentId).changes||0);
     logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'tournament.started',details:{matchCount}});
   });
   const matches=listMatches(req.tournamentId);emitBracketUpdated(req.tournamentId,matches);
-  res.json({tournament:db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId),matches});
+  res.json({tournament:db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId),matches,openedCheckinCount});
 });
 app.get('/api/tournaments/:id/audit',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{
   const logs=db.prepare(`SELECT a.*,u.display_name user_name FROM audit_logs a LEFT JOIN users u ON u.id=a.user_id WHERE a.tournament_id=? ORDER BY a.id DESC LIMIT 300`).all(req.tournamentId).map(row=>({...row,details:jsonParse(row.details_json)}));res.json({logs});
@@ -1319,7 +1320,30 @@ app.patch('/api/matches/:matchId',authRequired,requireMatchAccess,(req,res)=>{
   const updated=db.prepare('SELECT * FROM matches WHERE id=?').get(match.id);if(old.server!==updated.server_region)addSystemMessage(match.id,`Server changed to ${updated.server_region}.`);if(old.roomCode!==updated.room_code)addSystemMessage(match.id,updated.room_code?'Room code was updated.':'Room code was removed.');if(old.status!==updated.match_status)addSystemMessage(match.id,`Match status changed to ${updated.match_status}.`);logAction({tournamentId:match.tournament_id,matchId:match.id,userId:req.user.id,action:'match.updated',details:req.body});emitMatchUpdated(updated);res.json({match:updated});
 });
 app.post('/api/tournaments/:id/matches/apply-best-of',authRequired,requireTournamentPermission('match.manage'),(req,res)=>{const bestOf=Number(req.body.bestOf),roundNo=req.body.roundNo==null?null:Number(req.body.roundNo),stage=req.body.stage||null;if(![1,3,5,7].includes(bestOf))return res.status(400).json({error:'Best-of must be BO1, BO3, BO5 or BO7.'});let sql=`UPDATE matches SET best_of=?,updated_at=CURRENT_TIMESTAMP WHERE tournament_id=? AND result_status!='final'`,params=[bestOf,req.tournamentId];if(roundNo!=null){sql+=' AND round_no=?';params.push(roundNo);}if(stage){sql+=' AND stage=?';params.push(stage);}db.prepare(sql).run(...params);const matches=listMatches(req.tournamentId);emitBracketUpdated(req.tournamentId,matches);res.json({matches});});
-app.post('/api/matches/:matchId/checkin',authRequired,emailVerifiedRequired,requireMatchAccess,(req,res)=>{const match=req.match;let actorType=String(req.body.actorType||'');let actorId=String(req.body.actorId||'');if(req.matchTeamId){if(!teamForCaptain(req.user.id,req.matchTeamId))return res.status(403).json({error:'Only the linked Captain can check in the team.'});if(actorType==='team'&&actorId&&actorId!==String(req.matchTeamId))return res.status(400).json({error:'actorId does not match your linked team; you can only check in your own team.'});actorType='team';actorId=String(req.matchTeamId);}else if(!hasTournamentPermission(req.user.id,match.tournament_id,'match.checkin')&&!hasTournamentPermission(req.user.id,match.tournament_id,'match.manage'))return res.status(403).json({error:'Check-in permission required.'});if(!actorType||!actorId)return res.status(400).json({error:'Check-in actor is required.'});db.prepare(`INSERT INTO match_checkins(match_id,actor_type,actor_id,status,checked_in_by) VALUES (?,?,?,'ready',?) ON CONFLICT(match_id,actor_type,actor_id) DO UPDATE SET status='ready',checked_in_by=excluded.checked_in_by,checked_in_at=CURRENT_TIMESTAMP`).run(match.id,actorType,actorId,req.user.id);addSystemMessage(match.id,`${req.user.display_name} checked in ${actorType} ${actorId}.`);const checkins=db.prepare('SELECT * FROM match_checkins WHERE match_id=?').all(match.id);emitInternalTournamentEvent(match.tournament_id,'match:checkin',{tournamentId:match.tournament_id,matchId:match.id,actorType,actorId,status:'ready',checkedInBy:req.user.id,checkins});res.json({checkins});});
+app.post('/api/matches/:matchId/checkin',authRequired,emailVerifiedRequired,requireMatchAccess,(req,res)=>{
+  const match=req.match;
+  let actorType=String(req.body.actorType||'');
+  let actorId=String(req.body.actorId||'');
+  if(req.matchTeamId){
+    if(!teamForCaptain(req.user.id,req.matchTeamId))return res.status(403).json({error:'Only the linked Captain can check in the team.'});
+    if(!['checkin_open','ready'].includes(String(match.match_status||'')))return res.status(409).json({error:'The Host has not opened Captain check-in for this match yet.'});
+    if(actorType==='team'&&actorId&&actorId!==String(req.matchTeamId))return res.status(400).json({error:'actorId does not match your linked team; you can only check in your own team.'});
+    actorType='team';actorId=String(req.matchTeamId);
+  }else if(!hasTournamentPermission(req.user.id,match.tournament_id,'match.checkin')&&!hasTournamentPermission(req.user.id,match.tournament_id,'match.manage'))return res.status(403).json({error:'Check-in permission required.'});
+  if(!actorType||!actorId)return res.status(400).json({error:'Check-in actor is required.'});
+  db.prepare(`INSERT INTO match_checkins(match_id,actor_type,actor_id,status,checked_in_by) VALUES (?,?,?,'ready',?) ON CONFLICT(match_id,actor_type,actor_id) DO UPDATE SET status='ready',checked_in_by=excluded.checked_in_by,checked_in_at=CURRENT_TIMESTAMP`).run(match.id,actorType,actorId,req.user.id);
+  addSystemMessage(match.id,`${req.user.display_name} checked in ${actorType} ${actorId}.`);
+  const checkins=db.prepare('SELECT * FROM match_checkins WHERE match_id=?').all(match.id);
+  const checkedTeamIds=new Set(checkins.filter(item=>item.actor_type==='team'&&item.status==='ready').map(item=>Number(item.actor_id)));
+  const bothTeamsReady=Boolean(match.team_a_id&&match.team_b_id&&checkedTeamIds.has(Number(match.team_a_id))&&checkedTeamIds.has(Number(match.team_b_id)));
+  if(bothTeamsReady&&['available','checkin_open'].includes(match.match_status)){
+    db.prepare(`UPDATE matches SET status='ready',match_status='ready',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
+    addSystemMessage(match.id,'Both teams are checked in. The Host may now open the Draft Room.');
+    emitMatchUpdated(listMatches(match.tournament_id).find(item=>Number(item.id)===Number(match.id)));
+  }
+  emitInternalTournamentEvent(match.tournament_id,'match:checkin',{tournamentId:match.tournament_id,matchId:match.id,actorType,actorId,status:'ready',checkedInBy:req.user.id,bothTeamsReady,checkins});
+  res.json({checkins,bothTeamsReady});
+});
 app.get('/api/matches/:matchId/checkin',authRequired,requireMatchAccess,(req,res)=>res.json({checkins:db.prepare('SELECT * FROM match_checkins WHERE match_id=?').all(req.match.id)}));
 
 // Result state machine
@@ -1468,11 +1492,11 @@ function draftRoomPayload(req, room, access) {
 
 function draftRoomAccessForRequest(req, room, access) {
   let role = null;
-  if (Number(req.matchTeamId) === Number(req.match?.team_a_id)) role = 'teamA';
-  else if (Number(req.matchTeamId) === Number(req.match?.team_b_id)) role = 'teamB';
-  else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control')) role = 'host';
+  if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control')) role = 'host';
   else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'dispute.review')) role = 'referee';
   else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'broadcast.control')) role = 'broadcaster';
+  else if (Number(req.matchTeamId) === Number(req.match?.team_a_id) && teamForCaptain(req.user.id, req.matchTeamId)) role = 'teamA';
+  else if (Number(req.matchTeamId) === Number(req.match?.team_b_id) && teamForCaptain(req.user.id, req.matchTeamId)) role = 'teamB';
   if (!role || !access[role]) return null;
   const route = role === 'broadcaster' ? '/broadcast.html' : '/draft-room.html';
   return {
@@ -1893,7 +1917,7 @@ app.get('/api/matches/:matchId/draft-room/access', authRequired, emailVerifiedRe
   if (!room) return res.status(404).json({ error: 'Draft Room has not been opened by the Host yet.' });
   const access = jsonParse(room.access_json);
   const result = draftRoomAccessForRequest(req, room, access);
-  if (!result) return res.status(403).json({ error: 'No Draft Room role is assigned to this account.' });
+  if (!result) return res.status(403).json({ error: 'Only the linked Team Captain can enter and control this team Draft Room.' });
   res.json(result);
 });
 
@@ -1991,6 +2015,14 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
   let room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(match.id);
   let access;
   if (!room) {
+    const tournament = db.prepare('SELECT source_platform FROM tournaments WHERE id=?').get(match.tournament_id);
+    if (tournament?.source_platform !== 'quick_draft') {
+      const checkins = db.prepare(`SELECT actor_id FROM match_checkins WHERE match_id=? AND actor_type='team' AND status='ready'`).all(match.id);
+      const checkedTeamIds = new Set(checkins.map(item => Number(item.actor_id)));
+      if (!checkedTeamIds.has(Number(match.team_a_id)) || !checkedTeamIds.has(Number(match.team_b_id))) {
+        return res.status(409).json({ error: 'Both Team Captains must check in before the Host opens the Draft Room.' });
+      }
+    }
     const roomCode = randomCode(8);
     access = { host: randomCode(32), teamA: randomCode(32), teamB: randomCode(32), referee: randomCode(32), broadcaster: randomCode(32) };
     const effectiveRules = { ...jsonParse(match.tournament_rules_json), ...jsonParse(match.rules_json) };
@@ -2116,8 +2148,18 @@ app.post('/api/matches/:matchId/draft-room/next-game', authRequired, requireMatc
     res.status(error.status || 400).json({ error: clientErrorMessage(error) });
   }
 });
+function canUseTournamentDraftRole(userId,room,role){
+  const match=canAccessMatch(userId,room.match_id);
+  if(!match.match)return false;
+  if(role==='teamA')return Boolean(teamForCaptain(userId,match.match.team_a_id));
+  if(role==='teamB')return Boolean(teamForCaptain(userId,match.match.team_b_id));
+  if(role==='host')return hasTournamentPermission(userId,match.match.tournament_id,'draft.control');
+  if(role==='referee')return hasTournamentPermission(userId,match.match.tournament_id,'dispute.review');
+  if(role==='broadcaster')return hasTournamentPermission(userId,match.match.tournament_id,'broadcast.control');
+  return false;
+}
 app.post('/api/public/draft-rooms/:roomCode/access',(req,res)=>{
-  const room=db.prepare(`SELECT dr.*,m.tournament_id FROM draft_rooms dr JOIN matches m ON m.id=dr.match_id WHERE dr.room_code=?`)
+  const room=db.prepare(`SELECT dr.*,m.tournament_id,t.source_platform FROM draft_rooms dr JOIN matches m ON m.id=dr.match_id JOIN tournaments t ON t.id=m.tournament_id WHERE dr.room_code=?`)
     .get(String(req.params.roomCode||'').toUpperCase());
   if(!room)return res.status(404).json({error:'Draft room not found.'});
   const accessToken=String(req.body.accessToken||'');
@@ -2126,7 +2168,18 @@ app.post('/api/public/draft-rooms/:roomCode/access',(req,res)=>{
     securityLog('draft.access_denied',{roomCodeHash:anonymize(req.params.roomCode),ipHash:anonymize(clientIp(req))});
     return res.status(403).json({error:'Invalid draft-room access link.'});
   }
-  const ticket=issueDraftSocketTicket({roomId:room.id,role});
+  let userId=null;
+  if(room.source_platform!=='quick_draft'){
+    let auth=null;
+    try{auth=authenticateAccessToken(accessTokenFromRequest(req));}catch{}
+    if(!auth)return res.status(401).json({error:'Sign in with the account assigned to this tournament Draft role.'});
+    if(!canUseTournamentDraftRole(auth.user.id,room,role)){
+      securityLog('draft.account_role_denied',{roomId:room.id,role,userId:auth.user.id});
+      return res.status(403).json({error:role==='teamA'||role==='teamB'?'Only the linked Team Captain can use this team Draft link.':'This tournament Draft role is not assigned to your account.'});
+    }
+    userId=auth.user.id;
+  }
+  const ticket=issueDraftSocketTicket({roomId:room.id,role,userId});
   const messages=db.prepare(`SELECT id,sender_role,sender_name,message,message_type,file_id,pinned,created_at
     FROM match_messages WHERE match_id=? AND deleted_at IS NULL ORDER BY id ASC LIMIT 300`).all(room.match_id);
   res.json({
@@ -2145,11 +2198,11 @@ function socketRequestLike(socket){
 function resolveDraftRoleForUser(room,userId){
   const match=canAccessMatch(userId,room.match_id);
   if(!match.allowed)return null;
-  if(match.teamId===match.match.team_a_id)return 'teamA';
-  if(match.teamId===match.match.team_b_id)return 'teamB';
   if(hasTournamentPermission(userId,match.match.tournament_id,'draft.control'))return 'host';
   if(hasTournamentPermission(userId,match.match.tournament_id,'dispute.review'))return 'referee';
   if(hasTournamentPermission(userId,match.match.tournament_id,'broadcast.control'))return 'broadcaster';
+  if(match.teamId===match.match.team_a_id&&teamForCaptain(userId,match.teamId))return 'teamA';
+  if(match.teamId===match.match.team_b_id&&teamForCaptain(userId,match.teamId))return 'teamB';
   return null;
 }
 function validSocketObject(value,maxBytes=32*1024){

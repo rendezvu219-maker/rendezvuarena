@@ -60,13 +60,20 @@ async function tokenFromAccessUrl(url) {
   return exchanged.payload.token;
 }
 
+async function tokenFromPassword(username, password) {
+  const login = await request('/api/auth/login', {
+    method: 'POST', body: { identity: username, password },
+  });
+  return login.payload.token;
+}
+
 function fragmentValue(url, key) {
   return new URLSearchParams(new URL(url, base).hash.slice(1)).get(key);
 }
 
-async function connectDraftRole(roomCode, accessToken) {
+async function connectDraftRole(roomCode, accessToken, accountToken) {
   const exchange = await request(`/api/public/draft-rooms/${roomCode}/access`, {
-    method: 'POST', body: { accessToken },
+    token: accountToken, method: 'POST', body: { accessToken },
   });
   return new Promise((resolve, reject) => {
     const socket = io(base, {
@@ -105,6 +112,16 @@ try {
   const tournament = await request(`/api/tournaments/${live.id}`, { token: hostToken });
   const match = tournament.payload.matches.find(item => item.team_a_id && item.team_b_id && item.result_status !== 'final');
   assert.ok(match, 'The live tournament must contain a playable match.');
+  const teamARecord = tournament.payload.teams.find(item => Number(item.id) === Number(match.team_a_id));
+  const teamBRecord = tournament.payload.teams.find(item => Number(item.id) === Number(match.team_b_id));
+  const captainAPersona = suite.users.find(item => Number(item.id) === Number(teamARecord?.captain_user_id));
+  const captainBPersona = suite.users.find(item => Number(item.id) === Number(teamBRecord?.captain_user_id));
+  const playerAMember = teamARecord?.members.find(item => !item.is_captain && item.user_id);
+  const playerAPersona = suite.users.find(item => Number(item.id) === Number(playerAMember?.user_id));
+  assert.ok(captainAPersona && captainBPersona && playerAPersona, 'Both Captains and a normal roster member must be available.');
+  const captainAToken = await tokenFromPassword(captainAPersona.username, created.payload.password);
+  const captainBToken = await tokenFromPassword(captainBPersona.username, created.payload.password);
+  const playerAToken = await tokenFromPassword(playerAPersona.username, created.payload.password);
 
   const selectable = await request('/api/broadcast/matches', { token: broadcasterToken });
   assert.ok(selectable.payload.matches.some(item => Number(item.id) === Number(match.id)),
@@ -113,13 +130,37 @@ try {
   const opened = await request(`/api/matches/${match.id}/draft-room`, { token: hostToken, method: 'POST' });
   const room = opened.payload.room;
   assert.ok(room?.roomCode && room?.links?.teamA && room?.links?.teamB && room?.links?.host);
+  const teamAAccess = fragmentValue(room.links.teamA, 'access');
 
-  const teamA = await connectDraftRole(room.roomCode, fragmentValue(room.links.teamA, 'access'));
+  const anonymousTeamExchange = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    method: 'POST', body: { accessToken: teamAAccess }, allowError: true,
+  });
+  assert.equal(anonymousTeamExchange.response.status, 401, 'Tournament Draft links must require an assigned signed-in account.');
+  const memberTeamExchange = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    token: playerAToken, method: 'POST', body: { accessToken: teamAAccess }, allowError: true,
+  });
+  assert.equal(memberTeamExchange.response.status, 403, 'A normal roster member must not exchange the Captain team capability.');
+  const memberPortalAccess = await request(`/api/matches/${match.id}/draft-room/access`, {
+    token: playerAToken, allowError: true,
+  });
+  assert.equal(memberPortalAccess.response.status, 403, 'A normal roster member must not receive a team Draft link from the portal API.');
+
+  const memberSocket = io(base, { transports: ['websocket'], auth: { token: playerAToken } });
+  sockets.push(memberSocket);
+  await new Promise((resolve, reject) => {
+    memberSocket.once('connect_error', reject);
+    memberSocket.once('connect', resolve);
+  });
+  const memberJoin = await new Promise(resolve => memberSocket.emit('draft:join', { roomCode: room.roomCode }, resolve));
+  assert.equal(memberJoin.ok, false, 'A linked roster member must not bypass the Captain restriction through an account Socket.');
+  assert.match(memberJoin.error, /access denied/i);
+
+  const teamA = await connectDraftRole(room.roomCode, teamAAccess, captainAToken);
   sockets.push(teamA.socket);
   assert.equal(teamA.result.authorityRole, 'teamA', 'Team A becomes authority when no Host is connected.');
   assert.equal(teamA.result.authoritySocketId, teamA.socket.id);
 
-  const teamB = await connectDraftRole(room.roomCode, fragmentValue(room.links.teamB, 'access'));
+  const teamB = await connectDraftRole(room.roomCode, fragmentValue(room.links.teamB, 'access'), captainBToken);
   sockets.push(teamB.socket);
   assert.equal(teamB.result.authorityRole, 'teamA', 'Team A remains the elected fallback authority.');
 
@@ -141,7 +182,7 @@ try {
   assert.equal((await teamBState).preDraft.stage, 'complete', 'The elected team authority can publish the shared Draft state.');
 
   const hostAuthoritySeen = waitForEvent(teamA.socket, 'draft:authority');
-  const host = await connectDraftRole(room.roomCode, fragmentValue(room.links.host, 'access'));
+  const host = await connectDraftRole(room.roomCode, fragmentValue(room.links.host, 'access'), hostToken);
   sockets.push(host.socket);
   const hostAuthority = await hostAuthoritySeen;
   assert.equal(hostAuthority.role, 'host', 'Host takes authority only while a Host view is connected.');

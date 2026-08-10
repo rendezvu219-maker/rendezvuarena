@@ -128,14 +128,14 @@ function once(socket, event, timeout = 3000) {
   });
 }
 
-async function exchangeDraftTicket(instance, link) {
+async function exchangeDraftTicket(instance, link, token) {
   const params = fragmentParams(link, instance.base);
   const roomCode = params.get('room');
   const accessToken = params.get('access');
   assert.ok(roomCode && accessToken, 'Draft credentials must be present only in the URL fragment.');
   assert.equal(new URL(link, instance.base).searchParams.has('access'), false, 'Draft access token must never be placed in the query string.');
   const result = await request(instance, `/api/public/draft-rooms/${encodeURIComponent(roomCode)}/access`, {
-    method: 'POST', body: { accessToken },
+    token, method: 'POST', body: { accessToken },
   });
   assert.equal(result.response.status, 200);
   return { roomCode, accessToken, ticket: result.payload.socketTicket, room: result.payload.room };
@@ -297,6 +297,8 @@ try {
   const suite = fixture.payload.suite;
   const live = suite.tournaments.find(item => item.scenario === 'live');
   const hostToken = await exchangeDevAccess(mainServer, suite.quickLinks.host);
+  const captainToken = await exchangeDevAccess(mainServer, suite.quickLinks.captainA);
+  const broadcasterToken = await exchangeDevAccess(mainServer, suite.quickLinks.broadcaster);
   const detail = await request(mainServer, `/api/tournaments/${live.id}`, { token: hostToken });
   const match = detail.payload.matches.find(item => item.team_a_id && item.team_b_id);
   assert.ok(match);
@@ -363,9 +365,15 @@ try {
   const teamParams = fragmentParams(teamLink, mainServer.base);
   const teamRoomCode = teamParams.get('room');
   const teamAccessToken = teamParams.get('access');
-  const draftExchangeWithoutCsrf = await fetch(`${mainServer.base}/api/public/draft-rooms/${encodeURIComponent(teamRoomCode)}/access`, {
+  const anonymousDraftExchange = await fetch(`${mainServer.base}/api/public/draft-rooms/${encodeURIComponent(teamRoomCode)}/access`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessToken: teamAccessToken }),
+  });
+  assert.equal(anonymousDraftExchange.status, 401, 'A tournament team capability must also require the assigned Captain account.');
+  const draftExchangeWithoutCsrf = await fetch(`${mainServer.base}/api/public/draft-rooms/${encodeURIComponent(teamRoomCode)}/access`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${captainToken}` },
     body: JSON.stringify({ accessToken: teamAccessToken }),
   });
   assert.equal(draftExchangeWithoutCsrf.status, 200, 'Draft access exchange must remain CSRF-exempt.');
@@ -383,7 +391,7 @@ try {
   teamSocket.emit('draft:chat', { roomCode: firstExchange.roomCode, message: 'bad', unexpected: 'key' });
   assert.match((await badPayloadError).message, /invalid|oversized/i);
   teamSocket.disconnect();
-  const reconnectExchange = await exchangeDraftTicket(mainServer, teamLink);
+  const reconnectExchange = await exchangeDraftTicket(mainServer, teamLink, captainToken);
   const reconnectedTeamSocket = await connectSocket(mainServer, { auth: { draftTicket: reconnectExchange.ticket } });
   sockets.push(reconnectedTeamSocket);
   const rejoin = await emitAck(reconnectedTeamSocket, 'draft:join', { roomCode: reconnectExchange.roomCode });
@@ -394,7 +402,7 @@ try {
   assert.equal(chatMessage.message, 'Chat still works after reconnect.');
 
   // MEDIUM: broadcaster remains read-only and cannot send Match Chat.
-  const broadcasterExchange = await exchangeDraftTicket(mainServer, suite.quickLinks.broadcast);
+  const broadcasterExchange = await exchangeDraftTicket(mainServer, suite.quickLinks.broadcast, broadcasterToken);
   const broadcasterSocket = await connectSocket(mainServer, { auth: { draftTicket: broadcasterExchange.ticket } });
   sockets.push(broadcasterSocket);
   const broadcasterJoin = await emitAck(broadcasterSocket, 'draft:join', { roomCode: broadcasterExchange.roomCode });
@@ -414,7 +422,7 @@ try {
   assert.equal(oldLinkAfterRotation.response.status, 403, 'A rotated role capability must stop exchanging tickets immediately.');
   const newTeamLink = rotatedAccess.payload.room.links.teamA;
   assert.ok(newTeamLink && newTeamLink !== teamLink);
-  const newLinkExchange = await exchangeDraftTicket(mainServer, newTeamLink);
+  const newLinkExchange = await exchangeDraftTicket(mainServer, newTeamLink, captainToken);
   assert.ok(newLinkExchange.ticket);
 
   // Static regressions: no remote Google font/hero runtime dependency, no credential query parsing, reconnect is wired on every connection loss.

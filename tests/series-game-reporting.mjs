@@ -189,6 +189,7 @@ try {
   const nextGameUrl = new URL(confirmGame1.payload.nextDraftUrl);
   const nextGameAccess = new URLSearchParams(nextGameUrl.hash.slice(1));
   const nextGameExchange = await request(`/api/public/draft-rooms/${nextGameAccess.get('room')}/access`, {
+    token: captainBToken,
     method: 'POST',
     body: { accessToken: nextGameAccess.get('access') },
   });
@@ -221,6 +222,7 @@ try {
   const game3Url = new URL(confirmGame2.payload.nextDraftUrl);
   const game3Access = new URLSearchParams(game3Url.hash.slice(1));
   const game3Exchange = await request(`/api/public/draft-rooms/${game3Access.get('room')}/access`, {
+    token: captainAToken,
     method: 'POST',
     body: { accessToken: game3Access.get('access') },
   });

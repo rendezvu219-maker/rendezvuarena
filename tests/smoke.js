@@ -53,9 +53,9 @@ async function register(index, role = 'player') {
     body: { displayName: `Smoke ${name}`, username: name, password: 'Password123!', passwordConfirmation: 'Password123!', role },
   });
 }
-async function connectRoom(roomCode, accessToken) {
+async function connectRoom(roomCode, accessToken, accountToken) {
   const exchanged = await request(`/api/public/draft-rooms/${encodeURIComponent(roomCode)}/access`, {
-    method: 'POST', body: { accessToken },
+    token: accountToken, method: 'POST', body: { accessToken },
   });
   return new Promise((resolve, reject) => {
     const socket = io(base, { transports: ['websocket'], auth: { draftTicket: exchanged.socketTicket } });
@@ -157,8 +157,13 @@ function accessFromFragment(url) {
       token: hostToken, method: 'POST', body: { bestOf: 3, randomize: false, allowWarnings: true },
     });
     assert(bracket.matches.filter(match => match.stage === 'playoff').length === 7, 'Six-team single elimination should reserve seven matches.');
+    const preStartMatch = bracket.matches.find(match => match.team_a_id && match.team_b_id);
+    const preStartCaptain = teams.find(team => team.id === preStartMatch.team_a_id).captainToken;
+    const closedCheckin = await request(`/api/matches/${preStartMatch.id}/checkin`, { token: preStartCaptain, method: 'POST', body: {}, expectError: true });
+    assert(closedCheckin.response.status === 409 && /has not opened Captain check-in/i.test(closedCheckin.payload.error), 'Captain check-in must stay closed until the Host starts the tournament.');
     const started = await request(`/api/tournaments/${tournamentId}/start`, { token: hostToken, method: 'POST' });
     assert(started.tournament.status === 'ongoing', 'Host should be able to start a preflight-ready generated tournament.');
+    assert(started.openedCheckinCount > 0, 'Starting the tournament should open Captain check-in for playable matches.');
     tournament = await request(`/api/tournaments/${tournamentId}`, { token: hostToken });
     const playable = tournament.matches.find(match => match.team_a_id && match.team_b_id && match.result_status !== 'final');
     assert(playable, 'A playable match should exist.');
@@ -226,6 +231,13 @@ function accessFromFragment(url) {
     const draftMatch = tournament.matches.find(match => match.team_a_id && match.team_b_id && match.id !== playable.id && match.result_status !== 'final');
     assert(draftMatch, 'Another playable match should exist for Draft Room tests.');
     await request(`/api/matches/${draftMatch.id}`, { token: hostToken, method: 'PATCH', body: { seriesRule: 'fearless', bestOf: 3 } });
+    const earlyDraft = await request(`/api/matches/${draftMatch.id}/draft-room`, { token: hostToken, method: 'POST', body: {}, expectError: true });
+    assert(earlyDraft.response.status === 409 && /Captains must check in/i.test(earlyDraft.payload.error), 'Host must not open a tournament Draft Room before both Captain check-ins.');
+    const draftTeamAToken = teams.find(team => team.id === draftMatch.team_a_id).captainToken;
+    const draftTeamBToken = teams.find(team => team.id === draftMatch.team_b_id).captainToken;
+    await request(`/api/matches/${draftMatch.id}/checkin`, { token: draftTeamAToken, method: 'POST', body: {} });
+    const readyCheckin = await request(`/api/matches/${draftMatch.id}/checkin`, { token: draftTeamBToken, method: 'POST', body: {} });
+    assert(readyCheckin.bothTeamsReady, 'Both Captain check-ins should make the match ready for its Draft Room.');
     const draft = await request(`/api/matches/${draftMatch.id}/draft-room`, { token: hostToken, method: 'POST' });
     assert(draft.room.config.seriesRule === 'fearless', 'Series rule should flow into Draft Room config.');
     assert(draft.room.config.protectList.includes('0001'), 'Protected hero rules should flow into Draft Room config.');
@@ -236,8 +248,8 @@ function accessFromFragment(url) {
     assert(!draft.room.links.spectator, 'Draft Room must not create a spectator account/link.');
     const hostAccess = accessFromFragment(draft.room.links.host);
     const teamAAccess = accessFromFragment(draft.room.links.teamA);
-    const hostSocket = await connectRoom(draft.room.roomCode, hostAccess);
-    const teamASocket = await connectRoom(draft.room.roomCode, teamAAccess);
+    const hostSocket = await connectRoom(draft.room.roomCode, hostAccess, hostToken);
+    const teamASocket = await connectRoom(draft.room.roomCode, teamAAccess, draftTeamAToken);
     sockets.push(hostSocket.socket, teamASocket.socket);
     assert(hostSocket.result.role === 'host' && teamASocket.result.role === 'teamA', 'Draft roles should resolve correctly.');
 
@@ -253,8 +265,6 @@ function accessFromFragment(url) {
       state: { status: 'complete', engine: { state: 'complete', teamA: { picks: ['0001'], bans: ['0005'] }, teamB: { picks: ['0002'], bans: ['0006'] } }, chosenDivineRules: [] },
     });
     await new Promise(resolve => setTimeout(resolve, 150));
-    const draftTeamAToken = teams.find(team => team.id === draftMatch.team_a_id).captainToken;
-    const draftTeamBToken = teams.find(team => team.id === draftMatch.team_b_id).captainToken;
     const gameReport = await request(`/api/matches/${draftMatch.id}/games/current/report`, { token: draftTeamAToken, method: 'POST', body: { winnerSide: 'A' } });
     assert(gameReport.game.result_status === 'awaiting_confirmation', 'Game 1 should wait for the opposing Captain confirmation.');
     const nextDraft = await request(`/api/matches/${draftMatch.id}/games/current/confirm`, { token: draftTeamBToken, method: 'POST', body: { decision: 'confirm' } });
