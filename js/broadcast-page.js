@@ -1,6 +1,6 @@
 import { DraftEngine } from './draft.js';
 import { HEROES, PICKS_PER_TEAM } from './heroes.js';
-import { BroadcastUI } from './broadcast.js?v=0.6.40-broadcast-side-orbit-4';
+import { BroadcastUI } from './broadcast.js?v=0.6.41-broadcast-hero-hold';
 import { loadDraftConfigFromUrl } from './app.js';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';
@@ -271,7 +271,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else if (type === 'draft:completed') {
         engine.state = 'complete';
         engine.stopTimer();
-        overlay.setStatusScreen('DRAFT COMPLETE', 'FINAL TEAM COMPOSITIONS LOCKED');
+        // Keep the final hero reveal visible. With no next pick, it is the
+        // natural last frame for the Broadcast overlay.
+        overlay.updatePhase(null);
+        document.getElementById('bc-timer').textContent = '—';
       }
     });
 
@@ -297,7 +300,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (status === 'reconnecting') overlay.setStatusScreen('RECONNECTING', `RESYNC ATTEMPT ${attempt}`);
       if (status === 'resynced') {
         overlay.syncFromEngine();
-        overlay.setStatusScreen('', '');
       }
     });
     sync.on('error', error => console.warn(error?.message || error));

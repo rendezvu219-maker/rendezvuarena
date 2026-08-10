@@ -126,6 +126,16 @@ export class DraftUI {
     return (parts.length === 1 ? parts[0].slice(0, 2) : parts.slice(0, 2).map(part => part[0]).join('')).toUpperCase();
   }
 
+  setTeamName(root, value) {
+    if (!root) return;
+    const name = String(value || 'TEAM').trim() || 'TEAM';
+    const length = [...name].length;
+    root.textContent = name;
+    root.title = name;
+    root.classList.toggle('is-long-team-name', length > 22);
+    root.classList.toggle('is-very-long-team-name', length > 38);
+  }
+
   setLogo(root, url, name) {
     if (!root) return;
     const image = root.querySelector('img');
@@ -145,7 +155,7 @@ export class DraftUI {
     for (const teamKey of ['teamA', 'teamB']) {
       const entrant = this.entrant(teamKey);
       const name = document.getElementById(`pre-draft-name-${teamKey}`);
-      if (name) name.textContent = entrant.name;
+      this.setTeamName(name, entrant.name);
       this.setLogo(document.getElementById(`pre-draft-logo-${teamKey}`), entrant.logo, entrant.name);
     }
   }
@@ -186,8 +196,8 @@ export class DraftUI {
 
     const nameA = document.getElementById('team-a-name');
     const nameB = document.getElementById('team-b-name');
-    if (nameA) nameA.textContent = blue.name;
-    if (nameB) nameB.textContent = red.name;
+    this.setTeamName(nameA, blue.name);
+    this.setTeamName(nameB, red.name);
     this.setLogo(document.getElementById('header-team-a-logo'), blue.logo, blue.name);
     this.setLogo(document.getElementById('header-team-b-logo'), red.logo, red.name);
     document.getElementById('draft-view')?.classList.toggle('side-pending', !revealHeader);
@@ -546,8 +556,8 @@ export class DraftUI {
     if (this.sideAssignment) this.applySideAssignment(this.sideAssignment);
     else {
       this.setSidePending(Boolean(this.config.enableCoinFlip));
-      document.getElementById('team-a-name').textContent = this.config.enableCoinFlip ? 'SIDE PENDING' : this.engine.config.teamA;
-      document.getElementById('team-b-name').textContent = this.config.enableCoinFlip ? 'SIDE PENDING' : this.engine.config.teamB;
+      this.setTeamName(document.getElementById('team-a-name'), this.config.enableCoinFlip ? 'SIDE PENDING' : this.engine.config.teamA);
+      this.setTeamName(document.getElementById('team-b-name'), this.config.enableCoinFlip ? 'SIDE PENDING' : this.engine.config.teamB);
     }
     document.getElementById('match-stage-text').textContent = `${this.config.format} — ${t('game')} ${Number(this.config.gameNumber || 1)} · ${this.config.seriesRule === 'normal' ? t('normal') : String(this.config.seriesRule || '').replaceAll('_', ' ').toUpperCase()}`;
     this.updateSeriesScoreDisplay();
@@ -1977,8 +1987,8 @@ if (this.engine.selectedHero === h.id) {
     });
     const nameA = document.getElementById('series-team-a-name');
     const nameB = document.getElementById('series-team-b-name');
-    if (nameA) nameA.textContent = this.teamForSide('A').name;
-    if (nameB) nameB.textContent = this.teamForSide('B').name;
+    this.setTeamName(nameA, this.teamForSide('A').name);
+    this.setTeamName(nameB, this.teamForSide('B').name);
   }
 
   bindSeriesControl() {

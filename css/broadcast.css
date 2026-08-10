@@ -139,7 +139,9 @@ body.broadcast-page { background: transparent; }
 .bc-side-card-logo span { color:#fff; font:900 1.15rem/1 var(--font-display); letter-spacing:.08em; }
 .bc-side-card > div:last-child { min-width:0; display:grid; gap:7px; }
 .bc-side-card small { color:rgba(255,255,255,.48); font:700 .52rem/1 var(--font-display); letter-spacing:.16em; }
-.bc-side-card strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff; font:900 clamp(.72rem,1.15vw,1.02rem)/1.15 var(--font-display); letter-spacing:.05em; }
+.bc-side-card strong { max-width:100%; overflow-wrap:anywhere; white-space:normal; color:#fff; font:900 clamp(.62rem,1.05vw,1.02rem)/1.08 var(--font-display); letter-spacing:.04em; text-wrap:balance; }
+.bc-side-card strong.is-long-team-name { font-size:clamp(.56rem,.85vw,.8rem); }
+.bc-side-card strong.is-very-long-team-name { font-size:clamp(.5rem,.72vw,.7rem); letter-spacing:.02em; }
 .bc-side-assignment.is-revealing .bc-side-orbit::before { border-color:rgba(240,194,74,.34); box-shadow:0 0 45px rgba(240,194,74,.13), inset 0 0 30px rgba(240,194,74,.035); }
 .bc-side-assignment.is-docking .bc-side-orbit::before,
 .bc-side-assignment.is-docking .bc-side-orbit::after { opacity:0; transition:opacity .18s ease; }
@@ -157,8 +159,8 @@ body.broadcast-page { background: transparent; }
 
 /* Ban row shares the exact column geometry of the pick row beneath it. */
 .bc-team-ban-dock { min-width: 0; display: grid; align-items: end; }
-.bc-team-ban-dock-a { grid-template-columns: minmax(0, 1fr) minmax(150px, 31%); }
-.bc-team-ban-dock-b { grid-template-columns: minmax(150px, 31%) minmax(0, 1fr); }
+.bc-team-ban-dock-a { grid-template-columns:minmax(0,1fr) minmax(180px,36%); }
+.bc-team-ban-dock-b { grid-template-columns:minmax(180px,36%) minmax(0,1fr); }
 .bc-ban-spacer { min-width: 0; }
 .bc-team-bans { min-width: 0; height: 68px; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.1); border-bottom: 0; background: rgba(3,6,13,.9); box-shadow: 0 -8px 24px rgba(0,0,0,.2); }
 .bc-team-bans-a { justify-content: flex-start; border-left: 4px solid var(--team-left-primary); border-radius: 12px 12px 0 0; background: linear-gradient(90deg, color-mix(in srgb, var(--team-left-primary) 17%, rgba(3,6,13,.94)), rgba(3,6,13,.92)); }
@@ -174,10 +176,10 @@ body.broadcast-page { background: transparent; }
 
 /* Logo + team + score + four picks stay on one line. */
 .bc-team-lineup { min-width: 0; display: grid; align-items: stretch; gap: 12px; padding: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(3,6,13,.94); box-shadow: 0 -8px 30px rgba(0,0,0,.28); }
-.bc-team-lineup-a { grid-template-columns: minmax(0, 1fr) minmax(150px, 31%); border-left: 4px solid var(--team-left-primary); border-radius: 12px 0 14px 14px; }
-.bc-team-lineup-b { grid-template-columns: minmax(150px, 31%) minmax(0, 1fr); border-right: 4px solid var(--team-right-primary); border-radius: 0 12px 14px 14px; }
-.bc-team-identity { min-width: 0; display: grid; grid-template-columns: 54px minmax(0, 1fr) 42px; align-items: center; gap: 10px; }
-.bc-team-identity-b { grid-template-columns: 42px minmax(0, 1fr) 54px; text-align: right; }
+.bc-team-lineup-a { grid-template-columns:minmax(0,1fr) minmax(180px,36%); border-left: 4px solid var(--team-left-primary); border-radius: 12px 0 14px 14px; }
+.bc-team-lineup-b { grid-template-columns:minmax(180px,36%) minmax(0,1fr); border-right: 4px solid var(--team-right-primary); border-radius: 0 12px 14px 14px; }
+.bc-team-identity { min-width:0; display:grid; grid-template-columns:clamp(38px,3vw,54px) minmax(0,1fr) clamp(28px,2.3vw,42px); align-items:center; gap:clamp(5px,.55vw,10px); }
+.bc-team-identity-b { grid-template-columns:clamp(28px,2.3vw,42px) minmax(0,1fr) clamp(38px,3vw,54px); text-align:right; }
 .bc-team-logo { width: 54px; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,.18); border-radius: 12px; background: linear-gradient(135deg, rgba(48,116,255,.28), rgba(48,116,255,.08)); }
 .bc-team-lineup-b .bc-team-logo { background: linear-gradient(135deg, rgba(224,47,69,.28), rgba(224,47,69,.08)); }
 .bc-team-logo img { width: 100%; height: 100%; object-fit: contain; display: none; }
@@ -186,7 +188,9 @@ body.broadcast-page { background: transparent; }
 .bc-team-logo span { color: #fff; font: 900 1rem/1 var(--font-display); letter-spacing: .08em; }
 .bc-team-copy { min-width: 0; display: grid; gap: 4px; }
 .bc-team-copy small { color: rgba(255,255,255,.46); font: 700 .48rem/1 var(--font-display); letter-spacing: .18em; }
-.bc-team-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font: 900 .86rem/1.1 var(--font-display); letter-spacing: .05em; }
+.bc-team-copy strong { max-width:100%; overflow-wrap:anywhere; white-space:normal; color:#fff; font:900 clamp(.56rem,.72vw,.86rem)/1.05 var(--font-display); letter-spacing:.035em; text-wrap:balance; }
+.bc-team-copy strong.is-long-team-name { font-size:clamp(.42rem,.52vw,.6rem); letter-spacing:.02em; }
+.bc-team-copy strong.is-very-long-team-name { font-size:clamp(.32rem,.42vw,.46rem); letter-spacing:0; }
 .bc-team-score { display: grid; place-items: center; color: #fff; font: 900 2rem/1 var(--font-display); }
 .bc-team-picks { min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .bc-pick-card { position: relative; min-width: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: rgba(0,0,0,.38); }
@@ -220,8 +224,8 @@ body.broadcast-page { background: transparent; }
   .bc-ban-card { width: 44px; height: 44px; }
   .bc-ban-x { font-size: 3rem; }
   .bc-team-lineup { gap: 6px; padding: 7px; }
-  .bc-team-ban-dock-a, .bc-team-lineup-a { grid-template-columns: minmax(0,1fr) minmax(104px, 30%); }
-  .bc-team-ban-dock-b, .bc-team-lineup-b { grid-template-columns: minmax(104px, 30%) minmax(0,1fr); }
+  .bc-team-ban-dock-a, .bc-team-lineup-a { grid-template-columns:minmax(0,1fr) minmax(128px,36%); }
+  .bc-team-ban-dock-b, .bc-team-lineup-b { grid-template-columns:minmax(128px,36%) minmax(0,1fr); }
   .bc-team-identity { grid-template-columns: 38px minmax(0,1fr) 24px; gap: 5px; }
   .bc-team-identity-b { grid-template-columns: 24px minmax(0,1fr) 38px; }
   .bc-team-logo { width: 38px; }
@@ -352,11 +356,11 @@ body.broadcast-page { background: transparent; }
 }
 .bc-selector-versus strong {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
   color: #fff;
-  font: 800 .86rem/1.2 var(--font-display);
+  font: 800 clamp(.68rem,1.2vw,.86rem)/1.12 var(--font-display);
+  text-wrap: balance;
 }
 .bc-selector-versus em {
   color: var(--interactive-primary);

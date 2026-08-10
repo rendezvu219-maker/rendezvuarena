@@ -3,9 +3,11 @@ import { readFile } from 'node:fs/promises';
 
 const script = await readFile(new URL('../js/broadcast.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../css/broadcast.css', import.meta.url), 'utf8');
+const draftCss = await readFile(new URL('../css/draft.css', import.meta.url), 'utf8');
 const page = await readFile(new URL('../js/broadcast-page.js', import.meta.url), 'utf8');
 const heroes = await readFile(new URL('../js/heroes.js', import.meta.url), 'utf8');
 const draftRoomApp = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+const draftRoomHtml = await readFile(new URL('../draft-room.html', import.meta.url), 'utf8');
 
 const aLineup = script.match(/<section class="bc-team-lineup bc-team-lineup-a">([\s\S]*?)<\/section>/)?.[1] || '';
 const bLineup = script.match(/<section class="bc-team-lineup bc-team-lineup-b">([\s\S]*?)<\/section>/)?.[1] || '';
@@ -14,8 +16,8 @@ assert.ok(bLineup.indexOf('bc-team-identity') < bLineup.indexOf('bc-team-b-picks
 assert.match(script, /renderHostBans/);
 assert.match(page, /all-random:bans/);
 assert.match(css, /host-ban-rail/);
-assert.match(css, /bc-team-ban-dock-a \{ grid-template-columns: minmax\(0, 1fr\)/);
-assert.match(css, /bc-team-ban-dock-b \{ grid-template-columns: minmax\(150px, 31%\)/);
+assert.match(css, /bc-team-ban-dock-a \{ grid-template-columns:minmax\(0,1fr\) minmax\(180px,36%\)/);
+assert.match(css, /bc-team-ban-dock-b \{ grid-template-columns:minmax\(180px,36%\) minmax\(0,1fr\)/);
 
 const eventBannerStart = script.indexOf('<header class="bc-event-banner"');
 const heroStageStart = script.indexOf('<section class="bc-hero-stage"');
@@ -38,8 +40,24 @@ assert.doesNotMatch(script, /teamA\.bans, \.\.\.this\.engine\.teamA\.divineBans/
 assert.match(script, /getHeroTrailerUrls/);
 assert.match(heroes, /\/assets\/trailers\/\$\{heroId\}\.mp4/);
 assert.match(heroes, /\/assets\/trailers\/\$\{heroId\}\.png/);
-assert.match(script, /video\.onended = showPosterAndWait/);
-assert.match(script, /preserveMedia: true/);
+assert.match(script, /const BROADCAST_HERO_REVEAL_SECONDS = 3;/);
+assert.match(script, /video\.ontimeupdate = \(\) =>/);
+assert.match(script, /video\.currentTime >= BROADCAST_HERO_REVEAL_SECONDS/);
+assert.match(script, /video\.onended = showLockedHero/);
+assert.match(script, /copy\.classList\.remove\('hidden'\)/);
+assert.match(script, /this\.hasLockedHeroReveal = true/);
+assert.match(script, /this\.engine\.state === 'active' && !this\.hasLockedHeroReveal/);
+assert.doesNotMatch(script, /showPosterAndWait/);
+assert.doesNotMatch(page, /type === 'draft:completed'[\s\S]{0,220}setStatusScreen/, 'The final hero reveal must not be covered by a completion status screen.');
+assert.match(css, /\.bc-team-copy strong[^}]*overflow-wrap:anywhere[^}]*white-space:normal/s, 'Long Broadcast team names must wrap instead of being ellipsized.');
+assert.match(script, /setTeamName\(root, value\)/, 'Broadcast must classify long team names for responsive font sizing.');
+assert.match(css, /\.bc-team-copy strong\.is-very-long-team-name/, 'Very long Broadcast team names must use a compact multiline size.');
+assert.match(css, /\.bc-side-card strong[^}]*overflow-wrap:anywhere[^}]*white-space:normal/s, 'Long side-selection team names must wrap.');
+assert.match(draftCss, /\.team-name[^}]*overflow-wrap:\s*anywhere[^}]*white-space:\s*normal/s, 'Long Draft Room team names must wrap instead of being ellipsized.');
+assert.match(draftRoomApp, /setTeamName\(root, value\)/, 'Draft Room must classify long team names for responsive font sizing.');
+assert.match(draftCss, /\.team-name\.is-very-long-team-name/, 'Very long Draft Room team names must receive a denser font size.');
+assert.match(draftRoomHtml, /data-no-i18n="true" id="team-a-name"/, 'Dynamic Blue team names must not be replaced by the translation observer.');
+assert.match(draftRoomHtml, /data-no-i18n="true" id="team-b-name"/, 'Dynamic Red team names must not be replaced by the translation observer.');
 assert.doesNotMatch(script, /id="bc-hero-video"[^>]*\sloop(?:\s|>)/);
 assert.match(css, /bc-trailer-video[^}]*object-position: center -16px/s);
 assert.doesNotMatch(heroes, /`\/trailers\/\$\{heroId\}/);

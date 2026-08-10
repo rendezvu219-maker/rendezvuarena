@@ -81,14 +81,14 @@
 <p class="series-control-rule" data-i18n="afterGameRule" id="series-control-rule">After the game finishes, select the winning team. The next Fearless draft will load automatically.</p>
 <div class="series-scoreboard">
 <button class="series-team series-team-a" id="series-winner-a" type="button">
-<span data-i18n="teamA" id="series-team-a-name">TEAM A</span>
+<span data-no-i18n="true" id="series-team-a-name">TEAM A</span>
 <strong id="series-team-a-score">0</strong>
 <em data-i18n="teamAWonStatic">TEAM A WON THIS GAME</em>
 </button>
 <div class="series-score-vs"><span data-i18n="boSeries">BO SERIES</span><b data-no-i18n="true">VS</b></div>
 <button class="series-team series-team-b" id="series-winner-b" type="button">
 <strong id="series-team-b-score">0</strong>
-<span data-i18n="teamB" id="series-team-b-name">TEAM B</span>
+<span data-no-i18n="true" id="series-team-b-name">TEAM B</span>
 <em data-i18n="teamBWonStatic">TEAM B WON THIS GAME</em>
 </button>
 </div>
@@ -102,7 +102,7 @@
 <header class="draft-header">
 <div class="header-team team-a" id="header-team-a">
 <span class="header-team-logo" id="header-team-a-logo"><img alt=""/><span data-no-i18n="true">TB</span></span>
-<span class="team-name" data-i18n="teamBlue" id="team-a-name">TEAM BLUE</span>
+<span class="team-name" data-no-i18n="true" id="team-a-name">TEAM BLUE</span>
 <span class="team-score" id="team-a-score">0</span>
 </div>
 <div class="match-center">
@@ -112,7 +112,7 @@
 </div>
 <div class="header-team team-b" id="header-team-b">
 <span class="team-score" id="team-b-score">0</span>
-<span class="team-name" data-i18n="teamRed" id="team-b-name">TEAM RED</span>
+<span class="team-name" data-no-i18n="true" id="team-b-name">TEAM RED</span>
 <span class="header-team-logo" id="header-team-b-logo"><img alt=""/><span data-no-i18n="true">TR</span></span>
 </div>
 <div class="draft-header-tools"><div class="draft-access-badge" id="draft-access-badge" aria-live="polite" data-no-i18n="true">CONNECTING…</div><div class="header-divine-rules" id="header-divine-rules"></div><div class="gs-language-slot" data-language-slot="true"></div></div></header>
@@ -244,7 +244,7 @@
 </div>
 </main>
 <script src="/socket.io/socket.io.js"></script>
-<script src="js/app.js?v=0.6.44-game-results-wide-layout" type="module"></script>
+<script src="js/app.js?v=0.6.45-long-team-names" type="module"></script>
 <script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
 </body>
 </html>
