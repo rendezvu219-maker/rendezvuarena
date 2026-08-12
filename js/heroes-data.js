@@ -1,5 +1,55 @@
-// Automatically scraped hero detail database with approved final-state patch-note corrections through Season 6.1.
+// Automatically scraped hero detail database with approved final-state patch-note corrections.
 export const HEROES_DATA = {
+  "0040": {
+    "id": "0040",
+    "difficulty": "20",
+    "description": "A hero of conviction who takes reduced DMG from the front, and grows stronger the longer he fights.\nUse the range and AoE of your Skills to dominate the battlefield and prove your righteousness!",
+    "statsPath": "M 100.0 50.0 L 146.9 62.6 L 139.0 108.9 L 130.4 163.1 L 87.0 127.0 L 31.8 115.6 L 45.3 56.4 L 100.0 50.0",
+    "skills": [
+      {
+        "id": "passive1",
+        "type": "passive",
+        "name": "Strength Is Justice",
+        "desc": "Gain increased strength with continued fighting.\nReduces frontal DMG while in combat.\nDMG reduction gradually increases the more he fights.\nDMG reduction decreases when receiving DMG from behind by an enemy hero.\nDMG reduction effects are nullified while obstructed.\nEnters a powered-up state when DMG reduction is maxed, applies Movement Speed Up to self, and Rush Attacks become powered-up attacks, effect ends after leaving combat."
+      },
+      {
+        "id": "rush_attack1",
+        "type": "rush_attack",
+        "name": "Rush Attack",
+        "desc": "A physical attack.\nIf Strength Is Justice DMG reduction is at maximum, becomes a powered-up attack, and number of hits, range, and DMG increase."
+      },
+      {
+        "id": "skill1",
+        "type": "skill",
+        "name": "Heat Ball Shot",
+        "desc": "Fire a penetrating energy blast in a set direction.\nDeals more DMG the more DMG reduction he has from Strength Is Justice.\nAt Skill Level 3 (Super), number of blasts increases."
+      },
+      {
+        "id": "skill2",
+        "type": "skill",
+        "name": "Colossal Uppercut",
+        "desc": "Perform an uppercut in a set direction, generating a shockwave.\nWhile powered up by Strength Is Justice, applies Burning to enemies.\nEnemies struck by the uppercut will be launched upwards.\nCan move prior to performing the uppercut."
+      },
+      {
+        "id": "skill3",
+        "type": "skill",
+        "name": "Maximum Impact",
+        "desc": "Unleash an energy wave in a set direction.\nExtra HP is gradually gained, Strength Is Justice's DMG reduction increases, and can move/redirect in this stance.\nFire an energy wave on re-input or after a set amount of time.\nThe attack penetrates walls and enemies, applying Movement Speed Down.\nThe longer the time before firing, the greater the Movement Speed Down effect and DMG dealt."
+      },
+      {
+        "id": "super_attack1",
+        "type": "super_attack",
+        "name": "Omega Heatwall",
+        "desc": "Burn everything down in a set direction and create a wall of flames.\nWall will expand sideways, pushing away and applying Burning to enemies as it moves.\nCertain skills cause enemies hit by the moving wall to be staggered.\nThe wall disappears after moving a certain distance.\nCan be learned after transforming."
+      },
+      {
+        "id": "transformation1",
+        "type": "transformation",
+        "name": "Full Power",
+        "desc": "Can transform at Level 7.\nBase HP / Armor / All Attack Up."
+      }
+    ]
+  },
   "0039": {
     "id": "0039",
     "difficulty": "80",

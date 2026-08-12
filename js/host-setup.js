@@ -1,5 +1,5 @@
 // Host Setup - Tab Content Renderer
-import { STAGE_PRESETS, THEMES, applyTheme } from './heroes.js';
+import { HEROES, STAGE_PRESETS, THEMES, applyTheme } from './heroes.js';
 import { bindDraftRulesForm, renderDraftRulesForm } from './draft-rules-form.js';
 import { t } from './i18n.js';
 import { api } from './api.js';
@@ -401,7 +401,7 @@ export class HostSetup {
 
   // ===== PROTECTION & GLOBAL BAN =====
   renderProtect() {
-    this.renderRulesSection('protection', t('protectionGlobalBan'), 'Manage hero availability with an explicit scope and a searchable 39-hero roster.');
+    this.renderRulesSection('protection', t('protectionGlobalBan'), `Manage hero availability with an explicit scope and a searchable ${HEROES.length}-hero roster.`);
   }
 
   // ===== PRESENTATION =====

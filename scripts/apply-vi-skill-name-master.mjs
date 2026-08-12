@@ -21,12 +21,12 @@ function replaceAllApprovedNames(value, replacements) {
 }
 
 const master = readJson(masterUrl);
-if (master?.schemaVersion !== 1 || master?.locale !== 'vi' || master?.status !== 'user-approved') {
+if (master?.schemaVersion !== 1 || master?.locale !== 'vi' || !['user-approved', 'user-approved-with-editorial-additions'].includes(master?.status)) {
   throw new Error('Vietnamese skill-name Master metadata is invalid.');
 }
 
 const rows = Array.isArray(master.skills) ? master.skills : [];
-if (rows.length !== 207) throw new Error(`Expected 207 approved names, found ${rows.length}.`);
+if (rows.length !== 212) throw new Error(`Expected 212 reviewed names, found ${rows.length}.`);
 
 const approvedByEnglish = new Map();
 const previousByEnglish = new Map();
@@ -86,8 +86,8 @@ for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
 
   record.translationStatus = 'editor-reviewed';
   record.sourceLocale = 'zh-CN';
-  record.sourcePolicy = 'Tên chiến binh giữ nguyên tiếng Anh; 207 tên kỹ năng dùng bộ Master tiếng Việt đã được người dùng duyệt; mô tả dựa trên bản tiếng Trung chính thức và đã đồng bộ toàn bộ tham chiếu tên kỹ năng.';
+  record.sourcePolicy = 'Tên chiến binh giữ nguyên tiếng Anh; 207 tên kỹ năng gốc dùng bộ Master tiếng Việt đã được người dùng duyệt; các tên bổ sung được đánh dấu biên tập; mô tả dựa trên bản tiếng Trung chính thức và đã đồng bộ toàn bộ tham chiếu tên kỹ năng.';
 }
 
 writeJson(catalogUrl, catalog);
-console.log(`Applied 207 approved Vietnamese names to ${updatedSlots} skill slots and refreshed ${updatedTextFields} description fields.`);
+console.log(`Applied 212 reviewed Vietnamese names to ${updatedSlots} skill slots and refreshed ${updatedTextFields} description fields.`);

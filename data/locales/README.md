@@ -31,7 +31,7 @@ Official routes:
 - Korean: `https://dbg-squadra.bn-ent.net/ko/hero/{id}`
 - Spanish: `https://dbg-squadra.bn-ent.net/es/hero/{id}`
 
-Fetch all 39 pages for all four official locales, validate them, write the local snapshot, and compile the browser
+Fetch every current hero page for all four official locales, validate them, write the local snapshot, and compile the browser
 module:
 
 ```bash
@@ -65,7 +65,7 @@ Validate source integrity:
 npm run i18n:heroes:verify
 ```
 
-Before a release, require all 39 official snapshots for Japanese, Simplified Chinese, Korean, and Spanish:
+Before a release, require complete official-roster coverage for Japanese, Simplified Chinese, Korean, and Spanish:
 
 ```bash
 npm run i18n:heroes:verify:full

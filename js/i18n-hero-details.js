@@ -6,11 +6,11 @@ export const HERO_I18N_METADATA = Object.freeze({
   "schemaVersion": 2,
   "policy": "Verified localized hero records may combine official-site snapshots with exact fields manually checked in the released game client. Temporary verification media is not distributed; only the reviewed fields and source type are retained. Synthetic text is forbidden.",
   "coverage": {
-    "ja": 39,
-    "zh-CN": 39,
-    "ko": 39,
-    "es": 39,
-    "vi": 39
+    "ja": 40,
+    "zh-CN": 40,
+    "ko": 40,
+    "es": 40,
+    "vi": 40
   },
   "generatedFrom": [
     "data/locales/official-hero-details.json",
@@ -1261,6 +1261,40 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
         }
       },
       "translationStatus": "official-site-snapshot"
+    },
+    "0040": {
+      "description": "前方からの被DMGを軽減し、闘い続けることで強くなる、絶対的ヒーロー。\n技の射程や範囲を活かして闘いの場を制圧し、己が正義を示せ！",
+      "skills": {
+        "passive1": {
+          "name": "強さこそが正義",
+          "desc": "闘い続けることで強くなる能力。\n交戦中、前方からの被DMGが軽減する。\n敵ヒーローと交戦し続けると、徐々に被DMG軽減量がアップする。\n敵ヒーローに後方からDMGを受けると、被DMG軽減量がダウンする。\n行動妨害を受けている間は、被DMG軽減の効果は無効化となる。\n被DMG軽減量が最大になると、強化状態となり、\n自身に「移動速度アップ」を付与し、ラッシュ攻撃が強化攻撃に変化する。\n交戦を止めると、効果が終了する。"
+        },
+        "rush_attack1": {
+          "name": "ラッシュ攻撃",
+          "desc": "体術による攻撃。\n『強さこそが正義』の被DMG軽減量が最大になると、\n強化攻撃となり、攻撃回数の増加、射程が延長、与DMGがアップする。"
+        },
+        "skill1": {
+          "name": "ヒートボールショット",
+          "desc": "狙った方向に敵を貫通する気弾を放つ攻撃。\n『強さこそが正義』の被DMG軽減量が多いほど、与DMGが高くなる。\n技レベル超になると、弾数が増加する。"
+        },
+        "skill2": {
+          "name": "ハイパワーアッパーカット",
+          "desc": "狙った方向にアッパーを繰り出し、衝撃波を発生させる攻撃。\n『強さこそが正義』の強化状態中、敵に「燃焼」を付与する。\nアッパーが命中すると、敵を打ち上げる効果が追加される。\nアッパーを繰り出すまで移動が可能となる。"
+        },
+        "skill3": {
+          "name": "マキシマムインパクト",
+          "desc": "拳を構え、狙った方向にエネルギー波を放つ攻撃。\n構える間、徐々に追加HPを獲得し、\n『強さこそが正義』の被DMG軽減量の割合が増加し、移動・方向操作が可能となる。\n再入力か、時間経過で、エネルギー波を発射する。\nエネルギー波は敵・壁を貫通し、敵に「移動速度ダウン」を付与する。\n発射までの時間が長いほど「移動速度ダウン」の効果量・与DMGがアップする。"
+        },
+        "super_attack1": {
+          "name": "オメガヒートウォール",
+          "desc": "狙った方向を横なぎに焼き払い、炎の壁を生成する攻撃。\n壁は移動しながら、徐々に横に広がり、敵を押し出して「燃焼」を付与し、\n一部の技では移動しながら壁にぶつかってきた敵にのけぞらせる効果を追加する。\n壁は一定距離移動すると消滅する。\n変身すると、会得が可能となる。"
+        },
+        "transformation1": {
+          "name": "フルパワー",
+          "desc": "レベル7以上で変身が可能となる。\n基本HP・アーマー・全攻撃力がアップする。"
+        }
+      },
+      "translationStatus": "official-site-snapshot"
     }
   },
   "zh-CN": {
@@ -2502,6 +2536,40 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
         "super_attack1": {
           "name": "黑暗能量球",
           "desc": "向目标位置击出气弹的攻击。\n命中的同时生成领域，对领域内的敌人附加“基础生命值和护甲值减少”的效果。"
+        }
+      },
+      "translationStatus": "official-site-snapshot"
+    },
+    "0040": {
+      "description": "凭借正面减伤傲视群雄，于激战中不断升华，实乃无可撼动的英雄。\n灵活运用射程与范围优势统御战场，向世人宣示自己心中的正义！",
+      "skills": {
+        "passive1": {
+          "name": "实力即正义",
+          "desc": "拥有在持续与敌人战斗的过程中逐渐变强的能力。\n与敌方英雄交战时，减少来自前方伤害的效果开始生效。\n与敌方英雄持续作战时，伤害减少量会逐渐提升。\n若受到敌方英雄从背后造成的伤害，伤害减少量则会降低。\n在受到行动干扰期间，伤害减少的效果将失效。\n当伤害减少量提升至最大值时，会进入强化状态，\n对自己附加“移动速度提升”的效果，且连续攻击转为强化攻击。\n若停止交战，该效果消失。"
+        },
+        "rush_attack1": {
+          "name": "突进攻击",
+          "desc": "依靠体术的攻击。\n“实力即正义”的伤害减少量提升至最大值时，转为强化攻击，攻击次数增加、射程延长，且造成的伤害提升。"
+        },
+        "skill1": {
+          "name": "热球射击",
+          "desc": "向目标方向发射气弹，可贯穿沿途敌人的攻击。\n“实力即正义”的伤害减少量越高，造成的伤害越高。\n技能等级达到“超”后，气弹的数量将增加。"
+        },
+        "skill2": {
+          "name": "高能上勾拳",
+          "desc": "向目标方向挥出上勾拳，并释放冲击波的攻击。\n“实力即正义”的强化状态期间，对敌人附加“燃烧”效果。\n上勾拳命中时，追加将敌人击飞的效果。\n上勾拳挥出前可移动。"
+        },
+        "skill3": {
+          "name": "极限冲击",
+          "desc": "摆出架势，向目标方向释放能源波的攻击。\n保持架势期间，缓慢获得额外生命值，\n“实力即正义”的伤害减少量比例提升，可移动及调整朝向。\n再次按键，或经过一段时间后将释放能源波。\n能源波可贯穿敌人和墙壁，对敌人附加“移动速度下降”效果。\n释放之前保持架势的时间越长，“移动速度下降”的效果越显著，且造成的伤害越高。"
+        },
+        "super_attack1": {
+          "name": "究极热力墙",
+          "desc": "向目标方向横扫并焚烧敌人，同时生成火墙的攻击。\n火墙在向前推进时会缓慢横向延展，将敌人逼退的同时，对其附加“燃烧”效果，\n部分技能可对在移动中撞上火墙的敌人，追加使其陷入后仰硬直的效果。\n火墙在移动一定距离后自动消失。\n变身后方可习得。"
+        },
+        "transformation1": {
+          "name": "全力形态",
+          "desc": "等级达到Lv7以上时，即可变身。\n基础生命值/护甲值/各种攻击力提升。"
         }
       },
       "translationStatus": "official-site-snapshot"
@@ -3753,6 +3821,40 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
         "super_attack1": {
           "name": "블랙 파워 볼",
           "desc": "조준한 위치에 기탄을 내던지는 공격.\n착탄과 동시에 구역을 생성하고, 구역 내의 적에게 \"기본 HP・아머 감소\"를 부여한다."
+        }
+      },
+      "translationStatus": "official-site-snapshot"
+    },
+    "0040": {
+      "description": "전방으로부터 받는 DMG가 감소하고 교전을 계속하면 강해지는 절대적인 히어로.\n기술의 사정거리와 범위를 활용해 전장을 제압하고 자신이 곧 정의임을 보여라!",
+      "skills": {
+        "passive1": {
+          "name": "힘이 곧 정의",
+          "desc": "전투를 계속하면 강해지는 능력.\n교전 중 전방으로부터 받는 DMG가 감소한다.\n적 히어로와 교전을 계속 진행하면 받는 DMG 감소량이 서서히 증가한다.\n적 히어로에게 후방에서 DMG를 받으면 받는 DMG 감소량이 저하된다.\n행동 방해를 당하는 동안 받는 DMG 감소 효과는 무효화된다.\n받는 DMG 감소량이 최대가 되면 강화 상태가 되어, 자신에게 \"이동 속도 상승\" 부여, 러시 공격이 강화 공격으로 변화한다.\n교전을 멈추면 효과가 종료된다."
+        },
+        "rush_attack1": {
+          "name": "러시 공격",
+          "desc": "체술 공격.\n\"힘이 곧 정의\"의 받는 DMG 감소량이 최대가 되면, 강화 공격이 되어 공격 횟수 증가, 사정거리 연장, 가하는 DMG가 상승한다."
+        },
+        "skill1": {
+          "name": "히트 볼 샷",
+          "desc": "조준한 방향으로 적을 관통하는 기탄을 발사하는 공격.\n\"힘이 곧 정의\"의 받는 DMG 감소량이 증가할수록 가하는 DMG가 높아진다.\n기술 레벨이 초에 도달하면 탄 수가 증가한다."
+        },
+        "skill2": {
+          "name": "하이 파워 어퍼컷",
+          "desc": "조준한 방향으로 어퍼를 펼치고 충격파를 발생시키는 공격.\n\"힘이 곧 정의\"의 강화 상태 중 적에게 \"연소\"를 부여한다.\n어퍼가 명중하면 적을 띄우는 효과가 추가된다.\n어퍼를 펼칠 때까지 이동 가능."
+        },
+        "skill3": {
+          "name": "맥시멈 임팩트",
+          "desc": "정권 자세로 조준한 방향으로 에너지파를 발사하는 공격.\n자세를 취하는 동안 서서히 추가 HP를 획득한다.\n\"힘이 곧 정의\"의 받는 DMG 감소량 비율이 증가하고, 이동・방향 조작이 가능하게 된다.\n재입력 또는 시간 경과로 에너지파를 발사한다.\n에너지파는 적・벽을 관통하고 적에게 \"이동 속도 감소\"를 부여한다.\n발사까지의 시간이 길수록 \"이동 속도 감소\"의 효과량・가하는 DMG가 상승한다."
+        },
+        "super_attack1": {
+          "name": "오메가 히트 월",
+          "desc": "조준한 방향 옆면을 불태워 불꽃 벽을 생성하는 공격.\n벽은 이동하며 서서히 옆으로 넓어지며, 적을 밀어내고 \"연소\"를 부여하고,\n일부 기술로는 이동하며 벽에 부딪힌 적을 주춤하게 하는 효과를 추가한다.\n벽은 일정 거리 이동하면 소멸한다.\n변신하면 습득할 수 있게 된다."
+        },
+        "transformation1": {
+          "name": "풀 파워",
+          "desc": "레벨 7 이상이면 변신할 수 있게 된다.\n기본 HP・아머・모든 공격력이 상승한다."
         }
       },
       "translationStatus": "official-site-snapshot"
@@ -5008,6 +5110,40 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
         }
       },
       "translationStatus": "official-site-snapshot"
+    },
+    "0040": {
+      "description": "Un héroe absoluto capaz de volverse más fuerte al continuar luchando, reduciendo el daño que recibe de frente.\n¡Aprovecha el alcance y área de sus técnicas para tomar el control del campo de batalla y demostrar la verdadera justicia!",
+      "skills": {
+        "passive1": {
+          "name": "La Ley del más Fuerte",
+          "desc": "Capacidad de volverse más fuerte al continuar luchando.\nDurante el combate, reduce el daño que recibe del frente.\nAl continuar luchando contra héroes enemigos, aumenta gradualmente la reducción de daño recibido.\nSi recibe daño de un héroe enemigo por la espalda, disminuye la reducción de daño recibido.\nEl efecto de reducción de daño recibido se anula mientras está bajo obstaculizaciones.\nCuando la reducción de daño recibido llega al máximo, entra en estado reforzado, otorgándose Movimiento acelerado a sí mismo y sus Arremetidas se convierten en ataques reforzados.\nEl efecto concluye al dejar de luchar."
+        },
+        "rush_attack1": {
+          "name": "Arremetida",
+          "desc": "Ataque físico.\nCuando la reducción de daño recibido de \"La Ley del más Fuerte\" llega al máximo, se convierte en ataque reforzado, aumentando el número de ataques, el alcance y el daño infligido."
+        },
+        "skill1": {
+          "name": "Disparo de Bola de Calor",
+          "desc": "Dispara una bala de ki que atraviesa enemigos en la dirección deseada.\nCuanto mayor sea la cantidad de reducción de daño recibido de \"La Ley del más Fuerte\", inflige más daño.\nEn el nivel de técnica Súper, aumenta el número de balas de ki."
+        },
+        "skill2": {
+          "name": "Gancho de Alto Poder",
+          "desc": "Ejecuta varios ganchos en la dirección deseada, generando una onda expansiva.\nDurante el refuerzo de \"La Ley del más Fuerte\", inflige Combustión a los enemigos.\nAl impactar un gancho, se agrega un efecto de levantar a los enemigos.\nEs posible desplazarse hasta antes de ejecutar los ganchos."
+        },
+        "skill3": {
+          "name": "Impacto Máximo",
+          "desc": "Prepara sus puños y lanza una onda de energía en la dirección deseada.\nMientras se prepara, obtiene gradualmente vida adicional, aumenta el porcentaje de reducción de daño recibido de \"La Ley del más Fuerte\" y es posible desplazarse y controlar la dirección.\nAl pulsar de nuevo o después de cierto tiempo se lanza la onda de energía.\nLa onda de energía atraviesa muros y enemigos, infligiéndoles Movimiento ralentizado.\nCuánto más largo es el tiempo que tarda hasta que la lanza, más aumenta el efecto de Movimiento ralentizado y el daño infligido."
+        },
+        "super_attack1": {
+          "name": "Muro de Calor Omega",
+          "desc": "Ataque con el que barre horizontalmente quemando todo y genera un muro de llamas en la dirección deseada.\nEl muro se mueve expandiéndose horizontalmente de forma gradual y empuja a los enemigos infligiéndoles\nCombustión. Se agrega un efecto de aturdir a los enemigos que choquen con el muro en movimiento mientras realizan ciertas técnicas.\nEl muro desaparece después de moverse cierta distancia.\nPuede dominar esta técnica después de transformarse."
+        },
+        "transformation1": {
+          "name": "Máximo Poder",
+          "desc": "Puede transformarse a partir del nivel 7.\nAumenta la vida base, la armadura y potencia todos los ataques."
+        }
+      },
+      "translationStatus": "official-site-snapshot"
     }
   },
   "vi": {
@@ -6249,6 +6385,40 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
         "super_attack1": {
           "name": "Cầu Năng Lượng Hắc Ám",
           "desc": "Đánh một khí đạn xuống vị trí chỉ định.\nKhi trúng, tạo lĩnh vực gây “Giảm HP Cơ Bản và Giáp” lên kẻ địch bên trong."
+        }
+      },
+      "translationStatus": "editor-reviewed"
+    },
+    "0040": {
+      "description": "Một chiến binh tuyệt đối giảm sát thương nhận từ phía trước và càng giao tranh lâu càng trở nên mạnh mẽ.\nHãy tận dụng tầm đánh cùng phạm vi kỹ năng để thống trị chiến trường và chứng minh chính nghĩa của mình!",
+      "skills": {
+        "passive1": {
+          "name": "Sức Mạnh Chính Là Công Lý",
+          "desc": "Càng giao tranh lâu càng trở nên mạnh mẽ.\nTrong khi giao tranh, giảm sát thương nhận từ phía trước.\nKhi liên tục giao tranh với chiến binh địch, lượng giảm sát thương tăng dần.\nNếu bị chiến binh địch gây sát thương từ phía sau, lượng giảm sát thương sẽ giảm.\nHiệu quả giảm sát thương bị vô hiệu hóa trong khi chịu hiệu ứng cản trở hành động.\nKhi lượng giảm sát thương đạt tối đa, bản thân bước vào trạng thái cường hóa, nhận “Tăng Tốc Độ Di Chuyển” và Liên Kích chuyển thành đòn cường hóa. Hiệu quả kết thúc khi rời giao tranh."
+        },
+        "rush_attack1": {
+          "name": "Liên Kích",
+          "desc": "Tấn công bằng thể thuật.\nKhi lượng giảm sát thương của “Sức Mạnh Chính Là Công Lý” đạt tối đa, Liên Kích chuyển thành đòn cường hóa, tăng số lần đánh, tầm đánh và sát thương gây ra."
+        },
+        "skill1": {
+          "name": "Bắn Cầu Nhiệt",
+          "desc": "Bắn khí đạn xuyên qua kẻ địch theo hướng chỉ định.\nLượng giảm sát thương của “Sức Mạnh Chính Là Công Lý” càng cao, sát thương gây ra càng lớn.\nỞ Cấp Kỹ Năng 3 (Siêu Cấp), số lượng khí đạn tăng lên."
+        },
+        "skill2": {
+          "name": "Cú Móc Toàn Lực",
+          "desc": "Tung cú móc lên theo hướng chỉ định và tạo ra sóng xung kích.\nTrong trạng thái cường hóa của “Sức Mạnh Chính Là Công Lý”, đòn đánh gây “Thiêu Đốt” lên kẻ địch.\nKẻ địch trúng cú móc sẽ bị hất tung.\nCó thể di chuyển trước khi tung cú móc."
+        },
+        "skill3": {
+          "name": "Xung Kích Tối Đa",
+          "desc": "Vào thế rồi phóng sóng năng lượng theo hướng chỉ định.\nTrong lúc giữ thế, bản thân dần nhận thêm HP, lượng giảm sát thương của “Sức Mạnh Chính Là Công Lý” tăng lên, đồng thời có thể di chuyển và điều chỉnh hướng.\nNhập lại hoặc chờ một khoảng thời gian để phóng sóng năng lượng.\nSóng năng lượng xuyên qua tường và kẻ địch, đồng thời gây “Giảm Tốc Độ Di Chuyển”.\nThời gian giữ thế trước khi phóng càng lâu, hiệu quả “Giảm Tốc Độ Di Chuyển” và sát thương gây ra càng lớn."
+        },
+        "super_attack1": {
+          "name": "Tường Nhiệt Omega",
+          "desc": "Thiêu rụi mọi thứ theo hướng chỉ định và tạo ra một bức tường lửa.\nBức tường vừa di chuyển vừa dần mở rộng sang hai bên, đẩy lùi và gây “Thiêu Đốt” lên kẻ địch.\nMột số kỹ năng sẽ khiến kẻ địch va vào bức tường đang di chuyển bị khựng lại.\nBức tường biến mất sau khi di chuyển một khoảng nhất định.\nCó thể học sau khi biến thân."
+        },
+        "transformation1": {
+          "name": "Toàn Lực",
+          "desc": "Có thể biến thân từ Cấp 7.\nTăng HP Cơ Bản / Giáp / Toàn Bộ Công Kích."
         }
       },
       "translationStatus": "editor-reviewed"

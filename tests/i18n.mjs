@@ -45,37 +45,46 @@ const vietnameseUiText = JSON.stringify({ base: UI.vi, pages: PAGE_UI.vi });
 assert.doesNotMatch(vietnameseUiText, /anh hùng|\btướng\b/iu, 'Vietnamese UI must consistently use “chiến binh”.');
 assert.match(PAGE_UI.vi.pageTitleHeroes, /Chiến binh/);
 assert.equal(UI.vi.heroes, 'Chiến binh');
+assert.equal(t('heroRoster', {}, 'en'), '40-HERO ROSTER');
+assert.equal(t('heroRoster', {}, 'vi'), 'DANH SÁCH 40 CHIẾN BINH');
+assert.equal(t('heroesShown', {}, 'ja'), '40体を表示');
 
 // Hero names + source-authenticated hero details -----------------------------
 const heroIds = HEROES.map(hero => hero.id).sort();
-assert.equal(heroIds.length, 39, 'Expected the full 39-hero roster.');
+const sourceHeroNames = JSON.parse(read('data/locales/hero-names.json'));
+assert.equal(heroIds.length, 40, 'Expected the full 40-hero roster.');
 assert.deepEqual(Object.keys(EN_HERO_NAMES).sort(), heroIds, 'English hero-name catalog is incomplete.');
-for (const locale of ['ja', 'zh-CN', 'ko', 'es']) {
+for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) {
   assert.deepEqual(Object.keys(HERO_NAMES[locale] || {}).sort(), heroIds, `${locale} hero-name catalog is incomplete.`);
 }
-for (const locale of ['ja', 'zh-CN', 'ko', 'es']) {
+for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) {
   assert.deepEqual(HERO_NAMES[locale], LOCALIZED_HERO_NAMES[locale], `${locale} runtime hero names are stale.`);
 }
-for (const hero of HEROES) assert.equal(heroName(hero.id, hero.name, 'vi'), hero.name, `Vietnamese must keep the English hero name for ${hero.id}.`);
+assert.equal(heroName('0001', '', 'vi'), 'Siêu Saiya Son Goku');
+assert.equal(heroName('0028', '', 'vi'), 'Siêu Saiya Huyền Thoại Broly');
+assert.equal(heroName('0016', '', 'vi'), 'Siêu Saiya Cấp 2 Caulifla');
+assert.equal(heroName('0023', '', 'vi'), 'Siêu Saiya Cấp 3 Son Goku');
+assert.equal(heroName('0033', '', 'vi'), 'Thần Siêu Saiya Vegeta');
+assert.equal(heroName('0040', '', 'vi'), 'Jiren (Full Power)');
 
 const vietnameseCatalog = JSON.parse(read('data/locales/official-hero-details.json')).locales.vi || {};
-assert.deepEqual(Object.keys(vietnameseCatalog).sort(), heroIds, 'Vietnamese hero-detail catalog must cover all 39 heroes.');
+assert.deepEqual(Object.keys(vietnameseCatalog).sort(), heroIds, 'Vietnamese hero-detail catalog must cover the full hero roster.');
 let vietnameseSkillCount = 0;
 for (const hero of HEROES) {
   const record = vietnameseCatalog[hero.id];
-  assert.equal(record.officialName, hero.name, `Vietnamese must keep the English hero name for ${hero.id}.`);
+  assert.equal(record.officialName, sourceHeroNames.vi[hero.id], `Vietnamese display name mismatch for ${hero.id}.`);
   assert.equal(record.translationStatus, 'editor-reviewed', `Vietnamese ${hero.id} must be editor-reviewed.`);
   assert.equal(record.sourceLocale, 'zh-CN', `Vietnamese ${hero.id} must be translated from the official Simplified Chinese record.`);
   assert.doesNotMatch(JSON.stringify({ description: record.description, skills: record.skills }), /anh hùng|\btướng\b/iu, `Vietnamese ${hero.id} must use “chiến binh”.`);
   vietnameseSkillCount += Object.keys(record.skills || {}).length;
 }
-assert.equal(vietnameseSkillCount, 252, 'Vietnamese catalog must translate all 252 skills.');
+assert.equal(vietnameseSkillCount, 259, 'Vietnamese catalog must translate all 259 skills.');
 const vietnameseSkillMaster = JSON.parse(read('data/locales/vi-skill-name-master.json'));
 assert.equal(vietnameseSkillMaster.schemaVersion, 1);
-assert.equal(vietnameseSkillMaster.status, 'user-approved');
-assert.equal(vietnameseSkillMaster.skills.length, 207, 'Vietnamese skill-name Master must contain 207 unique names.');
+assert.equal(vietnameseSkillMaster.status, 'user-approved-with-editorial-additions');
+assert.equal(vietnameseSkillMaster.skills.length, 212, 'Vietnamese skill-name Master must contain 212 unique names.');
 const approvedVietnameseSkillNames = new Map(vietnameseSkillMaster.skills.map(row => [row.english, row.vietnamese]));
-assert.equal(approvedVietnameseSkillNames.size, 207, 'Vietnamese skill-name Master contains duplicate English names.');
+assert.equal(approvedVietnameseSkillNames.size, 212, 'Vietnamese skill-name Master contains duplicate English names.');
 let approvedVietnameseSkillSlots = 0;
 for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
   for (const sourceSkill of sourceHero.skills) {
@@ -85,14 +94,15 @@ for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
     approvedVietnameseSkillSlots += 1;
   }
 }
-assert.equal(approvedVietnameseSkillSlots, 252, 'Vietnamese Master must cover all 252 skill slots.');
+assert.equal(approvedVietnameseSkillSlots, 259, 'Vietnamese Master must cover all 259 skill slots.');
 assert.equal(vietnameseCatalog['0001'].skills.skill1.name, 'Kamehameha');
 assert.equal(vietnameseCatalog['0001'].skills.super_attack1.name, 'Quả Cầu Khinh Khí');
 assert.match(vietnameseCatalog['0015'].skills.rush_attack1.desc, /số lượng khí đạn/i);
 assert.equal(vietnameseCatalog['0039'].skills.passive1.name, 'Con Đường Thành Thần');
+assert.equal(vietnameseCatalog['0040'].skills.passive1.name, 'Sức Mạnh Chính Là Công Lý');
+assert.equal(vietnameseCatalog['0040'].skills.super_attack1.name, 'Tường Nhiệt Omega');
 
-const sourceHeroNames = JSON.parse(read('data/locales/hero-names.json'));
-for (const locale of ['ja', 'zh-CN', 'ko', 'es']) assert.deepEqual(HERO_NAMES[locale], sourceHeroNames[locale], `${locale} generated hero-name module is stale.`);
+for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) assert.deepEqual(HERO_NAMES[locale], sourceHeroNames[locale], `${locale} generated hero-name module is stale.`);
 const heroCatalog = loadHeroI18nCatalog();
 const inGameOverrides = loadInGameHeroOverrides();
 const overrideValidation = validateInGameHeroOverrides(inGameOverrides);
@@ -337,7 +347,7 @@ const parsedSourceMarkerHtml = parseOfficialHeroHtml({
 assert.match(parsedSourceMarkerHtml.skills.rush_attack1.desc, /cantidad de disparos/i);
 
 // Missing snapshots must fail closed to canonical English, never a fabricated locale summary.
-// Use a synthetic id so this regression remains valid after all 39 official pages are synchronized.
+// Use a synthetic id so this regression remains valid after every official page is synchronized.
 const missingHeroFixture = { ...HEROES.find(hero => hero.id === '0039'), id: '9999', name: 'Missing Hero Fixture' };
 const missingJapanese = localizeHeroDetail(missingHeroFixture, HEROES_DATA['0039'], 'ja');
 assert.equal(missingJapanese.translationComplete, false);

@@ -1,4 +1,4 @@
-// Dragon Ball RendezVu Arena - Hero Database (Season 6.1)
+// Dragon Ball RendezVu Arena - Hero Database (current official roster)
 
 export const ROLES = {
   Damage:    { name: 'Damage',    color: 'var(--role-damage)', glow: 'var(--role-damage-glow)',   icon: 'DMG', label: 'DMG',  max: 2, iconPath: 'assets/roles/damage.png' },
@@ -179,8 +179,9 @@ export function getHeroSkillIconUrls(heroId, skillId) {
   return { primary: `${base}.png`, fallback: `${base}.webp` };
 }
 
-// Full roster - Season 6.1 (scraped from official site July 2026)
+// Full roster (scraped from the official site)
 export const HEROES = [
+  { id: '0040', name: 'Jiren (Full Power)',             role: 'Tank',      isNew: true  },
   { id: '0039', name: 'Goku Black',                     role: 'Technical', isNew: true  },
   { id: '0038', name: 'Beerus',                        role: 'Damage',    isNew: true  },
   { id: '0001', name: 'Super Saiyan Son Goku',         role: 'Damage',    isNew: false },

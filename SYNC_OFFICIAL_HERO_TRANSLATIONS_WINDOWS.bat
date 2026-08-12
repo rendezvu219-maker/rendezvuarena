@@ -6,7 +6,7 @@ echo [1/3] Downloading official Japanese, Simplified Chinese, Korean, and Spanis
 call npm run i18n:heroes:sync
 if errorlevel 1 goto :failed
 
-echo [2/3] Verifying complete 39-hero coverage for every official locale...
+echo [2/3] Verifying complete current-roster coverage for every official locale...
 call npm run i18n:heroes:verify:full
 if errorlevel 1 goto :failed
 

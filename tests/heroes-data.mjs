@@ -4,7 +4,18 @@ import { HEROES_DATA } from '../js/heroes-data.js';
 
 const ids = HEROES.map(hero => hero.id);
 assert.equal(new Set(ids).size, ids.length, 'Hero IDs must be unique.');
-assert.equal(HEROES.length, 39, 'Season 6.1 roster should contain 39 heroes.');
+assert.equal(HEROES.length, 40, 'Current roster should contain 40 heroes.');
+
+const jiren = HEROES.find(hero => hero.id === '0040');
+assert.deepEqual(jiren, { id: '0040', name: 'Jiren (Full Power)', role: 'Tank', isNew: true });
+
+const jirenData = HEROES_DATA['0040'];
+assert.equal(jirenData.difficulty, '20');
+assert.match(jirenData.description, /grows stronger the longer he fights/);
+assert.equal(jirenData.skills.length, 7);
+assert.equal(jirenData.skills[0].name, 'Strength Is Justice');
+assert.equal(jirenData.skills[5].name, 'Omega Heatwall');
+assert.equal(jirenData.skills[6].name, 'Full Power');
 
 for (const hero of HEROES) {
   const detail = HEROES_DATA[hero.id];
@@ -31,4 +42,4 @@ assert.deepEqual(gokuBlackData.skills.map(skill => skill.name), [
 ]);
 assert.match(getHeroFullImg('0039'), /0039\/image_character\.webp\?v=2$/);
 
-console.log('Season 6.1 hero roster and Goku Black data passed.');
+console.log('Current hero roster, Jiren, and Goku Black data passed.');

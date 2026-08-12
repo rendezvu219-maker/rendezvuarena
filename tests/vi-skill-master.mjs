@@ -11,11 +11,11 @@ const readJson = relative => JSON.parse(fs.readFileSync(new URL(`../${relative}`
 const master = readJson('data/locales/vi-skill-name-master.json');
 assert.equal(master.schemaVersion, 1);
 assert.equal(master.locale, 'vi');
-assert.equal(master.status, 'user-approved');
-assert.equal(master.skills.length, 207);
+assert.equal(master.status, 'user-approved-with-editorial-additions');
+assert.equal(master.skills.length, 212);
 
 const approved = new Map(master.skills.map(row => [row.english, row.vietnamese]));
-assert.equal(approved.size, 207, 'The Master must contain 207 unique English skill names.');
+assert.equal(approved.size, 212, 'The Master must contain 212 unique English skill names.');
 
 const sourceCatalog = readJson('data/locales/official-hero-details.json').locales.vi;
 const runtimeCatalog = FULL_HERO_DETAIL_OVERRIDES.vi;
@@ -31,7 +31,7 @@ for (const [heroId, hero] of Object.entries(HEROES_DATA)) {
     slotCount += 1;
   }
 }
-assert.equal(slotCount, 252);
+assert.equal(slotCount, 259);
 
 const fixedNames = new Map([
   ['Kaioken', 'Giới Vương Quyền'],

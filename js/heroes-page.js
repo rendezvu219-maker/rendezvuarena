@@ -327,6 +327,7 @@ const HERO_DETAIL_ART_BOUNDS = Object.freeze({
   '0037': [0, 104, 995, 1102],
   '0038': [36, 60, 913, 1000],
   '0039': [319, 4, 946, 1214],
+  '0040': [292, 60, 1086, 1188],
 });
 
 let heroDetailArtResizeObserver = null;

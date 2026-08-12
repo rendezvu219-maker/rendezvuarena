@@ -1,6 +1,7 @@
 import { FULL_HERO_DETAIL_OVERRIDES } from './i18n-hero-details.js?v=0.6.36-vi-skill-master-1';
 import { PAGE_UI } from './i18n-ui-pages.js?v=0.6.36-vi-skill-master-1';
 import { LOCALIZED_HERO_NAMES } from './i18n-hero-names.js?v=0.6.36-vi-skill-master-1';
+import { HEROES } from './heroes.js';
 
 const STORAGE_KEY = 'gs_locale';
 
@@ -14,9 +15,7 @@ export const LOCALES = Object.freeze({
 });
 
 export const HERO_NAMES = LOCALIZED_HERO_NAMES;
-export const EN_HERO_NAMES = Object.freeze({
-  '0039':'Goku Black','0038':'Beerus','0001':'Super Saiyan Son Goku','0002':'Super Saiyan Vegeta','0003':'Krillin','0004':'Super Saiyan Trunks (Teen)','0005':'Piccolo','0006':'Android 18','0007':'Majin Buu (Good)','0008':'Zamasu','0009':'Son Gohan (Kid)','0010':'Baby (Young Body)','0011':'Frieza (First Form)','0012':'Dabura','0013':'Cooler (Final Form)','0014':'Super Uub','0015':'Full Power Bojack','0016':'Super Saiyan 2 Caulifla','0017':'Son Goku (Mini)','0018':'Cell (Perfect Form)','0019':'Android 17','0020':'Hit','0021':'Super Saiyan Kale (Berserk)','0022':'Gamma 1 & Gamma 2','0023':'Super Saiyan 3 Son Goku','0024':'Super Saiyan Gotenks','0025':'God of Destruction Toppo','0026':'Super Saiyan 4 Vegeta','0027':'Ultimate Gohan','0028':'Legendary Super Saiyan Broly','0029':'Super Vegito','0030':'Super Saiyan Bardock','0031':'Super Saiyan 2 Kefla','0032':'Super Saiyan God Son Goku','0033':'Super Saiyan God Vegeta','0034':'Majin Buu (Pure)','0035':'Frieza (Fourth Form)','0036':'Son Goku (Youth)','0037':'Bulma (Youth)'
-});
+export const EN_HERO_NAMES = Object.freeze(Object.fromEntries(HEROES.map(hero => [hero.id, hero.name])));
 const HERO_ID_BY_EN_NAME = Object.freeze(Object.fromEntries(
   Object.entries(EN_HERO_NAMES).map(([id, name]) => [name, id]),
 ));
@@ -392,13 +391,16 @@ export function setLocale(next, { reload = true } = {}) {
 export function t(key, params = {}, explicitLocale = locale) {
   const table = UI[explicitLocale] || UI.en;
   let value = PAGE_UI[explicitLocale]?.[key] ?? UI_EXTRA[explicitLocale]?.[key] ?? table[key] ?? PAGE_UI.en[key] ?? UI_EXTRA.en[key] ?? UI.en[key] ?? key;
-  for (const [name, replacement] of Object.entries(params)) value = String(value).replaceAll(`{${name}}`, String(replacement));
+  const replacements = ['heroRoster', 'heroesShown', 'search39Roster'].includes(key) && params.count == null
+    ? { ...params, count: HEROES.length }
+    : params;
+  for (const [name, replacement] of Object.entries(replacements)) value = String(value).replaceAll(`{${name}}`, String(replacement));
   return value;
 }
 
 export function heroName(id, fallback = '', explicitLocale = locale) {
   const heroId = String(id || '').padStart(4, '0');
-  if (explicitLocale === 'en' || explicitLocale === 'vi') return fallback || EN_HERO_NAMES[heroId] || heroId;
+  if (explicitLocale === 'en') return fallback || EN_HERO_NAMES[heroId] || heroId;
   return HERO_NAMES[explicitLocale]?.[heroId] || fallback || EN_HERO_NAMES[heroId] || heroId;
 }
 

@@ -1,5 +1,6 @@
 {
   "en": {
+    "0040": "Jiren (Full Power)",
     "0039": "Goku Black",
     "0038": "Beerus",
     "0001": "Super Saiyan Son Goku",
@@ -79,7 +80,8 @@
     "0034": "魔人ブウ：純粋",
     "0035": "フリーザ：第四形態",
     "0036": "孫悟空：少年期",
-    "0037": "ブルマ：少女期"
+    "0037": "ブルマ：少女期",
+    "0040": "ジレン：フルパワー"
   },
   "zh-CN": {
     "0039": "黑悟空",
@@ -120,7 +122,8 @@
     "0034": "魔人布欧（纯粹）",
     "0035": "弗利萨（第四形态）",
     "0036": "少年孙悟空",
-    "0037": "少女布尔玛"
+    "0037": "少女布尔玛",
+    "0040": "全力吉连"
   },
   "ko": {
     "0039": "오공 블랙",
@@ -161,7 +164,8 @@
     "0034": "마인 부우: 순수",
     "0035": "프리저: 최종 형태",
     "0036": "손오공: 소년기",
-    "0037": "부르마: 소녀기"
+    "0037": "부르마: 소녀기",
+    "0040": "지렌: 풀 파워"
   },
   "es": {
     "0039": "Goku Oscuro",
@@ -202,15 +206,17 @@
     "0034": "Majin Buu (Puro)",
     "0035": "Frieza (Cuarta Forma)",
     "0036": "Son Goku (Niño)",
-    "0037": "Bulma (Niña)"
+    "0037": "Bulma (Niña)",
+    "0040": "Jiren (Máximo Poder)"
   },
   "vi": {
+    "0040": "Jiren (Full Power)",
     "0039": "Goku Black",
     "0038": "Beerus",
-    "0001": "Super Saiyan Son Goku",
-    "0002": "Super Saiyan Vegeta",
+    "0001": "Siêu Saiya Son Goku",
+    "0002": "Siêu Saiya Vegeta",
     "0003": "Krillin",
-    "0004": "Super Saiyan Trunks (Teen)",
+    "0004": "Siêu Saiya Trunks (Teen)",
     "0005": "Piccolo",
     "0006": "Android 18",
     "0007": "Majin Buu (Good)",
@@ -222,24 +228,24 @@
     "0013": "Cooler (Final Form)",
     "0014": "Super Uub",
     "0015": "Full Power Bojack",
-    "0016": "Super Saiyan 2 Caulifla",
+    "0016": "Siêu Saiya Cấp 2 Caulifla",
     "0017": "Son Goku (Mini)",
     "0018": "Cell (Perfect Form)",
     "0019": "Android 17",
     "0020": "Hit",
-    "0021": "Super Saiyan Kale (Berserk)",
+    "0021": "Siêu Saiya Kale (Berserk)",
     "0022": "Gamma 1 & Gamma 2",
-    "0023": "Super Saiyan 3 Son Goku",
-    "0024": "Super Saiyan Gotenks",
+    "0023": "Siêu Saiya Cấp 3 Son Goku",
+    "0024": "Siêu Saiya Gotenks",
     "0025": "God of Destruction Toppo",
-    "0026": "Super Saiyan 4 Vegeta",
+    "0026": "Siêu Saiya Cấp 4 Vegeta",
     "0027": "Ultimate Gohan",
-    "0028": "Legendary Super Saiyan Broly",
+    "0028": "Siêu Saiya Huyền Thoại Broly",
     "0029": "Super Vegito",
-    "0030": "Super Saiyan Bardock",
-    "0031": "Super Saiyan 2 Kefla",
-    "0032": "Super Saiyan God Son Goku",
-    "0033": "Super Saiyan God Vegeta",
+    "0030": "Siêu Saiya Bardock",
+    "0031": "Siêu Saiya Cấp 2 Kefla",
+    "0032": "Thần Siêu Saiya Son Goku",
+    "0033": "Thần Siêu Saiya Vegeta",
     "0034": "Majin Buu (Pure)",
     "0035": "Frieza (Fourth Form)",
     "0036": "Son Goku (Youth)",

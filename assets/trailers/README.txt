@@ -7,6 +7,8 @@ Place each hero's local trailer video and still image in this folder using the s
   ...
   assets/trailers/0039.mp4
   assets/trailers/0039.png
+  assets/trailers/0040.mp4
+  assets/trailers/0040.webp
 
 Video fallback extensions: .mp4, .webm, .mov.
 Still-image fallback extensions: .png, .webp, .jpg, .jpeg.

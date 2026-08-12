@@ -154,7 +154,7 @@ function protectionSection(rules) {
       </div>
     </div>
     <div class="draft-rule-hero-editor hidden" data-hero-editor>
-      <div class="draft-rule-hero-toolbar"><label><span class="sr-only">Search heroes</span><input type="search" data-hero-search placeholder="Search the 39-hero roster by name or role…"></label><button type="button" class="btn btn-ghost btn-xs" data-clear-hero-rules>Clear all</button></div>
+      <div class="draft-rule-hero-toolbar"><label><span class="sr-only">Search heroes</span><input type="search" data-hero-search placeholder="Search the ${HEROES.length}-hero roster by name or role…"></label><button type="button" class="btn btn-ghost btn-xs" data-clear-hero-rules>Clear all</button></div>
       <div class="draft-rule-hero-grid" data-hero-grid></div>
     </div>
   </section>`;

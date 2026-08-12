@@ -1,10 +1,11 @@
 {
   "schemaVersion": 1,
   "locale": "vi",
-  "status": "user-approved",
+  "status": "user-approved-with-editorial-additions",
   "approvedAt": "2026-07-30",
+  "editorialAdditionsAt": "2026-08-12",
   "sourceWorkbook": "Master_207_ky_nang_Viet_hoa_da_chot.xlsx",
-  "policy": "The 207 unique Vietnamese skill names approved by the user. English and Japanese keys are retained for validation and future maintenance.",
+  "policy": "The 207 original Vietnamese skill names were approved by the user. Five Jiren (Full Power) names were added as editor-reviewed translations on 2026-08-12. English and Japanese keys are retained for validation and future maintenance.",
   "skills": [
     {
       "stt": 1,
@@ -1454,6 +1455,46 @@
       "japanese": "勝てんぜ おまえは…",
       "previousVietnamese": "Ngươi Không Thể Thắng…",
       "vietnamese": "Ngươi Không Thể Thắng..."
+    },
+    {
+      "stt": 208,
+      "english": "Strength Is Justice",
+      "japanese": "強さこそが正義",
+      "previousVietnamese": "Sức Mạnh Chính Là Công Lý",
+      "vietnamese": "Sức Mạnh Chính Là Công Lý",
+      "approvalStatus": "editor-reviewed"
+    },
+    {
+      "stt": 209,
+      "english": "Heat Ball Shot",
+      "japanese": "ヒートボールショット",
+      "previousVietnamese": "Bắn Cầu Nhiệt",
+      "vietnamese": "Bắn Cầu Nhiệt",
+      "approvalStatus": "editor-reviewed"
+    },
+    {
+      "stt": 210,
+      "english": "Colossal Uppercut",
+      "japanese": "ハイパワーアッパーカット",
+      "previousVietnamese": "Cú Móc Toàn Lực",
+      "vietnamese": "Cú Móc Toàn Lực",
+      "approvalStatus": "editor-reviewed"
+    },
+    {
+      "stt": 211,
+      "english": "Maximum Impact",
+      "japanese": "マキシマムインパクト",
+      "previousVietnamese": "Xung Kích Tối Đa",
+      "vietnamese": "Xung Kích Tối Đa",
+      "approvalStatus": "editor-reviewed"
+    },
+    {
+      "stt": 212,
+      "english": "Omega Heatwall",
+      "japanese": "オメガヒートウォール",
+      "previousVietnamese": "Tường Nhiệt Omega",
+      "vietnamese": "Tường Nhiệt Omega",
+      "approvalStatus": "editor-reviewed"
     }
   ]
 }

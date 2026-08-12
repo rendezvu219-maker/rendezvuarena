@@ -13,6 +13,7 @@
     "assets:heroes:verify": "node scripts/verify-hero-assets.mjs",
     "test:security": "node tests/security-regressions.mjs",
     "i18n:heroes:generate": "node scripts/generate-hero-i18n.mjs",
+    "i18n:pages:generate": "node scripts/generate-page-i18n.mjs",
     "i18n:divine:migrate": "node scripts/migrate-divine-card-i18n.mjs",
     "i18n:divine:import": "node scripts/import-divine-card-i18n.mjs",
     "test:i18n": "node tests/i18n.mjs",
