@@ -2337,6 +2337,10 @@ function draftPresenceBucket(roomCode){
   if(!draftPresence.has(key))draftPresence.set(key,new Map());
   return draftPresence.get(key);
 }
+function draftPresenceSnapshot(roomCode){
+  const bucket=draftPresence.get(String(roomCode||'').toUpperCase());
+  return Object.fromEntries(['host','teamA','teamB','referee','broadcaster'].map(role=>[role,bucket?.get(role)?.size||0]));
+}
 function addDraftPresence(socket,roomCode,role){
   removeDraftPresence(socket,{emit:false});
   const key=String(roomCode||'').toUpperCase();
@@ -2422,8 +2426,9 @@ io.on('connection',socket=>{
     const authority=draftAuthority(room.room_code);
     const messages=db.prepare(`SELECT id,sender_role,sender_name,message,message_type,file_id,pinned,created_at
       FROM match_messages WHERE match_id=? AND deleted_at IS NULL ORDER BY id ASC LIMIT 300`).all(room.match_id);
-    ack({ok:true,role,authorityRole:authority?.role||null,authoritySocketId:authority?.socketId||null,config:jsonParse(room.config_json),state:jsonParse(room.state_json),messages,resynced:true});
-    io.to(`draft:${room.room_code}`).emit('draft:presence',{role,connected:true});
+    const presence=draftPresenceSnapshot(room.room_code);
+    ack({ok:true,role,authorityRole:authority?.role||null,authoritySocketId:authority?.socketId||null,presence,config:jsonParse(room.config_json),state:jsonParse(room.state_json),messages,resynced:true});
+    io.to(`draft:${room.room_code}`).emit('draft:presence',{role,connected:true,presence});
     emitDraftAuthority(room.room_code);
   });
 
@@ -2501,7 +2506,12 @@ io.on('connection',socket=>{
 
   socket.on('disconnect',()=>{
     if(socket.data.draftRoomCode&&socket.data.draftRole){
-      socket.to(`draft:${socket.data.draftRoomCode}`).emit('draft:presence',{role:socket.data.draftRole,connected:false});
+      const roomCode=socket.data.draftRoomCode;
+      const role=socket.data.draftRole;
+      removeDraftPresence(socket,{emit:false});
+      socket.to(`draft:${roomCode}`).emit('draft:presence',{role,connected:false,presence:draftPresenceSnapshot(roomCode)});
+      emitDraftAuthority(roomCode);
+      return;
     }
     removeDraftPresence(socket);
   });

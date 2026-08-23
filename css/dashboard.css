@@ -332,6 +332,11 @@ textarea:focus { border-color:var(--interactive-primary); }
 .ops-start-steps button:hover { background:rgba(255,255,255,.04); }
 .ops-start-steps span { display:grid; gap:2px; color:#fff; font-size:.62rem; }
 .ops-start-steps small { color:var(--text-muted); font-size:.52rem; }
+.ops-start-action { display:grid; justify-items:end; gap:var(--space-2); max-width:290px; }
+.ops-start-action .btn { white-space:normal; }
+.ops-start-blocker { padding:0; border:0; color:var(--interactive-primary); background:transparent; font:inherit; font-size:.58rem; font-weight:850; cursor:pointer; text-align:right; }
+.ops-start-blocker:hover,.ops-start-blocker:focus-visible { color:var(--text-primary); text-decoration:underline; }
+.ops-start-waiting { align-self:center; max-width:290px; color:var(--text-secondary); font-size:.66rem; line-height:1.5; text-align:right; }
 .ops-reconfirm-box { border-color:rgba(255,180,70,.35) !important; background:rgba(255,145,50,.045); }
 .ops-broadcast-match-view { display:grid; gap:18px; padding:20px; }
 .ops-broadcast-versus { display:grid; grid-template-columns:1fr auto 1fr; gap:18px; align-items:center; }

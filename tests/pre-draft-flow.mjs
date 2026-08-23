@@ -71,6 +71,7 @@ assert.doesNotMatch(banRulesMarkup, /data-rule-field="squadraBlastCarryBans"[^>]
 const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const html = await readFile(new URL('../draft-room.html', import.meta.url), 'utf8');
 const server = await readFile(new URL('../server.js', import.meta.url), 'utf8');
+const dashboard = await readFile(new URL('../js/dashboard.js', import.meta.url), 'utf8');
 assert.match(app, /!this\.config\.quickDraft && teamKey !== 'teamA'/, 'Tournament Team A must own the coin call.');
 assert.match(app, /coinCaller === 'teamA'\s*\? 'teamB' : 'teamA'/, 'A lost call must transfer side choice to the opponent.');
 assert.match(app, /divine\.drawnIndices = \[divine\.picks\.A, divine\.picks\.B\]/, 'Pick/Ban must resolve one Draw per side.');
@@ -79,6 +80,14 @@ assert.match(app, /restoreDraftVisuals\(\)[\s\S]*this\.updateCurrentActionUi\(\)
 assert.match(app, /this\.btnLock\.setAttribute\('data-i18n', presentation\.buttonKey\)/, 'The dynamic action label must update its i18n key when BAN changes to LOCK IN.');
 assert.match(app, /this\.phaseIndicator\.setAttribute\('data-i18n', presentation\.phaseKey\)/, 'The dynamic phase label must update its i18n key.');
 assert.match(html, /id="pre-draft-matchup-stage"/);
+assert.match(html, /id="pre-draft-waiting-title"/);
+assert.match(html, /id="pre-draft-waiting-description"/);
+assert.match(app, /missingDraftEntrants\(\)/, 'Tournament Draft rooms must identify a missing Captain before the flow starts.');
+assert.match(app, /waitingForTeamJoin/, 'The waiting overlay must name the missing team.');
+assert.match(server, /draftPresenceSnapshot/, 'Draft join acknowledgements must include the room-scoped presence snapshot.');
+assert.match(dashboard, /waitingHostStartTournament/, 'Non-managers must see who is responsible for starting the tournament.');
+assert.match(dashboard, /resolvePreflightBlockers/, 'The disabled start action must explain preflight blockers.');
+assert.match(dashboard, /generateBracketFirst/, 'The disabled start action must link to bracket generation.');
 assert.match(html, /data-side-choice="A"/);
 assert.match(html, /data-side-choice="B"/);
 assert.match(server, /pre-draft:coin-call/);

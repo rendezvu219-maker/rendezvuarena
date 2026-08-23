@@ -73,7 +73,14 @@ const UI_EXTRA = Object.freeze({
     "startOpenCaptainCheckinStep": "Start & open check-in",
     "captainAccountRequirement": "Only one active Captain account per team is required for check-in, coin flip, Draft control and results. Other roster slots do not need linked accounts or Draft Room presence.",
     "captainRunsDraft": "Captain runs ban/pick",
-    "memberViewOnlyMatchHelp": "You can view this match and use Match Chat. Only the linked Captain can check in, enter or control the Draft Room, run coin flip, and submit or verify results."
+    "memberViewOnlyMatchHelp": "You can view this match and use Match Chat. Only the linked Captain can check in, enter or control the Draft Room, run coin flip, and submit or verify results.",
+    "startTournamentButton": "START TOURNAMENT & OPEN CHECK-IN",
+    "generateBracketFirst": "Generate the bracket first",
+    "resolvePreflightBlockers": "Resolve {count} preflight blocker(s)",
+    "waitingHostStartTournament": "Waiting for the Host to start this tournament",
+    "waitingForTeamJoin": "Waiting for {team} to join",
+    "waitingForTeamJoinDesc": "The Draft Room will begin automatically when the missing Captain connects. The Host does not need to take control.",
+    "tournamentStartedStatus": "TOURNAMENT STARTED · {checkin} CHECK-IN · {ready} READY"
   },
   "ja": {
     "viewOnly": "閲覧のみ",
@@ -122,7 +129,14 @@ const UI_EXTRA = Object.freeze({
     "startOpenCaptainCheckinStep": "開始してチェックインを開く",
     "captainAccountRequirement": "各チームで必要なのは有効なキャプテンアカウント1つだけです。チェックイン、コイントス、ドラフト操作、結果処理はキャプテンが行います。他のロースター枠はアカウント連携もドラフトルームへの参加も不要です。",
     "captainRunsDraft": "キャプテンがBAN/PICKを操作",
-    "memberViewOnlyMatchHelp": "この試合の閲覧とマッチチャットの利用は可能です。チェックイン、ドラフトルームへの入室と操作、コイントス、結果の送信・確認は連携済みキャプテンのみ行えます。"
+    "memberViewOnlyMatchHelp": "この試合の閲覧とマッチチャットの利用は可能です。チェックイン、ドラフトルームへの入室と操作、コイントス、結果の送信・確認は連携済みキャプテンのみ行えます。",
+    "startTournamentButton": "大会を開始してチェックインを開く",
+    "generateBracketFirst": "先にブラケットを生成してください",
+    "resolvePreflightBlockers": "プレフライトの問題 {count} 件を解決してください",
+    "waitingHostStartTournament": "Host がこの大会を開始するのを待っています",
+    "waitingForTeamJoin": "{team} の参加を待っています",
+    "waitingForTeamJoinDesc": "不足しているキャプテンが接続すると、ドラフトルームが自動的に始まります。Host が操作を引き継ぐ必要はありません。",
+    "tournamentStartedStatus": "大会開始済み · チェックイン {checkin} · 準備完了 {ready}"
   },
   "zh-CN": {
     "viewOnly": "仅查看",
@@ -171,7 +185,14 @@ const UI_EXTRA = Object.freeze({
     "startOpenCaptainCheckinStep": "开始并开放签到",
     "captainAccountRequirement": "每队只需要一个有效的队长账号来完成签到、抛硬币、选禁操作和结果处理。其他阵容名额无需关联账号，也无需进入选禁房间。",
     "captainRunsDraft": "队长操作选禁",
-    "memberViewOnlyMatchHelp": "你可以查看本场比赛并使用比赛聊天。只有已关联的队长可以签到、进入或操作选禁房间、进行抛硬币，以及提交或确认结果。"
+    "memberViewOnlyMatchHelp": "你可以查看本场比赛并使用比赛聊天。只有已关联的队长可以签到、进入或操作选禁房间、进行抛硬币，以及提交或确认结果。",
+    "startTournamentButton": "开始赛事并开放签到",
+    "generateBracketFirst": "请先生成对阵表",
+    "resolvePreflightBlockers": "请解决 {count} 个赛前检查阻塞项",
+    "waitingHostStartTournament": "正在等待 Host 开始本次赛事",
+    "waitingForTeamJoin": "正在等待 {team} 加入",
+    "waitingForTeamJoinDesc": "缺席的队长连接后，选禁房间将自动开始。Host 无需接管操作。",
+    "tournamentStartedStatus": "赛事已开始 · {checkin} 场签到 · {ready} 场就绪"
   },
   "ko": {
     "viewOnly": "보기 전용",
@@ -220,7 +241,14 @@ const UI_EXTRA = Object.freeze({
     "startOpenCaptainCheckinStep": "시작하고 체크인 열기",
     "captainAccountRequirement": "팀마다 활성 주장 계정 하나만 있으면 체크인, 동전 던지기, 드래프트 조작과 결과 처리를 할 수 있습니다. 다른 로스터 슬롯은 계정 연결이나 드래프트 룸 입장이 필요하지 않습니다.",
     "captainRunsDraft": "주장이 밴/픽 진행",
-    "memberViewOnlyMatchHelp": "이 경기를 보고 매치 채팅을 사용할 수 있습니다. 체크인, 드래프트 룸 입장 및 조작, 동전 던지기, 결과 제출 또는 확인은 연결된 주장만 할 수 있습니다."
+    "memberViewOnlyMatchHelp": "이 경기를 보고 매치 채팅을 사용할 수 있습니다. 체크인, 드래프트 룸 입장 및 조작, 동전 던지기, 결과 제출 또는 확인은 연결된 주장만 할 수 있습니다.",
+    "startTournamentButton": "대회 시작 및 체크인 열기",
+    "generateBracketFirst": "먼저 대진표를 생성하세요",
+    "resolvePreflightBlockers": "프리플라이트 차단 항목 {count}개를 해결하세요",
+    "waitingHostStartTournament": "Host가 이 대회를 시작하기를 기다리는 중",
+    "waitingForTeamJoin": "{team} 참가를 기다리는 중",
+    "waitingForTeamJoinDesc": "아직 접속하지 않은 주장이 연결되면 드래프트 룸이 자동으로 시작됩니다. Host가 제어권을 가져올 필요는 없습니다.",
+    "tournamentStartedStatus": "대회 시작됨 · 체크인 {checkin} · 준비 {ready}"
   },
   "es": {
     "viewOnly": "SOLO LECTURA",
@@ -269,7 +297,14 @@ const UI_EXTRA = Object.freeze({
     "startOpenCaptainCheckinStep": "Iniciar y abrir check-in",
     "captainAccountRequirement": "Solo se requiere una cuenta de Capitán activa por equipo para el check-in, el lanzamiento de moneda, el control del Draft y los resultados. Los demás puestos del roster no necesitan una cuenta vinculada ni entrar en la sala de Draft.",
     "captainRunsDraft": "El Capitán controla bans/picks",
-    "memberViewOnlyMatchHelp": "Puedes ver este partido y usar el chat. Solo el Capitán vinculado puede hacer check-in, entrar o controlar la sala de Draft, lanzar la moneda y enviar o verificar resultados."
+    "memberViewOnlyMatchHelp": "Puedes ver este partido y usar el chat. Solo el Capitán vinculado puede hacer check-in, entrar o controlar la sala de Draft, lanzar la moneda y enviar o verificar resultados.",
+    "startTournamentButton": "INICIAR TORNEO Y ABRIR CHECK-IN",
+    "generateBracketFirst": "Genera primero el bracket",
+    "resolvePreflightBlockers": "Resuelve {count} bloqueo(s) de la comprobación previa",
+    "waitingHostStartTournament": "Esperando a que el Host inicie este torneo",
+    "waitingForTeamJoin": "Esperando a que se una {team}",
+    "waitingForTeamJoinDesc": "La sala de Draft comenzará automáticamente cuando se conecte el Capitán que falta. El Host no necesita tomar el control.",
+    "tournamentStartedStatus": "TORNEO INICIADO · {checkin} CHECK-IN · {ready} LISTOS"
   },
   "vi": {
     "viewOnly": "CHỈ XEM",
@@ -318,7 +353,14 @@ const UI_EXTRA = Object.freeze({
     "startOpenCaptainCheckinStep": "Bắt đầu & mở check-in",
     "captainAccountRequirement": "Mỗi đội chỉ cần một tài khoản Đội trưởng đang hoạt động để check-in, tung đồng xu, điều khiển Draft và xử lý kết quả. Các vị trí thành viên còn lại không cần liên kết tài khoản hoặc có mặt trong Draft Room.",
     "captainRunsDraft": "Đội trưởng điều khiển ban/pick",
-    "memberViewOnlyMatchHelp": "Bạn có thể xem trận và dùng Match Chat. Chỉ Đội trưởng đã liên kết mới được check-in, vào hoặc điều khiển Draft Room, tung đồng xu và gửi hoặc xác nhận kết quả."
+    "memberViewOnlyMatchHelp": "Bạn có thể xem trận và dùng Match Chat. Chỉ Đội trưởng đã liên kết mới được check-in, vào hoặc điều khiển Draft Room, tung đồng xu và gửi hoặc xác nhận kết quả.",
+    "startTournamentButton": "BẮT ĐẦU GIẢI & MỞ CHECK-IN",
+    "generateBracketFirst": "Hãy tạo bracket trước",
+    "resolvePreflightBlockers": "Xử lý {count} mục chặn preflight",
+    "waitingHostStartTournament": "Đang chờ Host bắt đầu giải đấu này",
+    "waitingForTeamJoin": "Đang chờ {team} tham gia",
+    "waitingForTeamJoinDesc": "Draft Room sẽ tự bắt đầu khi Đội trưởng còn thiếu kết nối. Host không cần giành quyền điều khiển.",
+    "tournamentStartedStatus": "GIẢI ĐÃ BẮT ĐẦU · {checkin} CHECK-IN · {ready} SẴN SÀNG"
   }
 });
 

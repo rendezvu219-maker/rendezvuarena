@@ -10,6 +10,7 @@ export class DraftRoomSync {
     this.initialMessages = [];
     this.authorityRole = null;
     this.isAuthority = false;
+    this.presence = {};
     this.listeners = new Map();
     this.manualClose = false;
     this.reconnectAttempt = 0;
@@ -87,6 +88,7 @@ export class DraftRoomSync {
         this.initialMessages = result.messages || [];
         this.authorityRole = result.authorityRole || null;
         this.isAuthority = Boolean(result.authoritySocketId && result.authoritySocketId === this.socket?.id);
+        this.presence = result.presence || {};
         this.emitLocal('authority', { role: this.authorityRole, isAuthority: this.isAuthority });
         resolve(result);
       });
@@ -123,6 +125,7 @@ export class DraftRoomSync {
           config: this.config,
           state: this.initialState,
           messages: this.initialMessages,
+          presence: this.presence,
         });
         this.emitLocal('state', this.initialState);
       }

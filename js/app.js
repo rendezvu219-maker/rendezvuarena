@@ -51,6 +51,8 @@ export class DraftUI {
     this.sideAnimationSignature = '';
     this.preDraftControlsBound = false;
     this.lastStatePublish = 0;
+    this.draftPresence = { host: 0, teamA: 0, teamB: 0, referee: 0, broadcaster: 0, ...(config._draftPresence || {}) };
+    this.initialDraftFlowStarted = false;
     if (this.cinematicOverlay) {
       this.cinematicOverlay.addEventListener('click', () => {
         if (this.cinematicOverlay.classList.contains('show')) {
@@ -80,6 +82,47 @@ export class DraftUI {
     ['coin-flip-screen', 'divine-draw-screen', 'pre-draft-waiting-screen'].forEach(id => {
       document.getElementById(id)?.classList.toggle('hidden', id !== screen);
     });
+    if (screen === 'pre-draft-waiting-screen') this.renderDraftWaitingMessage();
+  }
+
+  missingDraftEntrants() {
+    if (!(this.sync instanceof DraftRoomSync)) return [];
+    if (this.roomRole === 'teamA') return this.draftPresence.teamB > 0 ? [] : [this.entrant('teamB').name];
+    if (this.roomRole === 'teamB') return this.draftPresence.teamA > 0 ? [] : [this.entrant('teamA').name];
+    return ['teamA', 'teamB'].filter(role => !(this.draftPresence[role] > 0)).map(role => this.entrant(role).name);
+  }
+
+  renderDraftWaitingMessage() {
+    const missing = this.missingDraftEntrants();
+    const team = missing.join(' / ');
+    const title = document.getElementById('pre-draft-waiting-title');
+    const description = document.getElementById('pre-draft-waiting-description');
+    if (title) title.textContent = missing.length ? t('waitingForTeamJoin', { team }) : t('preDraftInProgress');
+    if (description) description.textContent = missing.length ? t('waitingForTeamJoinDesc') : t('preDraftDesc');
+  }
+
+  beginInitialDraftFlow() {
+    if (this.initialDraftFlowStarted) return;
+    const missing = this.missingDraftEntrants();
+    if (missing.length) {
+      this.setPreDraftStage(true, 'pre-draft-waiting-screen');
+      return;
+    }
+    this.initialDraftFlowStarted = true;
+    if (this.config.enableCoinFlip || this.config.enableDivineDraw) {
+      this.startPreDraft();
+    } else if (this.config.draftStyle === 'all-random') {
+      if (this.isAuthoritativeHost) {
+        this.setPreDraftStage(true);
+        setTimeout(() => this.startAllRandomBanPhase(), 600);
+      } else {
+        this.setPreDraftStage(true, 'pre-draft-waiting-screen');
+      }
+    } else if (this.isAuthoritativeHost) {
+      setTimeout(() => this.startDraftEngine(), 1200);
+    } else {
+      this.setPreDraftStage(true, 'pre-draft-waiting-screen');
+    }
   }
 
   entrant(teamKey) {
@@ -317,6 +360,11 @@ export class DraftUI {
     });
 
     this.sync.on('authority', authority => this.setDraftAuthority(authority));
+
+    this.sync.on('presence', payload => {
+      if (payload?.presence && typeof payload.presence === 'object') this.draftPresence = { ...this.draftPresence, ...payload.presence };
+      if (!this.initialDraftFlowStarted) this.beginInitialDraftFlow();
+    });
 
     this.sync.on('resync', ({ messages = [] } = {}) => {
       this.initialRoomMessages = Array.isArray(messages) ? messages : this.initialRoomMessages;
@@ -591,20 +639,7 @@ export class DraftUI {
     // A restored active room must not run the pre-draft flow again.
     if (this.initialRoomState?.engine && this.engine.state !== 'waiting') return;
 
-    if (this.config.enableCoinFlip || this.config.enableDivineDraw) {
-      this.startPreDraft();
-    } else if (this.config.draftStyle === 'all-random') {
-      if (this.isAuthoritativeHost) {
-        this.setPreDraftStage(true);
-        setTimeout(() => this.startAllRandomBanPhase(), 600);
-      } else {
-        this.setPreDraftStage(true, 'pre-draft-waiting-screen');
-      }
-    } else if (this.isAuthoritativeHost) {
-      setTimeout(() => this.startDraftEngine(), 1200);
-    } else {
-      this.setPreDraftStage(true, 'pre-draft-waiting-screen');
-    }
+    this.beginInitialDraftFlow();
   }
 
 
@@ -2319,6 +2354,7 @@ function serializableDraftConfig(config = {}) {
     _roomMessages,
     _draftAuthorityRole,
     _isDraftAuthority,
+    _draftPresence,
     ...serializable
   } = config || {};
   return serializable;
@@ -2349,6 +2385,7 @@ export async function loadDraftConfigFromUrl() {
       _roomMessages: sync.initialMessages,
       _draftAuthorityRole: sync.authorityRole,
       _isDraftAuthority: sync.isAuthority,
+      _draftPresence: sync.presence,
     };
   }
 

@@ -95,6 +95,22 @@ function waitForEvent(socket, event, timeout = 3000) {
   });
 }
 
+function waitForEventMatching(socket, event, predicate, timeout = 3000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      socket.off(event, onEvent);
+      reject(new Error(`Timed out waiting for matching ${event}.`));
+    }, timeout);
+    const onEvent = payload => {
+      if (!predicate(payload)) return;
+      clearTimeout(timer);
+      socket.off(event, onEvent);
+      resolve(payload);
+    };
+    socket.on(event, onEvent);
+  });
+}
+
 const sockets = [];
 try {
   await waitForServer();
@@ -159,10 +175,16 @@ try {
   sockets.push(teamA.socket);
   assert.equal(teamA.result.authorityRole, 'teamA', 'Team A becomes authority when no Host is connected.');
   assert.equal(teamA.result.authoritySocketId, teamA.socket.id);
+  assert.equal(teamA.result.presence.teamA, 1);
+  assert.equal(teamA.result.presence.teamB, 0, 'The first Captain can see that the opposing Captain is missing.');
 
+  const teamBPresenceSeen = waitForEventMatching(teamA.socket, 'draft:presence', payload => payload?.presence?.teamB === 1);
   const teamB = await connectDraftRole(room.roomCode, fragmentValue(room.links.teamB, 'access'), captainBToken);
   sockets.push(teamB.socket);
   assert.equal(teamB.result.authorityRole, 'teamA', 'Team A remains the elected fallback authority.');
+  assert.equal(teamB.result.presence.teamA, 1);
+  assert.equal(teamB.result.presence.teamB, 1);
+  assert.equal((await teamBPresenceSeen).presence.teamB, 1, 'Presence updates let the waiting Captain resume automatically.');
 
   const proceedCommand = waitForEvent(teamA.socket, 'draft:command');
   teamB.socket.emit('draft:command', {
