@@ -262,7 +262,7 @@ function accessFromFragment(url) {
 
     hostSocket.socket.emit('draft:state', {
       roomCode: draft.room.roomCode,
-      state: { status: 'complete', engine: { state: 'complete', teamA: { picks: ['0001'], bans: ['0005'] }, teamB: { picks: ['0002'], bans: ['0006'] } }, chosenDivineRules: [] },
+      state: { status: 'complete', gameNumber: 1, engine: { state: 'complete', gameNumber: 1, teamA: { picks: ['0001'], bans: ['0005'] }, teamB: { picks: ['0002'], bans: ['0006'] } }, chosenDivineRules: [] },
     });
     await new Promise(resolve => setTimeout(resolve, 150));
     const gameReport = await request(`/api/matches/${draftMatch.id}/games/current/report`, { token: draftTeamAToken, method: 'POST', body: { winnerSide: 'A' } });
@@ -288,7 +288,7 @@ function accessFromFragment(url) {
     // A rejected per-game report opens the dispute before evidence can be uploaded.
     hostSocket.socket.emit('draft:state', {
       roomCode: draft.room.roomCode,
-      state: { status: 'complete', engine: { state: 'complete', teamA: { picks: ['0003'], bans: [] }, teamB: { picks: ['0004'], bans: [] } }, chosenDivineRules: [] },
+      state: { status: 'complete', gameNumber: 2, engine: { state: 'complete', gameNumber: 2, teamA: { picks: ['0003'], bans: [] }, teamB: { picks: ['0004'], bans: [] } }, chosenDivineRules: [] },
     });
     await new Promise(resolve => setTimeout(resolve, 150));
     await request(`/api/matches/${draftMatch.id}/games/current/report`, { token: draftTeamAToken, method: 'POST', body: { winnerSide: 'A' } });

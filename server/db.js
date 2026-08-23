@@ -506,11 +506,13 @@ CREATE TABLE IF NOT EXISTS draft_rooms (
 CREATE TABLE IF NOT EXISTS draft_actions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   draft_room_id INTEGER NOT NULL,
+  actor_user_id INTEGER,
   actor_role TEXT NOT NULL,
   action_type TEXT NOT NULL,
   payload_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(draft_room_id) REFERENCES draft_rooms(id) ON DELETE CASCADE
+  FOREIGN KEY(draft_room_id) REFERENCES draft_rooms(id) ON DELETE CASCADE,
+  FOREIGN KEY(actor_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS files (
@@ -883,6 +885,9 @@ const migrations = {
     ['pinned', 'INTEGER NOT NULL DEFAULT 0'],
     ['edited_at', 'TEXT'],
     ['deleted_at', 'TEXT'],
+  ],
+  draft_actions: [
+    ['actor_user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
   ],
 };
 for (const [table, columns] of Object.entries(migrations)) {

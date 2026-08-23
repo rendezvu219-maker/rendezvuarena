@@ -80,7 +80,10 @@ const UI_EXTRA = Object.freeze({
     "waitingHostStartTournament": "Waiting for the Host to start this tournament",
     "waitingForTeamJoin": "Waiting for {team} to join",
     "waitingForTeamJoinDesc": "The Draft Room will begin automatically when the missing Captain connects. The Host does not need to take control.",
-    "tournamentStartedStatus": "TOURNAMENT STARTED · {checkin} CHECK-IN · {ready} READY"
+    "tournamentStartedStatus": "TOURNAMENT STARTED · {checkin} CHECK-IN · {ready} READY",
+    "draftActionLog": "Draft Action Log",
+    "draftActionLogDesc": "Ordered commands and events saved for this Draft Room, including the actor, payload and timestamp.",
+    "noDraftActions": "No Draft actions have been recorded yet."
   },
   "ja": {
     "viewOnly": "閲覧のみ",
@@ -136,7 +139,10 @@ const UI_EXTRA = Object.freeze({
     "waitingHostStartTournament": "Host がこの大会を開始するのを待っています",
     "waitingForTeamJoin": "{team} の参加を待っています",
     "waitingForTeamJoinDesc": "不足しているキャプテンが接続すると、ドラフトルームが自動的に始まります。Host が操作を引き継ぐ必要はありません。",
-    "tournamentStartedStatus": "大会開始済み · チェックイン {checkin} · 準備完了 {ready}"
+    "tournamentStartedStatus": "大会開始済み · チェックイン {checkin} · 準備完了 {ready}",
+    "draftActionLog": "ドラフト操作ログ",
+    "draftActionLogDesc": "このドラフトルームに保存されたコマンドとイベントを、実行者、内容、時刻とともに順番で表示します。",
+    "noDraftActions": "ドラフト操作はまだ記録されていません。"
   },
   "zh-CN": {
     "viewOnly": "仅查看",
@@ -192,7 +198,10 @@ const UI_EXTRA = Object.freeze({
     "waitingHostStartTournament": "正在等待 Host 开始本次赛事",
     "waitingForTeamJoin": "正在等待 {team} 加入",
     "waitingForTeamJoinDesc": "缺席的队长连接后，选禁房间将自动开始。Host 无需接管操作。",
-    "tournamentStartedStatus": "赛事已开始 · {checkin} 场签到 · {ready} 场就绪"
+    "tournamentStartedStatus": "赛事已开始 · {checkin} 场签到 · {ready} 场就绪",
+    "draftActionLog": "选禁操作日志",
+    "draftActionLogDesc": "按顺序显示此选禁房间保存的命令和事件，包括操作者、内容与时间。",
+    "noDraftActions": "尚未记录任何选禁操作。"
   },
   "ko": {
     "viewOnly": "보기 전용",
@@ -248,7 +257,10 @@ const UI_EXTRA = Object.freeze({
     "waitingHostStartTournament": "Host가 이 대회를 시작하기를 기다리는 중",
     "waitingForTeamJoin": "{team} 참가를 기다리는 중",
     "waitingForTeamJoinDesc": "아직 접속하지 않은 주장이 연결되면 드래프트 룸이 자동으로 시작됩니다. Host가 제어권을 가져올 필요는 없습니다.",
-    "tournamentStartedStatus": "대회 시작됨 · 체크인 {checkin} · 준비 {ready}"
+    "tournamentStartedStatus": "대회 시작됨 · 체크인 {checkin} · 준비 {ready}",
+    "draftActionLog": "드래프트 작업 로그",
+    "draftActionLogDesc": "이 드래프트 룸에 저장된 명령과 이벤트를 실행자, 내용, 시간과 함께 순서대로 표시합니다.",
+    "noDraftActions": "기록된 드래프트 작업이 아직 없습니다."
   },
   "es": {
     "viewOnly": "SOLO LECTURA",
@@ -304,7 +316,10 @@ const UI_EXTRA = Object.freeze({
     "waitingHostStartTournament": "Esperando a que el Host inicie este torneo",
     "waitingForTeamJoin": "Esperando a que se una {team}",
     "waitingForTeamJoinDesc": "La sala de Draft comenzará automáticamente cuando se conecte el Capitán que falta. El Host no necesita tomar el control.",
-    "tournamentStartedStatus": "TORNEO INICIADO · {checkin} CHECK-IN · {ready} LISTOS"
+    "tournamentStartedStatus": "TORNEO INICIADO · {checkin} CHECK-IN · {ready} LISTOS",
+    "draftActionLog": "Registro de acciones del Draft",
+    "draftActionLogDesc": "Comandos y eventos guardados en orden para esta sala de Draft, con actor, contenido y hora.",
+    "noDraftActions": "Todavía no se ha registrado ninguna acción del Draft."
   },
   "vi": {
     "viewOnly": "CHỈ XEM",
@@ -360,7 +375,10 @@ const UI_EXTRA = Object.freeze({
     "waitingHostStartTournament": "Đang chờ Host bắt đầu giải đấu này",
     "waitingForTeamJoin": "Đang chờ {team} tham gia",
     "waitingForTeamJoinDesc": "Draft Room sẽ tự bắt đầu khi Đội trưởng còn thiếu kết nối. Host không cần giành quyền điều khiển.",
-    "tournamentStartedStatus": "GIẢI ĐÃ BẮT ĐẦU · {checkin} CHECK-IN · {ready} SẴN SÀNG"
+    "tournamentStartedStatus": "GIẢI ĐÃ BẮT ĐẦU · {checkin} CHECK-IN · {ready} SẴN SÀNG",
+    "draftActionLog": "Nhật ký thao tác Draft",
+    "draftActionLogDesc": "Các lệnh và sự kiện đã lưu theo thứ tự cho Draft Room này, gồm người thực hiện, nội dung và thời gian.",
+    "noDraftActions": "Chưa ghi nhận thao tác Draft nào."
   }
 });
 

@@ -486,6 +486,7 @@ export class DraftUI {
     this.lastStatePublish = now;
     this.sync.publishState({
       status: this.engine.state,
+      gameNumber: Number(this.config.gameNumber || 1),
       engine: this.engine.exportState(),
       chosenDivineRules: this.chosenDivineRules,
       hostBannedHeroIds: this._allRandomBannedIds || [],
@@ -2151,7 +2152,7 @@ if (this.engine.selectedHero === h.id) {
           method: 'POST',
           // The server records the original bracket Team A / Team B, not the
           // temporary Blue / Red placement selected after the coin toss.
-          body: { winnerSide: winnerSideForApi, ...(quickSharedRoom ? { accessToken: this.sync.accessToken } : {}) },
+          body: { winnerSide: winnerSideForApi, gameNumber: Number(this.config.gameNumber || 1), ...(quickSharedRoom ? { accessToken: this.sync.accessToken } : {}) },
         });
         this.config.seriesScoreA = Number(payload.scoreA || 0);
         this.config.seriesScoreB = Number(payload.scoreB || 0);

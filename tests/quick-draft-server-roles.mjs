@@ -142,6 +142,7 @@ try {
     roomCode: room.roomCode,
     state: {
       status: 'waiting',
+      gameNumber: 1,
       preDraft: { stage: 'side-select', sideAssignment: { A: 'teamB', B: 'teamA' } },
     },
   });
@@ -180,6 +181,7 @@ try {
     roomCode: room.roomCode,
     state: {
       status: 'complete',
+      gameNumber: 1,
       preDraft: { stage: 'complete', sideAssignment: { A: 'teamA', B: 'teamB' } },
       engine: {
         state: 'complete', gameNumber: 1,
@@ -192,16 +194,16 @@ try {
 
   const broadcasterResultAttempt = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
     method: 'POST', allowError: true,
-    body: { accessToken: fragmentValue(room.links.broadcaster, 'access'), winnerSide: 'A' },
+    body: { accessToken: fragmentValue(room.links.broadcaster, 'access'), winnerSide: 'A', gameNumber: 1 },
   });
   assert.equal(broadcasterResultAttempt.response.status, 403, 'A Broadcast link must never record Quick Draft results.');
   const nonAuthorityTeamAttempt = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
-    method: 'POST', allowError: true, body: { accessToken: teamAAccess, winnerSide: 'A' },
+    method: 'POST', allowError: true, body: { accessToken: teamAAccess, winnerSide: 'A', gameNumber: 1 },
   });
   assert.equal(nonAuthorityTeamAttempt.response.status, 409, 'A team link cannot record a result while the Host link controls the room.');
 
   const gameOneResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
-    method: 'POST', body: { accessToken: hostAccess, winnerSide: 'A' },
+    method: 'POST', body: { accessToken: hostAccess, winnerSide: 'A', gameNumber: 1 },
   });
   assert.equal(gameOneResult.response.status, 200, JSON.stringify(gameOneResult.payload));
   assert.equal(gameOneResult.payload.nextGameNumber, 2, 'A shared Quick Draft controller link must advance to Game 2.');
@@ -225,6 +227,7 @@ try {
     roomCode: room.roomCode,
     state: {
       status: 'complete',
+      gameNumber: 2,
       engine: {
         state: 'complete', gameNumber: 2,
         teamA: { picks: ['0011','0012','0013','0014'], bans: ['0009'] },
@@ -234,7 +237,7 @@ try {
   });
   await gameTwoStateSeen;
   const gameTwoResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
-    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'B' },
+    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'B', gameNumber: 2 },
   });
   assert.equal(gameTwoResult.response.status, 200, JSON.stringify(gameTwoResult.payload));
   assert.equal(gameTwoResult.payload.nextGameNumber, 3, 'The shared team controller link must advance to Game 3.');
@@ -253,6 +256,7 @@ try {
     roomCode: room.roomCode,
     state: {
       status: 'complete',
+      gameNumber: 3,
       engine: {
         state: 'complete', gameNumber: 3,
         teamA: { picks: ['0019','0020','0021','0022'], bans: ['0027'] },
@@ -262,7 +266,7 @@ try {
   });
   await gameThreeStateSeen;
   const gameThreeResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
-    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'A' },
+    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'A', gameNumber: 3 },
   });
   assert.equal(gameThreeResult.response.status, 200, JSON.stringify(gameThreeResult.payload));
   assert.equal(gameThreeResult.payload.seriesComplete, true);

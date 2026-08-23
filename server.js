@@ -1737,7 +1737,7 @@ function refreshedDraftConfig(match, room) {
   return config;
 }
 
-function recordDraftGameWinner(req, winnerSide, { nextDraftUrl = null } = {}) {
+function recordDraftGameWinner(req, winnerSide, { nextDraftUrl = null, expectedGameNumber = null } = {}) {
   const match = draftMatchContext(req.match.id);
   if (!match) throw new Error('Match not found.');
   if (!match.team_a_id || !match.team_b_id) throw new Error('Both teams must be assigned.');
@@ -1748,11 +1748,25 @@ function recordDraftGameWinner(req, winnerSide, { nextDraftUrl = null } = {}) {
   const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(match.id);
   if (!room) throw new Error('Create the Draft Room first.');
   const state = jsonParse(room.state_json);
+  const config = jsonParse(room.config_json);
+  const currentGameNumber = Number(match.current_game_number || 1);
+  const requestedGameNumber = Number(expectedGameNumber);
+  const roomGameNumber = Number(config.gameNumber || state.gameNumber || state.engine?.gameNumber || currentGameNumber);
+  const stateGameNumber = Number(state.gameNumber || state.engine?.gameNumber || roomGameNumber);
+  if (!Number.isInteger(requestedGameNumber) || requestedGameNumber <= 0) {
+    const error = new Error('The current game number is required when recording a Draft result.');
+    error.status = 400;
+    throw error;
+  }
+  if (requestedGameNumber !== currentGameNumber || roomGameNumber !== currentGameNumber || stateGameNumber !== currentGameNumber) {
+    const error = new Error(`Game ${requestedGameNumber} is stale; the Draft Room is on Game ${currentGameNumber}. Reload before recording a result.`);
+    error.status = 409;
+    throw error;
+  }
   if (state.engine?.state !== 'complete' && !req.body.force) {
     throw new Error('The current ban/pick must be complete before recording the game winner.');
   }
 
-  const currentGameNumber = Number(match.current_game_number || 1);
   const currentGame = db.prepare('SELECT * FROM match_games WHERE match_id=? AND game_number=?').get(match.id, currentGameNumber);
   if (!currentGame) throw new Error('Current game record was not found.');
   if (currentGame.status === 'completed' && currentGame.winner_team_id) {
@@ -1766,9 +1780,9 @@ function recordDraftGameWinner(req, winnerSide, { nextDraftUrl = null } = {}) {
   const winsNeeded = Math.floor(Number(match.best_of) / 2) + 1;
   const seriesComplete = score.scoreA >= winsNeeded || score.scoreB >= winsNeeded;
   const access = jsonParse(room.access_json);
-  const config = refreshedDraftConfig(match, room);
-  config.seriesScoreA = score.scoreA;
-  config.seriesScoreB = score.scoreB;
+  const refreshedConfig = refreshedDraftConfig(match, room);
+  refreshedConfig.seriesScoreA = score.scoreA;
+  refreshedConfig.seriesScoreB = score.scoreB;
 
   if (seriesComplete) {
     const finalState = {
@@ -1782,7 +1796,7 @@ function recordDraftGameWinner(req, winnerSide, { nextDraftUrl = null } = {}) {
     db.prepare(`UPDATE matches SET score_a=?,score_b=?,status='completed',match_status='completed',updated_at=CURRENT_TIMESTAMP WHERE id=?`)
       .run(score.scoreA, score.scoreB, match.id);
     db.prepare(`UPDATE draft_rooms SET config_json=?,state_json=?,status='series_complete',updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-      .run(JSON.stringify(config), JSON.stringify(finalState), room.id);
+      .run(JSON.stringify(refreshedConfig), JSON.stringify(finalState), room.id);
     addSystemMessage(match.id, `Series score updated: ${match.team_a_name} ${score.scoreA} - ${score.scoreB} ${match.team_b_name}. The BO series is complete.`);
     io.to(`draft:${room.room_code}`).emit('draft:state', finalState);
     emitBracketUpdated(match.tournament_id);
@@ -1899,6 +1913,15 @@ function assertCurrentGameReadyForReport(match, game) {
   const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(match.id);
   if (!room) throw new Error('Create the Draft Room first.');
   const state = jsonParse(room.state_json);
+  const config = jsonParse(room.config_json);
+  const currentGameNumber = Number(match.current_game_number || 1);
+  const roomGameNumber = Number(config.gameNumber || state.gameNumber || state.engine?.gameNumber || currentGameNumber);
+  const stateGameNumber = Number(state.gameNumber || state.engine?.gameNumber || roomGameNumber);
+  if (Number(game.game_number) !== currentGameNumber || roomGameNumber !== currentGameNumber || stateGameNumber !== currentGameNumber) {
+    const error = new Error(`The Draft Room game sequence is stale. Reload Game ${currentGameNumber} before continuing.`);
+    error.status = 409;
+    throw error;
+  }
   if (state.engine?.state !== 'complete') {
     const error = new Error(`Finish the Game ${game.game_number} draft before reporting its winner.`);
     error.status = 409;
@@ -1920,6 +1943,32 @@ app.get('/api/matches/:matchId/draft-room/access', authRequired, emailVerifiedRe
   const result = draftRoomAccessForRequest(req, room, access);
   if (!result) return res.status(403).json({ error: 'Only the linked Team Captain can enter and control this team Draft Room.' });
   res.json(result);
+});
+
+app.get('/api/matches/:matchId/draft-room/actions', authRequired, requireMatchAccess, (req, res) => {
+  if (!hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.audit.read')) {
+    return res.status(403).json({ error: 'Draft audit permission required.' });
+  }
+  const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(req.match.id);
+  if (!room) return res.json({ actions: [] });
+  const config = jsonParse(room.config_json);
+  const roleNames = {
+    host: 'Host', referee: 'Referee', broadcaster: 'Broadcaster',
+    teamA: config.teamA || 'Team A', teamB: config.teamB || 'Team B',
+  };
+  const actions = db.prepare(`SELECT da.id,da.actor_user_id,da.actor_role,da.action_type,da.payload_json,da.created_at,
+      COALESCE(u.display_name,u.username) actor_account_name
+    FROM draft_actions da LEFT JOIN users u ON u.id=da.actor_user_id
+    WHERE da.draft_room_id=? ORDER BY da.id ASC LIMIT 1000`).all(room.id).map(action => ({
+      id: action.id,
+      actorUserId: action.actor_user_id || null,
+      actorRole: action.actor_role,
+      actorName: action.actor_account_name || roleNames[action.actor_role] || action.actor_role,
+      actionType: action.action_type,
+      payload: jsonParse(action.payload_json),
+      createdAt: action.created_at,
+    }));
+  res.json({ actions });
 });
 
 app.get('/api/matches/:matchId/games', authRequired, requireMatchAccess, (req, res) => {
@@ -1998,7 +2047,7 @@ app.post('/api/matches/:matchId/games/current/confirm', authRequired, emailVerif
     db.prepare(`UPDATE match_games SET result_status='confirmed',confirmed_by_user_id=?,confirmed_by_team_id=?,confirmed_at=CURRENT_TIMESTAMP,dispute_reason='',updated_at=CURRENT_TIMESTAMP WHERE id=?`)
       .run(req.user.id, confirmingTeamId, game.id);
     req.body.winnerSide = sideForWinnerTeam(match, game.reported_winner_team_id);
-    let payload = recordDraftGameWinner(req, req.body.winnerSide);
+    let payload = recordDraftGameWinner(req, req.body.winnerSide, { expectedGameNumber: game.game_number });
     if (!payload.seriesComplete) db.prepare(`UPDATE matches SET result_status='none',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
     payload = finalizeSeriesFromVerifiedGames(req, payload);
     addSystemMessage(match.id, `Game ${game.game_number} result confirmed by both sides.`);
@@ -2122,6 +2171,9 @@ app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMa
     const match = draftMatchContext(req.match.id);
     const game = currentMatchGame(match);
     assertCurrentGameReadyForReport(match, game);
+    if (Number(req.body.gameNumber) !== Number(game.game_number)) {
+      return res.status(409).json({ error: `Game ${req.body.gameNumber || '?'} is stale; reload Game ${game.game_number} before recording a result.` });
+    }
     const winnerSide = String(req.body.winnerSide || '').toUpperCase();
     const winnerTeamId = winnerSide === 'A' ? Number(match.team_a_id) : winnerSide === 'B' ? Number(match.team_b_id) : null;
     if (!winnerTeamId) return res.status(400).json({ error: 'Choose Team A or Team B as the game winner.' });
@@ -2129,7 +2181,7 @@ app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMa
       .run(winnerTeamId, req.user.id, req.user.id, game.id);
     db.prepare(`UPDATE disputes SET status='resolved',resolved_by_user_id=?,resolution_note='Administrative game result override',resolved_at=CURRENT_TIMESTAMP WHERE match_id=? AND status IN ('open','under_review','recommended')`)
       .run(req.user.id, match.id);
-    let payload = recordDraftGameWinner(req, winnerSide);
+    let payload = recordDraftGameWinner(req, winnerSide, { expectedGameNumber: req.body.gameNumber });
     if (!payload.seriesComplete) db.prepare(`UPDATE matches SET result_status='none',match_status='drafting',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
     payload = finalizeSeriesFromVerifiedGames(req, payload);
     res.json(payload);
@@ -2142,7 +2194,7 @@ app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMa
 app.post('/api/matches/:matchId/draft-room/next-game', authRequired, requireMatchAccess, (req, res) => {
   if (!canDirectlyRecordDraftGame(req)) return res.status(403).json({ error: 'Only an Admin may override a tournament game result. Quick Draft creators may record their own games.' });
   try {
-    let payload = recordDraftGameWinner(req, req.body.winnerSide);
+    let payload = recordDraftGameWinner(req, req.body.winnerSide, { expectedGameNumber: req.body.gameNumber });
     payload = finalizeSeriesFromVerifiedGames(req, payload);
     res.json(payload);
   } catch (error) {
@@ -2204,7 +2256,7 @@ app.post('/api/public/draft-rooms/:roomCode/game-result',(req,res)=>{
     req.match=draftMatchContext(room.match_id);
     req.draftActorUserId=room.created_by;
     const nextDraftUrl=draftRoomPayload(req,room,{[role]:accessToken}).links[role];
-    let payload=recordDraftGameWinner(req,req.body.winnerSide,{nextDraftUrl});
+    let payload=recordDraftGameWinner(req,req.body.winnerSide,{nextDraftUrl,expectedGameNumber:req.body.gameNumber});
     payload=finalizeSeriesFromVerifiedGames(req,payload);
     securityLog('quick_draft.game_result_recorded',{roomId:room.id,role,gameNumber:payload.currentGameNumber,seriesComplete:Boolean(payload.seriesComplete)},'info');
     res.json(payload);
@@ -2322,9 +2374,9 @@ io.use((socket,next)=>{
     return next(new Error('Authentication required.'));
   }
 });
-function recordDraftAction(roomId,role,actionType,payload={}){
-  db.prepare('INSERT INTO draft_actions(draft_room_id,actor_role,action_type,payload_json) VALUES (?,?,?,?)')
-    .run(roomId,role||'unknown',String(actionType||'').slice(0,80),JSON.stringify(payload));
+function recordDraftAction(roomId,role,actionType,payload={},actorUserId=null){
+  db.prepare('INSERT INTO draft_actions(draft_room_id,actor_user_id,actor_role,action_type,payload_json) VALUES (?,?,?,?,?)')
+    .run(roomId,actorUserId||null,role||'unknown',String(actionType||'').slice(0,80),JSON.stringify(payload));
 }
 
 // Draft Rooms elect one authoritative connected controller. Tournament Host is
@@ -2451,7 +2503,7 @@ io.on('connection',socket=>{
     if(expected&&data.team&&data.team!==expected)return socket.emit('draft:error',{message:'You cannot control the other team.'});
     const authority=draftAuthority(room.room_code);
     if(!authority)return socket.emit('draft:error',{message:'No Team or Host is connected to control this Draft Room.'});
-    recordDraftAction(room.id,role,`command.${action}`,data);
+    recordDraftAction(room.id,role,`command.${action}`,data,socket.user?.id||socket.data.ticket?.user_id||null);
     io.to(authority.socketId).emit('draft:command',{action,data,fromRole:role});
   });
 
@@ -2464,7 +2516,7 @@ io.on('connection',socket=>{
     const authority=draftAuthority(room.room_code);
     const authorityEvents=['draft:started','hero:locked','hero:banned','timer:tick','draft:paused','draft:resumed','divine:result','all-random:bans','draft:completed','draft:reset'];
     if(!authority||socket.id!==authority.socketId||!authorityEvents.includes(type))return;
-    recordDraftAction(room.id,role,type,data);
+    recordDraftAction(room.id,role,type,data,socket.user?.id||socket.data.ticket?.user_id||null);
     socket.to(`draft:${room.room_code}`).emit('draft:event',{type,data,by:role});
   });
 
@@ -2493,14 +2545,24 @@ io.on('connection',socket=>{
     if(!room||socket.data.draftRoomId!==room.id||!authority||socket.id!==authority.socketId)return;
     const safe=payload.state;
     const status=sanitizeText(safe.status||room.status,40);
-    db.prepare('UPDATE draft_rooms SET state_json=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
-      .run(JSON.stringify(safe),status,room.id);
     const config=jsonParse(room.config_json);
-    if(safe.engine?.state==='complete'){
-      const entrantTeams=draftEngineTeamsByEntrant(safe);
-      db.prepare(`UPDATE match_games SET status='draft_complete',picks_a_json=?,picks_b_json=?,bans_a_json=?,bans_b_json=?,divine_json=?,draft_snapshot_json=?,completed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE match_id=? AND game_number=?`)
-        .run(JSON.stringify(entrantTeams.teamA?.picks||[]),JSON.stringify(entrantTeams.teamB?.picks||[]),JSON.stringify(entrantTeams.teamA?.bans||[]),JSON.stringify(entrantTeams.teamB?.bans||[]),JSON.stringify(safe.chosenDivineRules||[]),JSON.stringify(safe),room.match_id,Number(config.gameNumber||1));
+    const match=db.prepare('SELECT current_game_number FROM matches WHERE id=?').get(room.match_id);
+    const configGameNumber=Number(config.gameNumber||match?.current_game_number||1);
+    const stateGameNumber=Number(safe.gameNumber||safe.engine?.gameNumber||0);
+    if(!match||!Number.isInteger(stateGameNumber)||stateGameNumber!==configGameNumber||stateGameNumber!==Number(match.current_game_number||1)){
+      socket.emit('draft:error',{message:`Stale Draft state ignored. This room is on Game ${Number(match?.current_game_number||configGameNumber)}.`});
+      socket.emit('draft:state',jsonParse(room.state_json));
+      return;
     }
+    transaction(()=>{
+      db.prepare('UPDATE draft_rooms SET state_json=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
+        .run(JSON.stringify(safe),status,room.id);
+      if(safe.engine?.state==='complete'){
+        const entrantTeams=draftEngineTeamsByEntrant(safe);
+        db.prepare(`UPDATE match_games SET status='draft_complete',picks_a_json=?,picks_b_json=?,bans_a_json=?,bans_b_json=?,divine_json=?,draft_snapshot_json=?,completed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE match_id=? AND game_number=? AND status<>'completed'`)
+          .run(JSON.stringify(entrantTeams.teamA?.picks||[]),JSON.stringify(entrantTeams.teamB?.picks||[]),JSON.stringify(entrantTeams.teamA?.bans||[]),JSON.stringify(entrantTeams.teamB?.bans||[]),JSON.stringify(safe.chosenDivineRules||[]),JSON.stringify(safe),room.match_id,stateGameNumber);
+      }
+    });
     socket.to(`draft:${room.room_code}`).emit('draft:state',safe);
   });
 

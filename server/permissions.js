@@ -6,11 +6,11 @@ const ROLE_PERMISSIONS = {
   host: [
     'tournament.manage','team.create','team.edit','team.invite_captain','team.transfer_captain',
     'seeding.edit','bracket.generate','bracket.restore','match.read','match.manage','match.notes.private.read',
-    'result.submit','result.verify','dispute.review','evidence.read','chat.moderate','draft.control','broadcast.control'
+    'result.submit','result.verify','dispute.review','evidence.read','chat.moderate','draft.control','draft.audit.read','broadcast.control'
   ],
   referee: [
     'match.read','match.checkin','match.notes.private.read','result.submit','dispute.review',
-    'result.recommend','evidence.read','chat.send','draft.pause'
+    'result.recommend','evidence.read','chat.send','draft.pause','draft.audit.read'
   ],
   scheduler: ['match.read','match.schedule','match.manage'],
   scorekeeper: ['match.read','result.submit'],
