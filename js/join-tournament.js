@@ -18,13 +18,19 @@ function selectedTeam() {
   const id = Number($('#join-team').value || 0);
   return state.options?.teams?.find(team => Number(team.id) === id) || null;
 }
+function isSoloSignup() { return $('#join-team').value === '__solo__'; }
 function renderMemberOptions() {
+  const solo = isSoloSignup();
   const team = selectedTeam();
   const select = $('#join-member');
   const available = (team?.members || []).filter(member => !member.accountLinked);
   select.innerHTML = `<option value="">My roster name is not listed</option>${available.map(member => `<option value="${member.id}">${escapeHtml(member.gamerTag || member.displayName)} · ${escapeHtml(label(member.memberRole))}</option>`).join('')}`;
-  $('#join-custom-team-wrap').classList.toggle('hidden', Boolean(team));
-  $('#join-custom-team').required = !team;
+  select.closest('label').classList.toggle('hidden', solo);
+  $('#join-custom-team-wrap').classList.toggle('hidden', solo || Boolean(team));
+  $('#join-custom-team').required = !solo && !team;
+  const role=$('#join-role');
+  [...role.options].forEach(option=>{option.disabled=solo&&!['player','captain'].includes(option.value);});
+  if(solo&&!['player','captain'].includes(role.value))role.value='player';
 }
 function renderSource() {
   const tournament = state.options.tournament;
@@ -62,12 +68,13 @@ function renderEligibility(){
 
 function renderForm() {
   const teams = state.options.teams || [];
-  $('#join-team').innerHTML = teams.length
+  $('#join-team').innerHTML = `<option value="__solo__">${escapeHtml(t('soloSignupOption'))}</option>${teams.length
     ? `${teams.map(team => `<option value="${team.id}">${escapeHtml(team.name)}${team.tag ? ` [${escapeHtml(team.tag)}]` : ''}${team.captainLinked ? ' · Captain linked' : ''}</option>`).join('')}<option value="">My team is not listed</option>`
-    : '<option value="">Team list is not synced — enter it manually</option>';
+    : '<option value="">Team list is not synced — enter it manually</option>'}`;
   const matched=state.eligibility?.matchingMembers?.[0];
   if(matched&&teams.some(team=>Number(team.id)===Number(matched.team_id)))$('#join-team').value=String(matched.team_id);
   else if (teams.length) $('#join-team').value = String(teams[0].id);
+  else $('#join-team').value = '__solo__';
   renderMemberOptions();
   if(matched&&[...$('#join-member').options].some(option=>Number(option.value)===Number(matched.id)))$('#join-member').value=String(matched.id);
   $('#join-form').classList.remove('hidden');
@@ -84,7 +91,7 @@ function renderStatus(payload) {
   }
   if (request?.status === 'pending') {
     panel.className = 'join-account-status pending';
-    panel.innerHTML = `<span>REQUEST PENDING</span><h2>${escapeHtml(request.team_name || request.requested_team_name || 'Tournament join request')}</h2><p>The Host must confirm that this account matches the external entrant or roster.</p><button class="btn btn-ghost" id="cancel-join-request">CANCEL REQUEST</button>`;
+    panel.innerHTML = `<span>REQUEST PENDING</span><h2>${escapeHtml(request.team_name || request.requested_team_name || t('soloAssignmentPending'))}</h2><p>${escapeHtml(request.team_id||request.requested_team_name?t('hostConfirmsRosterLink'):t('hostApprovesSoloPool'))}</p><button class="btn btn-ghost" id="cancel-join-request">CANCEL REQUEST</button>`;
     panel.classList.remove('hidden');
     $('#cancel-join-request').addEventListener('click', async () => {
       try { await api(`/api/tournaments/${encodeURIComponent(slug)}/join-requests/current`, { method:'DELETE' }); location.reload(); }
@@ -133,15 +140,17 @@ $('#join-member').addEventListener('change', () => {
 $('#join-form').addEventListener('submit', async event => {
   event.preventDefault(); clearError();
   try {
-    const teamId = Number($('#join-team').value || 0) || null;
-    const memberId = Number($('#join-member').value || 0) || null;
+    const soloSignup=isSoloSignup();
+    const teamId = soloSignup?null:(Number($('#join-team').value || 0) || null);
+    const memberId = soloSignup?null:(Number($('#join-member').value || 0) || null);
     await api(`/api/tournaments/${encodeURIComponent(slug)}/join-requests`, {
       method:'POST',
       body:{
         requestedRole:$('#join-role').value,
         teamId,
         memberId,
-        requestedTeamName:teamId ? '' : $('#join-custom-team').value.trim(),
+        requestedTeamName:soloSignup||teamId ? '' : $('#join-custom-team').value.trim(),
+        soloSignup,
         gamerTag:$('#join-gamer-tag').value.trim(),
         message:$('#join-message').value.trim(),
       },

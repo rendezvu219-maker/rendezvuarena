@@ -236,6 +236,7 @@ CREATE TABLE IF NOT EXISTS teams (
   protected_seed_group TEXT NOT NULL DEFAULT '',
   region TEXT NOT NULL DEFAULT '',
   seeding_note TEXT NOT NULL DEFAULT '',
+  formation_source TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'pending',
   team_status TEXT NOT NULL DEFAULT 'captain_pending',
   captain_user_id INTEGER,
@@ -595,6 +596,35 @@ CREATE TABLE IF NOT EXISTS seeding_history (
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS solo_team_previews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tournament_id INTEGER NOT NULL,
+  created_by INTEGER NOT NULL,
+  total_slots INTEGER NOT NULL,
+  team_size INTEGER NOT NULL,
+  captain_mode TEXT NOT NULL CHECK(captain_mode IN ('self_nominated','host_selected')),
+  assignments_json TEXT NOT NULL,
+  request_ids_json TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','confirmed','cancelled','expired')),
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  confirmed_at TEXT,
+  FOREIGN KEY(tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+  FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS solo_team_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tournament_id INTEGER NOT NULL,
+  user_id INTEGER,
+  snapshot_json TEXT NOT NULL,
+  reason TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  undone_at TEXT,
+  FOREIGN KEY(tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS bracket_snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tournament_id INTEGER NOT NULL,
@@ -806,6 +836,7 @@ const migrations = {
     ['protected_seed_group', "TEXT NOT NULL DEFAULT ''"],
     ['region', "TEXT NOT NULL DEFAULT ''"],
     ['seeding_note', "TEXT NOT NULL DEFAULT ''"],
+    ['formation_source', "TEXT NOT NULL DEFAULT ''"],
     ['team_status', "TEXT NOT NULL DEFAULT 'captain_pending'"],
     ['captain_user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
     ['roster_locked_at', 'TEXT'],
@@ -949,6 +980,8 @@ CREATE INDEX IF NOT EXISTS idx_members_team ON team_members(team_id);
 CREATE INDEX IF NOT EXISTS idx_join_requests_tournament ON tournament_join_requests(tournament_id, status, created_at);
 CREATE INDEX IF NOT EXISTS idx_join_requests_user ON tournament_join_requests(user_id, status, created_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_join_requests_one_pending ON tournament_join_requests(tournament_id, user_id) WHERE status='pending';
+CREATE INDEX IF NOT EXISTS idx_solo_team_previews_tournament ON solo_team_previews(tournament_id, status, created_at);
+CREATE INDEX IF NOT EXISTS idx_solo_team_history_tournament ON solo_team_history(tournament_id, undone_at, created_at);
 CREATE INDEX IF NOT EXISTS idx_draft_actions_room ON draft_actions(draft_room_id);
 CREATE INDEX IF NOT EXISTS idx_match_messages_match ON match_messages(match_id, id);
 CREATE INDEX IF NOT EXISTS idx_result_submissions_match ON result_submissions(match_id, revision);

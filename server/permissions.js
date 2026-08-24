@@ -4,7 +4,7 @@ const ROLE_PERMISSIONS = {
   owner: ['*'],
   admin: ['*'],
   host: [
-    'tournament.manage','team.create','team.edit','team.invite_captain','team.transfer_captain',
+    'tournament.manage','team.create','team.edit','team.invite_captain','team.transfer_captain','team.randomize_solo',
     'seeding.edit','bracket.generate','bracket.restore','match.read','match.manage','match.notes.private.read',
     'result.submit','result.verify','dispute.review','evidence.read','chat.moderate','draft.control','draft.audit.read','broadcast.control'
   ],
