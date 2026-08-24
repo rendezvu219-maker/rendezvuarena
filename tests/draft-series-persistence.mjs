@@ -62,6 +62,41 @@ const SERIES = {
   ],
 };
 
+function selections(picksA, picksB, bansA = [], bansB = []) {
+  return { picksA, picksB, bansA, bansB };
+}
+
+const BO5_SERIES = {
+  normal: [
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0039'], ['0040']),
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0037'], ['0038']),
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0035'], ['0036']),
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0033'], ['0034']),
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0031'], ['0032']),
+  ],
+  fearless: [
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0039'], ['0040']),
+    selections(['0009','0010','0011','0012'], ['0013','0014','0015','0016'], ['0037'], ['0038']),
+    selections(['0017','0018','0019','0020'], ['0021','0022','0023','0024'], ['0035'], ['0036']),
+    selections(['0025','0026','0027','0028'], ['0029','0030','0031','0032'], ['0033'], ['0034']),
+    selections(['0033','0034','0035','0036'], ['0037','0038','0039','0040'], ['0031'], ['0032']),
+  ],
+  team_no_repeat: [
+    selections(['0001','0002','0003','0004'], ['0021','0022','0023','0024'], ['0039'], ['0040']),
+    selections(['0005','0006','0007','0008'], ['0025','0026','0027','0028'], ['0037'], ['0038']),
+    selections(['0009','0010','0011','0012'], ['0029','0030','0031','0032'], ['0035'], ['0036']),
+    selections(['0013','0014','0015','0016'], ['0033','0034','0035','0036'], ['0031'], ['0032']),
+    selections(['0017','0018','0019','0020'], ['0037','0038','0039','0040'], ['0029'], ['0030']),
+  ],
+  squadra_blast: [
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0039'], ['0040']),
+    selections(['0009','0010','0011','0012'], ['0013','0014','0015','0016'], ['0039'], ['0040']),
+    selections(['0001','0002','0003','0004'], ['0005','0006','0007','0008'], ['0037'], ['0038']),
+    selections(['0017','0018','0019','0020'], ['0021','0022','0023','0024'], ['0035'], ['0036']),
+    selections(['0025','0026','0027','0028'], ['0029','0030','0031','0032'], ['0035'], ['0036']),
+  ],
+};
+
 async function request(url, { token, method = 'GET', body, allowError = false } = {}) {
   const response = await fetch(`${base}${url}`, {
     method,
@@ -150,12 +185,12 @@ async function waitUntil(predicate, message, timeout = 4000) {
   throw new Error(message);
 }
 
-function createMatch(tournamentId, teamAId, teamBId, rule, index, captainAId, captainBId) {
+function createMatch(tournamentId, teamAId, teamBId, rule, index, captainAId, captainBId, bestOf = 3) {
   const result = db.prepare(`INSERT INTO matches(
       tournament_id,bracket_type,bracket_side,stage,round_no,round_name,position,
       team_a_id,team_b_id,best_of,series_rule,current_game_number,status,match_status,result_status
-    ) VALUES (?,'single','winners',?,1,?,1,?,?,3,?,1,'available','available','none')`)
-    .run(tournamentId, `phase2_${index}_${rule}`, `Phase 2 ${rule}`, teamAId, teamBId, rule);
+    ) VALUES (?,'single','winners',?,1,?,1,?,?,?,?,1,'available','available','none')`)
+    .run(tournamentId, `phase2_bo${bestOf}_${index}_${rule}`, `Phase 2 BO${bestOf} ${rule}`, teamAId, teamBId, bestOf, rule);
   const matchId = Number(result.lastInsertRowid);
   db.prepare(`INSERT INTO match_checkins(match_id,actor_type,actor_id,status,checked_in_by)
       VALUES (?,'team',?,'ready',?),(?,'team',?,'ready',?)`)
@@ -197,11 +232,12 @@ function assertPersistedGame(matchId, gameNumber, expected) {
 function assertNextGameHistory(rule, nextGameNumber, config, completedGames) {
   assert.equal(config.gameNumber, nextGameNumber);
   assert.equal(config.seriesRule, rule);
-  if (rule === 'squadra_blast' && nextGameNumber === 2) {
-    assert.deepEqual(config.previousPicksA, completedGames[0].picksA);
-    assert.deepEqual(config.previousPicksB, completedGames[0].picksB);
-    assert.deepEqual(config.previousBansA, completedGames[0].bansA);
-    assert.deepEqual(config.previousBansB, completedGames[0].bansB);
+  if (rule === 'squadra_blast' && ((nextGameNumber - 1) % 3) + 1 === 2) {
+    const previousGame = completedGames.at(-1);
+    assert.deepEqual(config.previousPicksA, previousGame.picksA);
+    assert.deepEqual(config.previousPicksB, previousGame.picksB);
+    assert.deepEqual(config.previousBansA, previousGame.bansA);
+    assert.deepEqual(config.previousBansB, previousGame.bansB);
     return;
   }
   if (rule === 'squadra_blast') {
@@ -376,10 +412,121 @@ try {
     controller.socket.disconnect();
   }
 
+  for (const [index, [rule, games]] of Object.entries(BO5_SERIES).entries()) {
+    const matchId = createMatch(
+      live.id,
+      seedMatch.team_a_id,
+      seedMatch.team_b_id,
+      rule,
+      `bo5_${index}`,
+      teamA.captain_user_id,
+      teamB.captain_user_id,
+      5,
+    );
+    const opened = await request(`/api/matches/${matchId}/draft-room`, { token: hostToken, method: 'POST' });
+    const { roomCode, links } = opened.payload.room;
+    const teamAAccess = accessValue(links.teamA, 'access');
+    let gameRollId = opened.payload.room.config.gameRollId;
+    let controller = await connectDraftRole(roomCode, teamAAccess, captainAToken);
+    assert.equal(controller.result.authorityRole, 'teamA');
+
+    for (let offset = 0; offset < games.length; offset += 1) {
+      const gameNumber = offset + 1;
+      const oldRollId = gameRollId;
+      controller.socket.emit('draft:state', {
+        roomCode,
+        state: draftState(rule, gameNumber, games[offset], gameRollId),
+      });
+      await waitUntil(() => {
+        const row = db.prepare('SELECT status FROM match_games WHERE match_id=? AND game_number=?').get(matchId, gameNumber);
+        return row?.status === 'draft_complete';
+      }, `BO5 ${rule} Game ${gameNumber} state was not persisted.`);
+      assert.equal(assertPersistedGame(matchId, gameNumber, games[offset]).status, 'draft_complete');
+
+      const expectedNextGame = gameNumber + 1;
+      const roomAdvanced = waitForEventMatching(
+        controller.socket,
+        'draft:state',
+        state => gameNumber === 5
+          ? state?.seriesComplete === true
+          : state?.reloadRequired === true && Number(state.gameNumber) === expectedNextGame,
+      );
+      const winnerSide = gameNumber % 2 === 1 ? 'A' : 'B';
+      const reported = await request(`/api/matches/${matchId}/games/current/report`, {
+        token: captainAToken, method: 'POST', body: { winnerSide },
+      });
+      assert.equal(reported.response.status, 200);
+      const confirmed = await request(`/api/matches/${matchId}/games/current/confirm`, {
+        token: captainBToken, method: 'POST', body: { decision: 'confirm' },
+      });
+      assert.equal(confirmed.response.status, 200, JSON.stringify(confirmed.payload));
+      const pushedState = await roomAdvanced;
+      assert.equal(assertPersistedGame(matchId, gameNumber, games[offset]).status, 'completed');
+
+      if (gameNumber < 5) {
+        assert.equal(confirmed.payload.seriesComplete, false);
+        assert.equal(confirmed.payload.nextGameNumber, expectedNextGame);
+        assert.equal(pushedState.status, 'waiting');
+        assert.equal(pushedState.engine, undefined, 'The result screen must not carry the completed engine into the next BO5 game.');
+        assert.equal(pushedState.preDraft, undefined, 'The result screen must not carry old Divine state into the next BO5 game.');
+        assert.equal(
+          db.prepare('SELECT current_game_number FROM matches WHERE id=?').get(matchId).current_game_number,
+          expectedNextGame,
+        );
+        assert.equal(
+          db.prepare('SELECT status FROM match_games WHERE match_id=? AND game_number=?').get(matchId, expectedNextGame).status,
+          'waiting_draft',
+        );
+
+        if (gameNumber === 3) {
+          const staleRollError = waitForEvent(controller.socket, 'draft:error');
+          controller.socket.emit('draft:state', {
+            roomCode,
+            state: draftState(rule, expectedNextGame, games[offset + 1], oldRollId),
+          });
+          assert.match((await staleRollError).message, /stale draft state ignored/i);
+          assert.equal(
+            db.prepare('SELECT status FROM match_games WHERE match_id=? AND game_number=?').get(matchId, expectedNextGame).status,
+            'waiting_draft',
+            'A BO5 next game must reject a result carrying the previous random-roll identity.',
+          );
+        }
+
+        const access = await request(`/api/public/draft-rooms/${roomCode}/access`, {
+          token: captainAToken, method: 'POST', body: { accessToken: teamAAccess },
+        });
+        assertNextGameHistory(rule, expectedNextGame, access.payload.room.config, games.slice(0, gameNumber));
+        assert.notEqual(access.payload.room.config.gameRollId, oldRollId);
+        assert.equal(access.payload.room.state.gameNumber, expectedNextGame);
+        assert.equal(access.payload.room.state.gameRollId, access.payload.room.config.gameRollId);
+        gameRollId = access.payload.room.config.gameRollId;
+
+        if (gameNumber === 2) {
+          controller.socket.disconnect();
+          controller = await connectDraftRole(roomCode, teamAAccess, captainAToken);
+          assert.equal(controller.result.authorityRole, 'teamA', `${rule} BO5 authority must survive the Game 3 reload.`);
+          assert.equal(controller.result.state.gameNumber, 3);
+          assert.equal(controller.result.state.engine, undefined);
+        }
+      } else {
+        assert.equal(confirmed.payload.seriesComplete, true);
+        assert.equal(confirmed.payload.final, true);
+        assert.equal(pushedState.status, 'series_complete');
+        assert.equal(confirmed.payload.scoreA, 3);
+        assert.equal(confirmed.payload.scoreB, 2);
+      }
+    }
+
+    const persistedGames = db.prepare('SELECT game_number,status FROM match_games WHERE match_id=? ORDER BY game_number').all(matchId);
+    assert.deepEqual(persistedGames.map(game => game.game_number), [1, 2, 3, 4, 5]);
+    assert.ok(persistedGames.every(game => game.status === 'completed'));
+    controller.socket.disconnect();
+  }
+
   const dashboard = fs.readFileSync(path.join(root, 'js', 'dashboard.js'), 'utf8');
   assert.match(dashboard, /renderDraftActionLog/);
   assert.match(dashboard, /draft-room\/actions/);
-  console.log('BO3 persistence, all series modes, authority reconnect, stale-state race and Draft audit log checks passed.');
+  console.log('BO3/BO5 persistence, all series modes, authority reconnect, result-screen advancement, stale-state race and Draft audit log checks passed.');
 } finally {
   try { db?.close(); } catch {}
   await stopServer();

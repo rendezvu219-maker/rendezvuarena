@@ -88,7 +88,7 @@ try {
   const token = registered.payload.token;
   const quickConfig = {
     sessionId: 'quick-role-session-001', teamA: 'Blue Warriors', teamB: 'Red Warriors',
-    format: 'BO3', seriesRule: 'squadra_blast', timerSeconds: 30, heroBans: 1,
+    format: 'BO5', seriesRule: 'squadra_blast', timerSeconds: 30, heroBans: 1,
     enableCoinFlip: false, enableDivineDraw: false, draftStyle: 'all-random',
   };
   const created = await request('/api/quick-draft-rooms', {
@@ -290,12 +290,98 @@ try {
     },
   });
   await gameThreeStateSeen;
+  const gameFourReadySeen = waitForEvent(teamB.socket, 'draft:state');
   const gameThreeResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
     method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'A', gameNumber: 3 },
   });
   assert.equal(gameThreeResult.response.status, 200, JSON.stringify(gameThreeResult.payload));
-  assert.equal(gameThreeResult.payload.seriesComplete, true);
-  assert.equal(gameThreeResult.payload.final, true, 'The shared Quick Draft controller must finalize the BO series.');
+  assert.equal(gameThreeResult.payload.seriesComplete, false);
+  assert.equal(gameThreeResult.payload.nextGameNumber, 4);
+  const gameFourReady = await gameFourReadySeen;
+  assert.equal(gameFourReady.status, 'waiting');
+  assert.equal(gameFourReady.reloadRequired, true, 'Quick Draft BO5 must leave the Game 3 result screen for Game 4.');
+  assert.equal(gameFourReady.engine, undefined);
+
+  const gameFourRoom = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    method: 'POST', body: { accessToken: teamAAccess },
+  });
+  assert.equal(gameFourRoom.payload.room.config.gameNumber, 4);
+  const gameFourRollId = gameFourRoom.payload.room.config.gameRollId;
+  assert.notEqual(gameFourRollId, gameThreeRollId);
+  assert.deepEqual(gameFourRoom.payload.room.config.previousPicksA, [], 'Squadra Blast Game 4 starts a clean cycle.');
+  assert.deepEqual(gameFourRoom.payload.room.config.previousBansA, []);
+
+  const staleGameFourError = waitForEvent(teamA.socket, 'draft:error');
+  teamA.socket.emit('draft:state', {
+    roomCode: room.roomCode,
+    state: {
+      status: 'complete', gameNumber: 4, gameRollId: gameThreeRollId,
+      engine: {
+        state: 'complete', gameNumber: 4,
+        teamA: { picks: ['0027','0028','0029','0030'], bans: ['0035'] },
+        teamB: { picks: ['0031','0032','0033','0034'], bans: ['0036'] },
+      },
+    },
+  });
+  assert.match((await staleGameFourError).message, /stale draft state ignored/i);
+
+  const gameFourStateSeen = waitForEvent(teamB.socket, 'draft:state');
+  teamA.socket.emit('draft:state', {
+    roomCode: room.roomCode,
+    state: {
+      status: 'complete', gameNumber: 4, gameRollId: gameFourRollId,
+      engine: {
+        state: 'complete', gameNumber: 4,
+        teamA: { picks: ['0027','0028','0029','0030'], bans: ['0035'] },
+        teamB: { picks: ['0031','0032','0033','0034'], bans: ['0036'] },
+      },
+    },
+  });
+  await gameFourStateSeen;
+  const gameFiveReadySeen = waitForEvent(teamB.socket, 'draft:state');
+  const gameFourResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
+    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'B', gameNumber: 4 },
+  });
+  assert.equal(gameFourResult.response.status, 200, JSON.stringify(gameFourResult.payload));
+  assert.equal(gameFourResult.payload.nextGameNumber, 5);
+  const gameFiveReady = await gameFiveReadySeen;
+  assert.equal(gameFiveReady.status, 'waiting');
+  assert.equal(gameFiveReady.reloadRequired, true, 'Quick Draft BO5 must leave the Game 4 result screen for Game 5.');
+
+  const gameFiveRoom = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    method: 'POST', body: { accessToken: teamAAccess },
+  });
+  assert.equal(gameFiveRoom.payload.room.config.gameNumber, 5);
+  const gameFiveRollId = gameFiveRoom.payload.room.config.gameRollId;
+  assert.notEqual(gameFiveRollId, gameFourRollId);
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousPicksA, ['0027','0028','0029','0030']);
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousPicksB, ['0031','0032','0033','0034']);
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousBansA, ['0035']);
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousBansB, ['0036']);
+
+  const gameFiveStateSeen = waitForEvent(teamB.socket, 'draft:state');
+  teamA.socket.emit('draft:state', {
+    roomCode: room.roomCode,
+    state: {
+      status: 'complete', gameNumber: 5, gameRollId: gameFiveRollId,
+      engine: {
+        state: 'complete', gameNumber: 5,
+        teamA: { picks: ['0001','0002','0003','0004'], bans: ['0035'] },
+        teamB: { picks: ['0005','0006','0007','0008'], bans: ['0036'] },
+      },
+    },
+  });
+  await gameFiveStateSeen;
+  const seriesCompleteSeen = waitForEvent(teamB.socket, 'draft:state');
+  const gameFiveResult = await request(`/api/public/draft-rooms/${room.roomCode}/game-result`, {
+    method: 'POST', body: { accessToken: teamAAccess, winnerSide: 'A', gameNumber: 5 },
+  });
+  assert.equal(gameFiveResult.response.status, 200, JSON.stringify(gameFiveResult.payload));
+  assert.equal(gameFiveResult.payload.seriesComplete, true);
+  assert.equal(gameFiveResult.payload.final, true, 'The shared Quick Draft controller must finalize BO5 only after three wins.');
+  assert.equal(gameFiveResult.payload.scoreA, 3);
+  assert.equal(gameFiveResult.payload.scoreB, 2);
+  assert.equal((await seriesCompleteSeen).status, 'series_complete');
 
   const rematch = await request('/api/quick-draft-rooms', {
     token, method: 'POST', body: { config: quickConfig },
@@ -304,7 +390,7 @@ try {
   assert.equal(rematch.payload.room.config.gameNumber, 1);
   assert.equal(rematch.payload.room.config.seriesScoreA, 0);
   assert.equal(rematch.payload.room.config.seriesScoreB, 0);
-  assert.notEqual(rematch.payload.room.config.gameRollId, gameThreeRollId);
+  assert.notEqual(rematch.payload.room.config.gameRollId, gameFiveRollId);
   const cleanRematch = await request(`/api/public/draft-rooms/${rematch.payload.room.roomCode}/access`, {
     method: 'POST', body: { accessToken: fragmentValue(rematch.payload.room.links.host, 'access') },
   });
@@ -314,7 +400,7 @@ try {
   assert.equal(cleanRematch.payload.room.state.engine, undefined);
   assert.equal(cleanRematch.payload.room.state.preDraft, undefined);
 
-  console.log('Quick Draft shared links, fresh game rolls, clean rematch and BO finalization passed.');
+  console.log('Quick Draft BO5 shared links, result-screen advancement, fresh game rolls, clean rematch and finalization passed.');
 } finally {
   sockets.forEach(socket => socket.disconnect());
   if (!child.killed) child.kill('SIGTERM');
