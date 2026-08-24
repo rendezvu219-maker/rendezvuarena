@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { DraftEngine, draftActionPresentation, seriesHeroBanCount, squadraBlastPhase } from '../js/draft.js';
+import { DraftEngine, draftActionPresentation, seriesHeroBanCount, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from '../js/draft.js';
 import { HEROES, generateDraftSequence } from '../js/heroes.js';
 
 const summarize = sequence => sequence.map(step => `${step.team}${step.type === 'ban' ? 'B' : 'P'}`);
@@ -11,6 +11,27 @@ assert.deepEqual([1,2,3,4,5,6].map(squadraBlastPhase), [1,2,3,1,2,3]);
 assert.equal(seriesHeroBanCount('squadra_blast', 1, 3), 3, 'Squadra Blast Game 1 must use the Host-configured ban count.');
 assert.equal(seriesHeroBanCount('squadra_blast', 2, 3), 0, 'Squadra Blast Game 2 must not add new bans.');
 assert.equal(seriesHeroBanCount('squadra_blast', 3, 3), 0, 'Squadra Blast Game 3 must not add new bans.');
+assert.equal(shouldRestartDraftFlowOnAuthorityGain({
+  wasAuthority: false,
+  isAuthority: true,
+  engineState: 'waiting',
+  initialFlowStarted: true,
+  missingEntrants: 0,
+}), true, 'A replacement page that gains authority must restart the waiting next-game flow.');
+assert.equal(shouldRestartDraftFlowOnAuthorityGain({
+  wasAuthority: false,
+  isAuthority: true,
+  engineState: 'waiting',
+  initialFlowStarted: true,
+  missingEntrants: 1,
+}), false, 'A next-game flow must remain waiting while an entrant is absent.');
+assert.equal(shouldRestartDraftFlowOnAuthorityGain({
+  wasAuthority: false,
+  isAuthority: true,
+  engineState: 'active',
+  initialFlowStarted: true,
+  missingEntrants: 0,
+}), false, 'An active draft must resume its timer instead of starting another game flow.');
 
 const twoBan = generateDraftSequence(2, 1, 4);
 assert.deepEqual(summarize(twoBan), [

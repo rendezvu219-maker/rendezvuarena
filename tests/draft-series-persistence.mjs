@@ -124,6 +124,22 @@ function waitForEvent(socket, event, timeout = 3000) {
   });
 }
 
+function waitForEventMatching(socket, event, predicate, timeout = 3000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      socket.off(event, handle);
+      reject(new Error(`Timed out waiting for matching ${event}.`));
+    }, timeout);
+    const handle = payload => {
+      if (!predicate(payload)) return;
+      clearTimeout(timer);
+      socket.off(event, handle);
+      resolve(payload);
+    };
+    socket.on(event, handle);
+  });
+}
+
 async function waitUntil(predicate, message, timeout = 4000) {
   const started = Date.now();
   while (Date.now() - started < timeout) {
@@ -285,6 +301,23 @@ try {
         });
         assert.equal(staleRest.response.status, 409, 'A stale REST result must not advance the current game.');
         assert.equal(db.prepare('SELECT current_game_number FROM matches WHERE id=?').get(matchId).current_game_number, 2);
+
+        // A real page reload briefly overlaps the old and replacement sockets.
+        // The replacement first joins as a non-authority, then must receive the
+        // authority handoff after the old page disconnects so its Game 2 flow
+        // can leave the waiting screen.
+        const replacement = await connectDraftRole(roomCode, teamAAccess, captainAToken);
+        assert.equal(replacement.result.authoritySocketId, controller.socket.id);
+        const authorityHandoff = waitForEventMatching(
+          replacement.socket,
+          'draft:authority',
+          payload => payload?.socketId === replacement.socket.id,
+        );
+        controller.socket.disconnect();
+        const handoff = await authorityHandoff;
+        assert.equal(handoff.role, 'teamA');
+        assert.equal(handoff.socketId, replacement.socket.id);
+        controller = replacement;
       }
 
       if (gameNumber < 3) {

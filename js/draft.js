@@ -29,6 +29,20 @@ export function seriesHeroBanCount(seriesRule, gameNumber, configuredCount = 2) 
   return count;
 }
 
+export function shouldRestartDraftFlowOnAuthorityGain({
+  wasAuthority = false,
+  isAuthority = false,
+  engineState = 'waiting',
+  initialFlowStarted = false,
+  missingEntrants = 0,
+} = {}) {
+  return !wasAuthority
+    && isAuthority
+    && engineState === 'waiting'
+    && initialFlowStarted
+    && Number(missingEntrants) === 0;
+}
+
 export function draftActionPresentation(action = null) {
   const type = String(action?.type || 'pick');
   const isBan = type === 'ban' || type === 'divine-ban';

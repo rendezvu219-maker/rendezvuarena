@@ -1,4 +1,4 @@
-import { DraftEngine, draftActionPresentation, squadraBlastPhase } from './draft.js';
+import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js';
 import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js';
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js';
@@ -350,6 +350,19 @@ export class DraftUI {
       if (wasAuthority && !this.isAuthoritativeHost) this.engine.stopTimer();
       if (!wasAuthority && this.isAuthoritativeHost) {
         if (this.engine.state === 'active') this.engine.startTimer({ reset: false });
+        if (shouldRestartDraftFlowOnAuthorityGain({
+          wasAuthority,
+          isAuthority: this.isAuthoritativeHost,
+          engineState: this.engine.state,
+          initialFlowStarted: this.initialDraftFlowStarted,
+          missingEntrants: this.missingDraftEntrants().length,
+        })) {
+          // During a page transition the replacement socket can join before
+          // the old authority disconnects. Its initial waiting flow has
+          // already yielded, so explicitly restart Game N after the handoff.
+          this.initialDraftFlowStarted = false;
+          this.beginInitialDraftFlow();
+        }
         this.schedulePreDraftAutomation();
         this.publishRoomState(true);
         this.showRoomNotice('Draft control transferred to this view.');
