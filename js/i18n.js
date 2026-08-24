@@ -111,7 +111,9 @@ const UI_EXTRA = Object.freeze({
     "soloTeamsConfirmed": "Solo teams created. Captain records were synchronized.",
     "undoSoloTeamsPrompt": "Undo the latest confirmed solo team assignment?",
     "soloTeamsUndone": "Solo team assignment undone; signups returned to the approved pool.",
-    "soloRosterPrivateUntilMatch": "Roster members stay private until this team is assigned to a match."
+    "soloRosterPrivateUntilMatch": "Roster members stay private until this team is assigned to a match.",
+    "watchReadOnly": "WATCH (READ-ONLY)",
+    "hostWatchingReadOnly": "HOST IS WATCHING · READ ONLY"
   },
   "ja": {
     "viewOnly": "閲覧のみ",
@@ -198,7 +200,9 @@ const UI_EXTRA = Object.freeze({
     "soloTeamsConfirmed": "個人チームを作成し、キャプテン情報を同期しました。",
     "undoSoloTeamsPrompt": "直近の個人チーム割り当てを元に戻しますか？",
     "soloTeamsUndone": "割り当てを元に戻し、参加者を承認済みプールへ戻しました。",
-    "soloRosterPrivateUntilMatch": "このチームが試合に割り当てられるまで、ロスターは非公開です。"
+    "soloRosterPrivateUntilMatch": "このチームが試合に割り当てられるまで、ロスターは非公開です。",
+    "watchReadOnly": "閲覧する（読み取り専用）",
+    "hostWatchingReadOnly": "ホストが閲覧中 · 読み取り専用"
   },
   "zh-CN": {
     "viewOnly": "仅查看",
@@ -285,7 +289,9 @@ const UI_EXTRA = Object.freeze({
     "soloTeamsConfirmed": "个人队伍已创建，队长记录已同步。",
     "undoSoloTeamsPrompt": "撤销最近确认的个人队伍分配吗？",
     "soloTeamsUndone": "已撤销分配，报名者已返回批准池。",
-    "soloRosterPrivateUntilMatch": "在该队被分配到比赛前，完整阵容保持私密。"
+    "soloRosterPrivateUntilMatch": "在该队被分配到比赛前，完整阵容保持私密。",
+    "watchReadOnly": "观看（只读）",
+    "hostWatchingReadOnly": "主持人正在观看 · 只读"
   },
   "ko": {
     "viewOnly": "보기 전용",
@@ -372,7 +378,9 @@ const UI_EXTRA = Object.freeze({
     "soloTeamsConfirmed": "개인 팀을 만들고 주장 기록을 동기화했습니다.",
     "undoSoloTeamsPrompt": "최근 확정한 개인 팀 배정을 되돌릴까요?",
     "soloTeamsUndone": "배정을 되돌리고 참가자를 승인 풀로 복원했습니다.",
-    "soloRosterPrivateUntilMatch": "이 팀이 경기에 배정될 때까지 전체 로스터는 비공개입니다."
+    "soloRosterPrivateUntilMatch": "이 팀이 경기에 배정될 때까지 전체 로스터는 비공개입니다.",
+    "watchReadOnly": "시청 (읽기 전용)",
+    "hostWatchingReadOnly": "호스트 시청 중 · 읽기 전용"
   },
   "es": {
     "viewOnly": "SOLO LECTURA",
@@ -459,7 +467,9 @@ const UI_EXTRA = Object.freeze({
     "soloTeamsConfirmed": "Equipos creados y registros de capitanes sincronizados.",
     "undoSoloTeamsPrompt": "¿Deshacer la última asignación confirmada de equipos individuales?",
     "soloTeamsUndone": "Asignación deshecha; las inscripciones volvieron al grupo aprobado.",
-    "soloRosterPrivateUntilMatch": "La plantilla completa permanece privada hasta que el equipo tenga un partido asignado."
+    "soloRosterPrivateUntilMatch": "La plantilla completa permanece privada hasta que el equipo tenga un partido asignado.",
+    "watchReadOnly": "VER (SOLO LECTURA)",
+    "hostWatchingReadOnly": "EL HOST ESTÁ MIRANDO · SOLO LECTURA"
   },
   "vi": {
     "viewOnly": "CHỈ XEM",
@@ -546,7 +556,9 @@ const UI_EXTRA = Object.freeze({
     "soloTeamsConfirmed": "Đã tạo đội và đồng bộ dữ liệu Đội trưởng.",
     "undoSoloTeamsPrompt": "Hoàn tác lần chia đội cá nhân đã xác nhận gần nhất?",
     "soloTeamsUndone": "Đã hoàn tác; các đăng ký trở lại nhóm đã duyệt.",
-    "soloRosterPrivateUntilMatch": "Roster đầy đủ được giữ riêng tư cho đến khi đội được xếp vào một trận."
+    "soloRosterPrivateUntilMatch": "Roster đầy đủ được giữ riêng tư cho đến khi đội được xếp vào một trận.",
+    "watchReadOnly": "XEM (CHỈ ĐỌC)",
+    "hostWatchingReadOnly": "HOST ĐANG XEM · CHỈ ĐỌC"
   }
 });
 

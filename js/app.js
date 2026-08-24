@@ -288,7 +288,16 @@ export class DraftUI {
       this.btnLock.setAttribute('data-i18n', 'viewOnly');
       this.btnLock.textContent = t('viewOnly');
     }
+    this.updateDraftWatchPresence();
     this.renderGrid();
+  }
+
+  updateDraftWatchPresence() {
+    const indicator = document.getElementById('draft-watch-presence');
+    if (!indicator) return;
+    const watching = Number(this.draftPresence?.broadcaster || 0) > 0;
+    indicator.classList.toggle('hidden', !watching);
+    indicator.textContent = t('hostWatchingReadOnly');
   }
 
   requestSelectHero(heroId) {
@@ -363,6 +372,7 @@ export class DraftUI {
 
     this.sync.on('presence', payload => {
       if (payload?.presence && typeof payload.presence === 'object') this.draftPresence = { ...this.draftPresence, ...payload.presence };
+      this.updateDraftWatchPresence();
       if (!this.initialDraftFlowStarted) this.beginInitialDraftFlow();
     });
 

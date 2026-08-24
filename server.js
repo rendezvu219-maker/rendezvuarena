@@ -1703,9 +1703,13 @@ function draftRoomPayload(req, room, access) {
   };
 }
 
-function draftRoomAccessForRequest(req, room, access) {
+function draftRoomAccessForRequest(req, room, access, { requestedRole = null } = {}) {
   let role = null;
-  if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control')) role = 'host';
+  if (requestedRole === 'broadcaster') {
+    const canWatch = hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control')
+      || hasTournamentPermission(req.user.id, req.match.tournament_id, 'broadcast.control');
+    if (canWatch) role = 'broadcaster';
+  } else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control')) role = 'host';
   else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'dispute.review')) role = 'referee';
   else if (hasTournamentPermission(req.user.id, req.match.tournament_id, 'broadcast.control')) role = 'broadcaster';
   else if (Number(req.matchTeamId) === Number(req.match?.team_a_id) && teamForCaptain(req.user.id, req.matchTeamId)) role = 'teamA';
@@ -2150,11 +2154,21 @@ function sideForWinnerTeam(match, winnerTeamId) {
 }
 
 app.get('/api/matches/:matchId/draft-room/access', authRequired, emailVerifiedRequired, requireMatchAccess, (req, res) => {
+  const hasRequestedRole = req.query.as !== undefined;
+  const requestedRole = hasRequestedRole ? String(req.query.as).trim().toLowerCase() : null;
+  if (hasRequestedRole && requestedRole !== 'broadcaster') {
+    return res.status(400).json({ error: 'Only the broadcaster read-only downgrade may be requested.' });
+  }
   const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(req.match.id);
   if (!room) return res.status(404).json({ error: 'Draft Room has not been opened by the Host yet.' });
   const access = jsonParse(room.access_json);
-  const result = draftRoomAccessForRequest(req, room, access);
-  if (!result) return res.status(403).json({ error: 'Only the linked Team Captain can enter and control this team Draft Room.' });
+  const result = draftRoomAccessForRequest(req, room, access, { requestedRole });
+  if (!result) {
+    const error = requestedRole === 'broadcaster'
+      ? 'Draft control or Broadcast permission is required for read-only watch mode.'
+      : 'Only the linked Team Captain can enter and control this team Draft Room.';
+    return res.status(403).json({ error });
+  }
   res.json(result);
 });
 
@@ -2421,7 +2435,8 @@ function canUseTournamentDraftRole(userId,room,role){
   if(role==='teamB')return Boolean(teamForCaptain(userId,match.match.team_b_id));
   if(role==='host')return hasTournamentPermission(userId,match.match.tournament_id,'draft.control');
   if(role==='referee')return hasTournamentPermission(userId,match.match.tournament_id,'dispute.review');
-  if(role==='broadcaster')return hasTournamentPermission(userId,match.match.tournament_id,'broadcast.control');
+  if(role==='broadcaster')return hasTournamentPermission(userId,match.match.tournament_id,'broadcast.control')
+    || hasTournamentPermission(userId,match.match.tournament_id,'draft.control');
   return false;
 }
 app.post('/api/public/draft-rooms/:roomCode/access',(req,res)=>{

@@ -126,8 +126,9 @@ try {
   const hostToken = await tokenFromAccessUrl(suite.users.find(item => item.persona === 'host').accessUrl);
   const broadcasterToken = await tokenFromAccessUrl(suite.users.find(item => item.persona === 'broadcaster').accessUrl);
   const tournament = await request(`/api/tournaments/${live.id}`, { token: hostToken });
-  const match = tournament.payload.matches.find(item => item.team_a_id && item.team_b_id && item.result_status !== 'final');
-  assert.ok(match, 'The live tournament must contain a playable match.');
+  const playableMatches = tournament.payload.matches.filter(item => item.team_a_id && item.team_b_id && item.result_status !== 'final');
+  const [match, otherMatch] = playableMatches;
+  assert.ok(match && otherMatch, 'The live tournament must contain two playable matches for scoped presence coverage.');
   const teamARecord = tournament.payload.teams.find(item => Number(item.id) === Number(match.team_a_id));
   const teamBRecord = tournament.payload.teams.find(item => Number(item.id) === Number(match.team_b_id));
   const captainAPersona = suite.users.find(item => Number(item.id) === Number(teamARecord?.captain_user_id));
@@ -220,8 +221,57 @@ try {
   assert.equal(broadcastAccess.payload.role, 'broadcaster');
   assert.match(broadcastAccess.payload.url, /\/broadcast\.html#room=/);
 
+  const invalidEscalation = await request(`/api/matches/${match.id}/draft-room/access?as=host`, {
+    token: hostToken, allowError: true,
+  });
+  assert.equal(invalidEscalation.response.status, 400, 'The role selector must accept only a broadcaster downgrade.');
+
+  const hostWatchAccess = await request(`/api/matches/${match.id}/draft-room/access?as=broadcaster`, { token: hostToken });
+  assert.equal(hostWatchAccess.payload.role, 'broadcaster', 'A Host may explicitly downgrade to the read-only role.');
+  assert.match(hostWatchAccess.payload.url, /\/broadcast\.html#room=/);
+  const watchPresenceSeen = waitForEventMatching(teamA.socket, 'draft:presence', payload => payload?.presence?.broadcaster === 1);
+  const hostWatch = await connectDraftRole(
+    room.roomCode,
+    fragmentValue(hostWatchAccess.payload.url, 'access'),
+    hostToken,
+  );
+  sockets.push(hostWatch.socket);
+  assert.equal(hostWatch.result.role, 'broadcaster');
+  assert.equal(hostWatch.result.authorityRole, 'teamA', 'Read-only Host watch mode must not take Draft authority.');
+  assert.equal(hostWatch.result.presence.host, 0);
+  assert.equal(hostWatch.result.presence.broadcaster, 1);
+  assert.equal((await watchPresenceSeen).presence.broadcaster, 1);
+
+  await request(`/api/matches/${otherMatch.id}/checkin`, {
+    token: hostToken, method: 'POST', body: { actorType: 'team', actorId: String(otherMatch.team_a_id) },
+  });
+  await request(`/api/matches/${otherMatch.id}/checkin`, {
+    token: hostToken, method: 'POST', body: { actorType: 'team', actorId: String(otherMatch.team_b_id) },
+  });
+  const otherOpened = await request(`/api/matches/${otherMatch.id}/draft-room`, { token: hostToken, method: 'POST' });
+  const defaultHostAccess = await request(`/api/matches/${otherMatch.id}/draft-room/access`, { token: hostToken });
+  assert.equal(defaultHostAccess.payload.role, 'host', 'Default Host access must retain control authority.');
+  const otherHost = await connectDraftRole(
+    otherOpened.payload.room.roomCode,
+    fragmentValue(defaultHostAccess.payload.url, 'access'),
+    hostToken,
+  );
+  sockets.push(otherHost.socket);
+  assert.equal(otherHost.result.authorityRole, 'host');
+  assert.equal(otherHost.result.presence.host, 1);
+  assert.equal(otherHost.result.presence.broadcaster, 0,
+    'Watch presence from another match must not leak into this Draft Room.');
+
+  const dashboardSource = await (await fetch(`${base}/js/dashboard.js`)).text();
+  const draftPage = await (await fetch(`${base}/draft-room.html`)).text();
+  const draftAppSource = await (await fetch(`${base}/js/app.js`)).text();
+  assert.match(dashboardSource, /draft-room\/access\?as=broadcaster/);
+  assert.match(dashboardSource, /modal-watch-draft/);
+  assert.match(draftPage, /id="draft-watch-presence"/);
+  assert.match(draftAppSource, /draftPresence\?\.broadcaster/);
+
   await request(`/api/dev-test/suites/${created.payload.suiteId}`, { token: adminToken, method: 'DELETE' });
-  console.log('Team-run Draft authority and Broadcast match selector access tests passed.');
+  console.log('Team-run Draft authority, downgrade-only Host watch mode and cross-match presence tests passed.');
 } finally {
   sockets.forEach(socket => socket.connected && socket.disconnect());
   if (!child.killed) child.kill('SIGTERM');

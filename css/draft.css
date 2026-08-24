@@ -2978,6 +2978,20 @@ body[data-draft-role="referee"] .action-bar { opacity:.72; }
 .draft-access-badge[data-role="teamB"] { color: var(--team-right-border); border-color: color-mix(in srgb, var(--team-right-border) 65%, transparent); }
 .draft-access-badge[data-role="broadcaster"],
 .draft-access-badge[data-role="preview"] { color: var(--text-muted); }
+.draft-watch-presence {
+  width: max-content;
+  margin: 3px auto 0;
+  padding: 3px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: .54rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
 body[data-draft-role="teamA"] .header-team.team-a,
 body[data-draft-role="teamB"] .header-team.team-b { background: rgba(255,255,255,.045); box-shadow: inset 0 -3px 0 currentColor; }
 body[data-draft-role="teamA"] .header-team.team-b,
