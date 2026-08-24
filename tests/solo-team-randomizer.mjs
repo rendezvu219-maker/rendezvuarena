@@ -177,6 +177,35 @@ try{
   assert.equal(restored.length,8);
   assert.ok(restored.every(request=>request.status==='approved'&&!request.team_id&&!request.selected_member_id));
 
+  const targetInsert=db.prepare(`INSERT INTO teams(tournament_id,name,tag,source,status,team_status,seed) VALUES (?,?,?,'manual','pending','captain_pending',?)`);
+  const targetA=Number(targetInsert.run(registration.id,'Existing Alpha','EA',1).lastInsertRowid);
+  const targetB=Number(targetInsert.run(registration.id,'Existing Beta','EB',2).lastInsertRowid);
+  const teamCountBeforeExisting=Number(db.prepare('SELECT COUNT(*) count FROM teams WHERE tournament_id=?').get(registration.id).count);
+  const existingPreview=await request(`/api/tournaments/${registration.id}/solo-randomizer/preview`,{
+    token:hostToken,method:'POST',body:{totalSlots:8,teamSize:4,captainMode:'self_nominated',targetTeamIds:[targetA,targetB]},
+  });
+  assert.deepEqual(existingPreview.payload.preview.assignments.map(team=>Number(team.teamId)).sort((a,b)=>a-b),[targetA,targetB]);
+  const existingConfirmed=await request(`/api/tournaments/${registration.id}/solo-randomizer/confirm`,{
+    token:hostToken,method:'POST',body:{previewId:existingPreview.payload.preview.id},
+  });
+  assert.deepEqual(existingConfirmed.payload.teams.map(team=>Number(team.teamId)).sort((a,b)=>a-b),[targetA,targetB]);
+  assert.equal(Number(db.prepare('SELECT COUNT(*) count FROM teams WHERE tournament_id=?').get(registration.id).count),teamCountBeforeExisting,'Existing-team mode must not create duplicate teams.');
+  for(const teamId of [targetA,targetB]){
+    const team=db.prepare('SELECT * FROM teams WHERE id=?').get(teamId);
+    assert.equal(team.formation_source,'solo_randomizer');
+    assert.equal(Number(db.prepare('SELECT COUNT(*) count FROM team_members WHERE team_id=?').get(teamId).count),4);
+  }
+  const existingUndo=await request(`/api/tournaments/${registration.id}/solo-randomizer/undo`,{token:hostToken,method:'POST',body:{}});
+  assert.deepEqual(existingUndo.payload.removedTeamIds,[]);
+  assert.deepEqual(existingUndo.payload.clearedTeamIds.sort((a,b)=>a-b),[targetA,targetB]);
+  for(const teamId of [targetA,targetB]){
+    const team=db.prepare('SELECT * FROM teams WHERE id=?').get(teamId);
+    assert.equal(team.formation_source,'');
+    assert.equal(team.captain_user_id,null);
+    assert.equal(team.team_status,'captain_pending');
+    assert.equal(Number(db.prepare('SELECT COUNT(*) count FROM team_members WHERE team_id=?').get(teamId).count),0);
+  }
+
   const hostCaptainIds=[poolPersonas[1].id,poolPersonas[2].id];
   const handPicked=await request(`/api/tournaments/${registration.id}/solo-randomizer/preview`,{
     token:hostToken,method:'POST',body:{totalSlots:8,teamSize:4,captainMode:'host_selected',captainUserIds:hostCaptainIds},
@@ -189,6 +218,7 @@ try{
   assert.match(dashboard,/solo-randomizer\/preview/);
   assert.match(dashboard,/confirmSoloTeams/);
   assert.match(dashboard,/registrationMode/);
+  assert.match(dashboard,/targetTeamIds/);
   assert.match(joinPage,/soloSignup/);
   assert.match(joinPage,/soloPoolOnly/);
   console.log('Solo-only registration, preview/confirm, Captain-safe teams, privacy, match access and undo snapshot checks passed.');

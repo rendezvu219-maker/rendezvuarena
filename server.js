@@ -458,7 +458,7 @@ function uniqueSoloTeamNames(tournamentId, teamCount) {
     used.add(name.toLowerCase());return name;
   });
 }
-function buildSoloTeamPreview(tournamentId,{totalSlots,teamSize=4,captainMode='self_nominated',captainUserIds=[]}={}) {
+function buildSoloTeamPreview(tournamentId,{totalSlots,teamSize=4,captainMode='self_nominated',captainUserIds=[],targetTeamIds=[]}={}) {
   assertSoloFormationWindow(tournamentId);
   const pool=soloRandomizerPool(tournamentId);
   const slots=Number(totalSlots||pool.length);const size=Number(teamSize||4);
@@ -481,15 +481,28 @@ function buildSoloTeamPreview(tournamentId,{totalSlots,teamSize=4,captainMode='s
     if(captains.some(player=>!player))throw new Error('Every selected Captain must be in the approved teamless solo pool.');
   }
   const captainIds=new Set(captains.map(player=>Number(player.user_id)));
-  const names=uniqueSoloTeamNames(tournamentId,teamCount);
+  const requestedTargetIds=[...new Set((Array.isArray(targetTeamIds)?targetTeamIds:[]).map(Number))];
+  if(requestedTargetIds.some(teamId=>!Number.isInteger(teamId)||teamId<=0))throw new Error('Every target team must have a valid ID.');
+  let targets=[];
+  if(requestedTargetIds.length){
+    if(requestedTargetIds.length!==teamCount)throw new Error(`Select exactly ${teamCount} empty target team(s) for ${slots} players.`);
+    const rows=db.prepare(`SELECT t.*,(SELECT COUNT(*) FROM team_members tm WHERE tm.team_id=t.id AND tm.membership_status='active') active_member_count
+      FROM teams t WHERE t.tournament_id=? AND t.id IN (${requestedTargetIds.map(()=>'?').join(',')})`).all(tournamentId,...requestedTargetIds);
+    const byId=new Map(rows.map(team=>[Number(team.id),team]));
+    targets=requestedTargetIds.map(teamId=>byId.get(teamId));
+    if(targets.some(team=>!team))throw new Error('Every target team must belong to this tournament.');
+    if(targets.some(team=>['withdrawn','disqualified'].includes(team.team_status)||Number(team.active_member_count)>0||team.captain_user_id))throw new Error('Existing target teams must be active, empty and have no Captain assigned.');
+  }else{
+    targets=uniqueSoloTeamNames(tournamentId,teamCount).map((name,index)=>({id:null,name,tag:`S${String(index+1).padStart(2,'0')}`}));
+  }
   const assignments=shuffledBySortKey(captains).map((captain,index)=>({
-    name:names[index],tag:`S${String(index+1).padStart(2,'0')}`,
+    teamId:targets[index].id?Number(targets[index].id):null,name:targets[index].name,tag:targets[index].tag,
     members:[{...captain,isCaptain:true}],
   }));
   shuffledBySortKey(pool.filter(player=>!captainIds.has(Number(player.user_id))))
     .forEach((player,index)=>assignments[index%teamCount].members.push({...player,isCaptain:false}));
   if(assignments.some(team=>team.members.length!==size))throw new Error('The solo pool could not be dealt into equal team sizes.');
-  return {pool,totalSlots:slots,teamSize:size,teamCount,captainMode:mode,assignments};
+  return {pool,totalSlots:slots,teamSize:size,teamCount,captainMode:mode,targetTeamIds:requestedTargetIds,assignments};
 }
 function soloPreviewPayload(row) {
   return {
@@ -1418,7 +1431,7 @@ app.post('/api/tournaments/:id/solo-randomizer/preview',authRequired,requireTour
         req.tournamentId,req.user.id,built.totalSlots,built.teamSize,built.captainMode,
         JSON.stringify(built.assignments),JSON.stringify(built.pool.map(player=>player.request_id)),expiresAt
       );
-      logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'solo_randomizer.previewed',details:{previewId:Number(result.lastInsertRowid),totalSlots:built.totalSlots,teamSize:built.teamSize,captainMode:built.captainMode}});
+      logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'solo_randomizer.previewed',details:{previewId:Number(result.lastInsertRowid),totalSlots:built.totalSlots,teamSize:built.teamSize,captainMode:built.captainMode,targetTeamIds:built.targetTeamIds}});
       return db.prepare('SELECT * FROM solo_team_previews WHERE id=?').get(Number(result.lastInsertRowid));
     });
     res.status(201).json({preview:soloPreviewPayload(row),poolSize:built.pool.length});
@@ -1453,12 +1466,23 @@ app.post('/api/tournaments/:id/solo-randomizer/confirm',authRequired,requireTour
         const captain=members.find(member=>member.isCaptain===true);
         const captainPoolRecord=poolByRequest.get(Number(captain.request_id));
         if(!captainPoolRecord||Number(captainPoolRecord.user_id)!==Number(captain.user_id))throw new Error('A preview Captain is no longer in the approved solo pool.');
-        const inserted=db.prepare(`INSERT INTO teams(
-          tournament_id,name,tag,source,formation_source,seed,status,team_status,captain_user_id
-        ) VALUES (?,?,?,'manual','solo_randomizer',?,'approved','ready',?)`).run(
-          req.tournamentId,String(assignment.name).slice(0,160),String(assignment.tag).slice(0,8),nextSeed++,captain.user_id
-        );
-        const teamId=Number(inserted.lastInsertRowid);const userIds=[];
+        const requestedTeamId=Number(assignment.teamId||0);let teamId,existingTeam=false,teamSnapshot=null;
+        if(requestedTeamId){
+          const target=db.prepare(`SELECT t.*,(SELECT COUNT(*) FROM team_members tm WHERE tm.team_id=t.id AND tm.membership_status='active') active_member_count
+            FROM teams t WHERE t.id=? AND t.tournament_id=?`).get(requestedTeamId,req.tournamentId);
+          if(!target||['withdrawn','disqualified'].includes(target.team_status)||Number(target.active_member_count)>0||target.captain_user_id)throw new Error('An existing target team changed after preview. Preview again before confirming.');
+          existingTeam=true;teamId=target.id;
+          teamSnapshot={formationSource:target.formation_source||'',status:target.status,teamStatus:target.team_status,captainUserId:target.captain_user_id||null};
+          db.prepare(`UPDATE teams SET formation_source='solo_randomizer',status='approved',team_status='ready',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(teamId);
+        }else{
+          const inserted=db.prepare(`INSERT INTO teams(
+            tournament_id,name,tag,source,formation_source,seed,status,team_status,captain_user_id
+          ) VALUES (?,?,?,'manual','solo_randomizer',?,'approved','ready',?)`).run(
+            req.tournamentId,String(assignment.name).slice(0,160),String(assignment.tag).slice(0,8),nextSeed++,captain.user_id
+          );
+          teamId=Number(inserted.lastInsertRowid);
+        }
+        const userIds=[];
         for(const previewMember of members){
           const poolRecord=poolByRequest.get(Number(previewMember.request_id));
           if(!poolRecord||Number(poolRecord.user_id)!==Number(previewMember.user_id))throw new Error('A preview player is no longer in the approved solo pool.');
@@ -1480,7 +1504,7 @@ app.post('/api/tournaments/:id/solo-randomizer/confirm',authRequired,requireTour
         },{gamerTag:captainPoolRecord.gamer_tag});
         const captainCount=Number(db.prepare('SELECT COUNT(*) count FROM team_members WHERE team_id=? AND is_captain=1 AND user_id=?').get(teamId,captain.user_id)?.count||0);
         if(captainCount!==1)throw new Error('Captain assignment could not be synchronized.');
-        generated.push({teamId,name:assignment.name,tag:assignment.tag,captainUserId:Number(captain.user_id),userIds});
+        generated.push({teamId,name:assignment.name,tag:assignment.tag,captainUserId:Number(captain.user_id),userIds,existingTeam,teamSnapshot});
       }
       const snapshot={previewId:preview.id,requests:requestSnapshots,generatedTeams:generated};
       const history=db.prepare(`INSERT INTO solo_team_history(tournament_id,user_id,snapshot_json,reason) VALUES (?,?,?,'Before confirming solo randomizer teams')`)
@@ -1511,14 +1535,23 @@ app.post('/api/tournaments/:id/solo-randomizer/undo',authRequired,requireTournam
       const captain=current.find(member=>member.is_captain);
       if(Number(captain?.user_id)!==Number(team.captainUserId)){const error=new Error('A generated team Captain changed after confirmation. Restore the Captain before using undo.');error.status=409;throw error;}
     }
+    const createdTeamIds=generated.filter(team=>!team.existingTeam).map(team=>Number(team.teamId));
+    const existingTeamIds=generated.filter(team=>team.existingTeam).map(team=>Number(team.teamId));
     transaction(()=>{
-      teamIds.forEach(teamId=>db.prepare('DELETE FROM teams WHERE id=? AND tournament_id=? AND formation_source=\'solo_randomizer\'').run(teamId,req.tournamentId));
+      createdTeamIds.forEach(teamId=>db.prepare('DELETE FROM teams WHERE id=? AND tournament_id=? AND formation_source=\'solo_randomizer\'').run(teamId,req.tournamentId));
+      generated.filter(team=>team.existingTeam).forEach(team=>{
+        db.prepare('DELETE FROM team_members WHERE team_id=?').run(team.teamId);
+        const before=team.teamSnapshot||{};
+        db.prepare(`UPDATE teams SET captain_user_id=?,status=?,team_status=?,formation_source=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND tournament_id=?`).run(
+          before.captainUserId||null,before.status||'pending',before.teamStatus||'captain_pending',before.formationSource||'',team.teamId,req.tournamentId
+        );
+      });
       const restore=db.prepare(`UPDATE tournament_join_requests SET team_id=?,selected_member_id=?,status=?,review_note=?,reviewed_by=?,reviewed_at=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND tournament_id=?`);
       (snapshot.requests||[]).forEach(request=>restore.run(request.team_id||null,request.selected_member_id||null,request.status,request.review_note||'',request.reviewed_by||null,request.reviewed_at||null,request.id,req.tournamentId));
       db.prepare('UPDATE solo_team_history SET undone_at=CURRENT_TIMESTAMP WHERE id=?').run(history.id);
       logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'solo_randomizer.undone',details:{historyId:history.id,teamIds,requestIds:(snapshot.requests||[]).map(request=>request.id)}});
     });
-    res.json({undone:true,removedTeamIds:teamIds,restoredRequestIds:(snapshot.requests||[]).map(request=>request.id)});
+    res.json({undone:true,removedTeamIds:createdTeamIds,clearedTeamIds:existingTeamIds,restoredRequestIds:(snapshot.requests||[]).map(request=>request.id)});
   }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
 });
 
