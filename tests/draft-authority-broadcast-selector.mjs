@@ -200,7 +200,13 @@ try {
   const teamBState = waitForEvent(teamB.socket, 'draft:state');
   teamA.socket.emit('draft:state', {
     roomCode: room.roomCode,
-    state: { status: 'active', gameNumber: 1, engine: { state: 'active', gameNumber: 1 }, preDraft: { stage: 'complete' } },
+    state: {
+      status: 'active',
+      gameNumber: 1,
+      gameRollId: room.config.gameRollId,
+      engine: { state: 'active', gameNumber: 1 },
+      preDraft: { stage: 'complete', gameNumber: 1, gameRollId: room.config.gameRollId },
+    },
   });
   assert.equal((await teamBState).preDraft.stage, 'complete', 'The elected team authority can publish the shared Draft state.');
 

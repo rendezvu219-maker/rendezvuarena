@@ -343,7 +343,21 @@ export class HostSetup {
     try {
       const room = await this.ensureServerRoom();
       if (!room?.links?.host) throw new Error('The Host Draft Room link was not returned.');
-      window.location.href = room.links.host;
+      const destination = room.links.host;
+      this.config = {
+        ...this.config,
+        sessionId: crypto.randomUUID ? crypto.randomUUID() : `quick-${Date.now()}`,
+        gameNumber: 1,
+        seriesScoreA: 0,
+        seriesScoreB: 0,
+        previousPicksA: [],
+        previousPicksB: [],
+        previousBansA: [],
+        previousBansB: [],
+      };
+      this.liveRoom = null;
+      this.liveRoomRequest = null;
+      window.location.href = destination;
     } catch (error) {
       this.setStartBusy(false);
       window.alert(error?.message || String(error));

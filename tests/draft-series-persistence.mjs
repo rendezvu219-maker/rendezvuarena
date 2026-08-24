@@ -163,10 +163,11 @@ function createMatch(tournamentId, teamAId, teamBId, rule, index, captainAId, ca
   return matchId;
 }
 
-function draftState(rule, gameNumber, selections) {
+function draftState(rule, gameNumber, selections, gameRollId) {
   return {
     status: 'active',
     gameNumber,
+    gameRollId,
     seriesRule: rule,
     engine: {
       state: 'complete',
@@ -176,7 +177,7 @@ function draftState(rule, gameNumber, selections) {
       teamB: { picks: selections.picksB, bans: selections.bansB },
     },
     chosenDivineRules: [],
-    preDraft: { stage: 'complete', sideAssignment: { A: 'teamA', B: 'teamB' } },
+    preDraft: { stage: 'complete', gameNumber, gameRollId, sideAssignment: { A: 'teamA', B: 'teamB' } },
   };
 }
 
@@ -257,16 +258,34 @@ try {
     const matchId = createMatch(live.id, seedMatch.team_a_id, seedMatch.team_b_id, rule, index, teamA.captain_user_id, teamB.captain_user_id);
     const opened = await request(`/api/matches/${matchId}/draft-room`, { token: hostToken, method: 'POST' });
     const { roomCode, links } = opened.payload.room;
+    let gameRollId = opened.payload.room.config.gameRollId;
+    const firstGameRollId = gameRollId;
+    assert.match(gameRollId, /^[A-Za-z0-9_-]{16,80}$/);
     const teamAAccess = accessValue(links.teamA, 'access');
     let controller = await connectDraftRole(roomCode, teamAAccess, captainAToken);
     assert.equal(controller.result.authorityRole, 'teamA');
 
     for (let offset = 0; offset < games.length; offset += 1) {
       const gameNumber = offset + 1;
+      if (rule === 'normal' && gameNumber === 1) {
+        controller.socket.emit('draft:event', {
+          roomCode,
+          type: 'divine:result',
+          data: {
+            rules: [{ name: 'Team Rush GO' }, { name: 'Super DMG Boost' }],
+            gameNumber,
+            gameRollId,
+          },
+        });
+        await waitUntil(
+          () => db.prepare("SELECT 1 FROM draft_actions WHERE draft_room_id=(SELECT id FROM draft_rooms WHERE match_id=?) AND action_type='divine:result'").get(matchId),
+          'Divine random result was not written to the Draft audit log.',
+        );
+      }
       controller.socket.emit('draft:command', {
         roomCode, action: 'select', data: { heroId: games[offset].picksA[0], team: 'A', actionType: 'pick' },
       });
-      controller.socket.emit('draft:state', { roomCode, state: draftState(rule, gameNumber, games[offset]) });
+      controller.socket.emit('draft:state', { roomCode, state: draftState(rule, gameNumber, games[offset], gameRollId) });
       await waitUntil(() => {
         const row = db.prepare('SELECT status FROM match_games WHERE match_id=? AND game_number=?').get(matchId, gameNumber);
         return row?.status === 'draft_complete';
@@ -292,7 +311,7 @@ try {
 
       if (gameNumber === 1 && rule === 'normal') {
         const staleError = waitForEvent(controller.socket, 'draft:error');
-        controller.socket.emit('draft:state', { roomCode, state: draftState(rule, 1, games[0]) });
+        controller.socket.emit('draft:state', { roomCode, state: draftState(rule, 1, games[0], gameRollId) });
         assert.match((await staleError).message, /stale draft state ignored/i);
         const nextGame = db.prepare('SELECT status FROM match_games WHERE match_id=? AND game_number=2').get(matchId);
         assert.equal(nextGame.status, 'waiting_draft', 'A late Game 1 socket snapshot must not complete Game 2.');
@@ -301,6 +320,15 @@ try {
         });
         assert.equal(staleRest.response.status, 409, 'A stale REST result must not advance the current game.');
         assert.equal(db.prepare('SELECT current_game_number FROM matches WHERE id=?').get(matchId).current_game_number, 2);
+
+        const staleRollError = waitForEvent(controller.socket, 'draft:error');
+        controller.socket.emit('draft:state', { roomCode, state: draftState(rule, 2, games[1], gameRollId) });
+        assert.match((await staleRollError).message, /stale draft state ignored/i);
+        assert.equal(
+          db.prepare('SELECT status FROM match_games WHERE match_id=? AND game_number=2').get(matchId).status,
+          'waiting_draft',
+          'Relabeling a Game 1 random roll as Game 2 must not persist picks or Divine state.',
+        );
 
         // A real page reload briefly overlaps the old and replacement sockets.
         // The replacement first joins as a non-authority, then must receive the
@@ -325,6 +353,8 @@ try {
           token: captainAToken, method: 'POST', body: { accessToken: teamAAccess },
         });
         assertNextGameHistory(rule, gameNumber + 1, access.payload.room.config, games.slice(0, gameNumber));
+        assert.notEqual(access.payload.room.config.gameRollId, gameRollId, `Game ${gameNumber + 1} must receive a fresh random-roll identity.`);
+        gameRollId = access.payload.room.config.gameRollId;
       } else {
         assert.equal(confirmed.payload.seriesComplete, true);
         assert.equal(confirmed.payload.final, true);
@@ -336,6 +366,11 @@ try {
     assert.ok(actions.payload.actions.length >= 3, `${rule} must expose its Draft audit trail.`);
     assert.ok(actions.payload.actions.every((action, actionIndex, list) => actionIndex === 0 || action.id > list[actionIndex - 1].id));
     assert.ok(actions.payload.actions.some(action => Number(action.actorUserId) === Number(teamA.captain_user_id)));
+    if (rule === 'normal') {
+      const divineAudit = actions.payload.actions.find(action => action.actionType === 'divine:result');
+      assert.equal(divineAudit?.payload?.gameNumber, 1);
+      assert.equal(divineAudit?.payload?.gameRollId, firstGameRollId);
+    }
     const captainAudit = await request(`/api/matches/${matchId}/draft-room/actions`, { token: captainAToken, allowError: true });
     assert.equal(captainAudit.response.status, 403, 'The Draft action log is a staff-only read path.');
     controller.socket.disconnect();

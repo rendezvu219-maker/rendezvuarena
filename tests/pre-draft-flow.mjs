@@ -4,6 +4,7 @@ import {
   DIVINE_RULES,
   buildDivineBanSequence,
   buildDivinePickBanSequence,
+  drawRandomDivineIndices,
   entrantForSide,
   resolveSideAssignment,
   sideForEntrant,
@@ -49,6 +50,12 @@ for (const banCount of [0, 1, 2, 3]) {
   assert.equal(sequence.filter(step => step.action === 'pick' && step.team === 'B').length, 1);
 }
 
+const repeatedDrawA = drawRandomDivineIndices([], () => 0.5);
+const repeatedDrawB = drawRandomDivineIndices([], () => 0.5);
+assert.deepEqual(repeatedDrawA, repeatedDrawB, 'Independent random rolls must still be allowed to repeat by chance.');
+assert.equal(new Set(repeatedDrawA).size, 2, 'A single Divine roll cannot contain the same card twice.');
+assert.ok(drawRandomDivineIndices([0, 1, 2, 3, 4, 5], () => 0).every(index => index >= 6), 'Banned Divine cards must stay excluded.');
+
 assert.equal(normalizeDraftRules({ seriesRule: 'team_no_repeat' }).seriesRule, 'team_no_repeat');
 assert.equal(normalizeDraftRules({ seriesRule: 'fearless' }).seriesRule, 'fearless');
 assert.equal(normalizeDraftRules({ seriesRule: 'squadra_blast' }).seriesRule, 'squadra_blast');
@@ -75,6 +82,9 @@ const dashboard = await readFile(new URL('../js/dashboard.js', import.meta.url),
 assert.match(app, /!this\.config\.quickDraft && teamKey !== 'teamA'/, 'Tournament Team A must own the coin call.');
 assert.match(app, /coinCaller === 'teamA'\s*\? 'teamB' : 'teamA'/, 'A lost call must transfer side choice to the opponent.');
 assert.match(app, /divine\.drawnIndices = \[divine\.picks\.A, divine\.picks\.B\]/, 'Pick/Ban must resolve one Draw per side.');
+assert.match(app, /drawRandomDivineIndices\(excludedIndices\)/, 'Divine Draw must use the shared secure random helper.');
+assert.match(app, /gameRollId: this\.gameRollId/, 'Draft and pre-draft state must carry the current game roll identity.');
+assert.doesNotMatch(app, /readPreviousAllRandomRoll/, 'All Random must not suppress legitimate repeats from the previous game.');
 assert.match(app, /winnerSide: winnerSideForApi/, 'Game results must map Blue/Red back to bracket Team A/Team B.');
 assert.match(app, /restoreDraftVisuals\(\)[\s\S]*this\.updateCurrentActionUi\(\)/, 'Restored rooms must refresh the BAN/LOCK IN label from the current action.');
 assert.match(app, /this\.btnLock\.setAttribute\('data-i18n', presentation\.buttonKey\)/, 'The dynamic action label must update its i18n key when BAN changes to LOCK IN.');

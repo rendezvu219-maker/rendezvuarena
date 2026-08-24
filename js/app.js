@@ -5,7 +5,7 @@ import { DraftRoomSync } from './realtime.js';
 import { LocalDraftSync } from './local-draft-sync.js';
 import { api, escapeHtml } from './api.js';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
-import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, sideForEntrant } from './pre-draft.js';
+import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
 
 export class DraftUI {
   constructor(config) {
@@ -45,7 +45,16 @@ export class DraftUI {
         : Boolean(config._isDraftAuthority ?? this.sync?.isAuthority));
     this.isApplyingRemote = false;
     this.initialRoomState = config._roomState || null;
-    this.preDraftState = this.initialRoomState?.preDraft || null;
+    this.gameRollId = String(
+      config.gameRollId
+      || this.initialRoomState?.gameRollId
+      || globalThis.crypto?.randomUUID?.()
+      || `client-roll-${Date.now()}`
+    );
+    this.preDraftState = this.initialRoomState?.preDraft?.gameRollId === this.gameRollId
+      && Number(this.initialRoomState?.preDraft?.gameNumber) === Number(config.gameNumber || 1)
+      ? this.initialRoomState.preDraft
+      : null;
     this.sideAssignment = normalizeSideAssignment(this.preDraftState?.sideAssignment);
     this.preDraftTimers = new Map();
     this.sideAnimationSignature = '';
@@ -510,6 +519,7 @@ export class DraftUI {
     this.sync.publishState({
       status: this.engine.state,
       gameNumber: Number(this.config.gameNumber || 1),
+      gameRollId: this.gameRollId,
       engine: this.engine.exportState(),
       chosenDivineRules: this.chosenDivineRules,
       hostBannedHeroIds: this._allRandomBannedIds || [],
@@ -1280,6 +1290,8 @@ if (this.engine.selectedHero === h.id) {
       this.preDraftState = this.config.enableCoinFlip
         ? {
             version: 2,
+            gameNumber: Number(this.config.gameNumber || 1),
+            gameRollId: this.gameRollId,
             stage: 'coin-call',
             coinCaller: null,
             coinChoice: null,
@@ -1291,6 +1303,8 @@ if (this.engine.selectedHero === h.id) {
           }
         : {
             version: 2,
+            gameNumber: Number(this.config.gameNumber || 1),
+            gameRollId: this.gameRollId,
             stage: this.config.enableDivineDraw ? 'divine' : 'complete',
             coinCaller: null,
             coinChoice: null,
@@ -1418,7 +1432,8 @@ if (this.engine.selectedHero === h.id) {
       state.sideChoice = side;
       state.sideAssignment = resolveSideAssignment(state.sideChooser, side);
       state.stage = 'side-reveal';
-      state.transitionToken = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      state.transitionToken = globalThis.crypto?.randomUUID?.()
+        || `${Date.now()}-${Math.floor(secureRandomUnit() * 0x100000000).toString(36)}`;
       this.applySideAssignment(state.sideAssignment, { revealHeader: false });
       this.commitPreDraftState();
       return;
@@ -1453,7 +1468,7 @@ if (this.engine.selectedHero === h.id) {
     if (state.stage === 'coin-flipping' && !state.coinResult) {
       this.scheduleTimer('coin-result', 1900, () => {
         if (this.preDraftState?.stage !== 'coin-flipping') return;
-        const result = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
+        const result = secureRandomUnit() < 0.5 ? 'HEADS' : 'TAILS';
         const callerWon = result === this.preDraftState.coinChoice;
         this.preDraftState.coinResult = result;
         this.preDraftState.sideChooser = callerWon
@@ -1496,7 +1511,7 @@ if (this.engine.selectedHero === h.id) {
       ? this.config.divineDrawMode : 'random';
     const bansPerTeam = Math.max(0, Math.min(3, Math.floor(Number(this.config.divineBans) || 0)));
     if (mode === 'random') {
-      return { mode, phase: 'spinning', sequence: [], stepIndex: 0, bannedIndices: [], picks: { A: null, B: null }, drawnIndices: [] };
+      return { mode, phase: 'spinning', gameNumber: Number(this.config.gameNumber || 1), gameRollId: this.gameRollId, sequence: [], stepIndex: 0, bannedIndices: [], picks: { A: null, B: null }, drawnIndices: [] };
     }
     const sequence = mode === 'pickban'
       ? buildDivinePickBanSequence(bansPerTeam)
@@ -1504,6 +1519,8 @@ if (this.engine.selectedHero === h.id) {
     return {
       mode,
       phase: sequence.length ? 'selecting' : 'shuffling',
+      gameNumber: Number(this.config.gameNumber || 1),
+      gameRollId: this.gameRollId,
       sequence,
       stepIndex: 0,
       bannedIndices: [],
@@ -1543,13 +1560,7 @@ if (this.engine.selectedHero === h.id) {
   drawDivineRules(excludedIndices = []) {
     const divine = this.preDraftState?.divine;
     if (!divine || !['spinning', 'shuffling'].includes(divine.phase)) return;
-    const excluded = new Set((excludedIndices || []).map(Number));
-    const remaining = DIVINE_RULES.map((_, index) => index).filter(index => !excluded.has(index));
-    for (let index = remaining.length - 1; index > 0; index -= 1) {
-      const swap = Math.floor(Math.random() * (index + 1));
-      [remaining[index], remaining[swap]] = [remaining[swap], remaining[index]];
-    }
-    divine.drawnIndices = remaining.slice(0, 2);
+    divine.drawnIndices = drawRandomDivineIndices(excludedIndices);
     divine.phase = 'complete';
     this.chosenDivineRules = divine.drawnIndices.map(index => DIVINE_RULES[index]);
     this.commitPreDraftState();
@@ -1753,7 +1764,11 @@ if (this.engine.selectedHero === h.id) {
     if (!alreadyCommitted) this.publishRoomState(true);
     this.setPreDraftStage(false);
     if (this.chosenDivineRules.length === 2) {
-      this.publishRoomEvent('divine:result', { rules: this.chosenDivineRules });
+      this.publishRoomEvent('divine:result', {
+        rules: this.chosenDivineRules,
+        gameNumber: Number(this.config.gameNumber || 1),
+        gameRollId: this.gameRollId,
+      });
       this.renderDivineHeader();
     }
     if (this.config.draftStyle === 'all-random') this.startAllRandomBanPhase();
@@ -1884,7 +1899,7 @@ if (this.engine.selectedHero === h.id) {
         </div>
         <div class="ban-phase-rule-note">
           <strong>${escapeHtml(activeMirrorLabel)}</strong>
-          <span>Mirror-enabled roles may repeat across teams, but never inside the same team. The previous roll is avoided when the pool allows it.</span>
+          <span>${escapeHtml(t('mirrorEnabledHelp'))}</span>
         </div>
       </header>
       <div class="ban-phase-toolbar">
@@ -2263,40 +2278,10 @@ if (this.engine.selectedHero === h.id) {
     }
   }
 
-  allRandomHistoryKey() {
-    const scope = this.config.matchId
-      ? `match-${this.config.matchId}`
-      : `quick-${this.config.teamA || 'A'}-${this.config.teamB || 'B'}`;
-    const safeScope = scope.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').slice(0, 100);
-    return `gsq-all-random-last-roll:${safeScope}`;
-  }
-
-  readPreviousAllRandomRoll() {
-    try {
-      const stored = JSON.parse(sessionStorage.getItem(this.allRandomHistoryKey()) || '[]');
-      if (!Array.isArray(stored)) return [];
-      const validIds = new Set(HEROES.map(hero => hero.id));
-      return [...new Set(stored.filter(id => validIds.has(id)))];
-    } catch {
-      return [];
-    }
-  }
-
-  rememberAllRandomRoll(assignments) {
-    try {
-      const rolledIds = [...new Set([...(assignments.A || []), ...(assignments.B || [])])];
-      sessionStorage.setItem(this.allRandomHistoryKey(), JSON.stringify(rolledIds));
-    } catch {
-      // Storage can be unavailable in private browsing; the roll still remains valid.
-    }
-  }
-
   runAllRandom() {
     let assignments;
     try {
-      assignments = this.engine.generateAllRandomAssignments({
-        avoidHeroIds: this.readPreviousAllRandomRoll(),
-      });
+      assignments = this.engine.generateAllRandomAssignments();
     } catch (error) {
       this.timerEl.textContent = 'ERR';
       this.phaseIndicator.textContent = 'RANDOMIZATION ERROR';
@@ -2305,7 +2290,11 @@ if (this.engine.selectedHero === h.id) {
       return;
     }
 
-    this.rememberAllRandomRoll(assignments);
+    this.publishRoomEvent('all-random:result', {
+      assignments,
+      gameNumber: Number(this.config.gameNumber || 1),
+      gameRollId: this.gameRollId,
+    });
     this.btnLock.style.display = 'none';
     this.timerEl.textContent = 'AUTO';
     this.engine.state = 'active';

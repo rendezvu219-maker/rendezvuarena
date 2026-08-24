@@ -83,18 +83,20 @@ async function tokenFromAccessUrl(url) {
 }
 
 function setDraftComplete(db, matchId, gameNumber, { bansA = [], bansB = [] } = {}) {
-  const room = db.prepare('SELECT id,state_json FROM draft_rooms WHERE match_id=?').get(matchId);
+  const room = db.prepare('SELECT id,state_json,config_json FROM draft_rooms WHERE match_id=?').get(matchId);
   assert.ok(room, 'Draft room must exist.');
+  const gameRollId = JSON.parse(room.config_json).gameRollId;
   const state = {
     status: 'active',
     gameNumber,
+    gameRollId,
     engine: {
       state: 'complete',
       teamA: { picks: ['0001', '0002', '0003', '0004'], bans: bansA },
       teamB: { picks: ['0005', '0006', '0007', '0008'], bans: bansB },
     },
     chosenDivineRules: [],
-    preDraft: { sideAssignment: { A: 'teamA', B: 'teamB' } },
+    preDraft: { gameNumber, gameRollId, sideAssignment: { A: 'teamA', B: 'teamB' } },
   };
   db.prepare("UPDATE draft_rooms SET state_json=?,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=?")
     .run(JSON.stringify(state), room.id);

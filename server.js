@@ -253,6 +253,8 @@ function slugify(text) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || `tournament-${Date.now()}`;
 }
 function randomCode(length = 8) { return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length).toUpperCase(); }
+function newDraftGameRollId() { return crypto.randomBytes(18).toString('base64url'); }
+function validDraftGameRollId(value) { return /^[A-Za-z0-9_-]{16,80}$/.test(String(value || '')); }
 function normalizeMirrorPickMode(rules = {}) {
   const allowed = new Set(['none','tank','technical','damage','tank-technical','all']);
   if (allowed.has(rules.mirrorPickMode)) return rules.mirrorPickMode;
@@ -1652,7 +1654,45 @@ app.get('/api/portal',authRequired,(req,res)=>{
 
 // Draft rooms and series game progression
 function findDraftRoom(roomCode) {
-  return db.prepare('SELECT * FROM draft_rooms WHERE room_code=?').get(String(roomCode || '').toUpperCase());
+  const room = db.prepare('SELECT * FROM draft_rooms WHERE room_code=?').get(String(roomCode || '').toUpperCase());
+  return room ? ensureDraftRoomRollIdentity(room) : room;
+}
+
+function ensureDraftRoomRollIdentity(room) {
+  if (!room) return room;
+  const match = db.prepare('SELECT current_game_number FROM matches WHERE id=?').get(room.match_id);
+  if (!match) return room;
+  const currentGameNumber = Number(match.current_game_number || 1);
+  let config = jsonParse(room.config_json);
+  let state = jsonParse(room.state_json);
+  const configGameNumber = Number(config.gameNumber || currentGameNumber);
+  const previousRollId = configGameNumber === currentGameNumber && validDraftGameRollId(config.gameRollId)
+    ? config.gameRollId
+    : null;
+  const gameRollId = previousRollId || newDraftGameRollId();
+  config = { ...config, gameNumber: currentGameNumber, gameRollId };
+
+  const stateGameNumber = Number(state.gameNumber || state.engine?.gameNumber || currentGameNumber);
+  if (stateGameNumber !== currentGameNumber) {
+    state = { status: 'waiting', gameNumber: currentGameNumber, gameRollId, reloadRequired: true };
+  } else {
+    state = { ...state, gameNumber: currentGameNumber, gameRollId };
+    if (state.preDraft && typeof state.preDraft === 'object' && !Array.isArray(state.preDraft)) {
+      state.preDraft = { ...state.preDraft, gameNumber: currentGameNumber, gameRollId };
+      if (state.preDraft.divine && typeof state.preDraft.divine === 'object' && !Array.isArray(state.preDraft.divine)) {
+        state.preDraft.divine = { ...state.preDraft.divine, gameNumber: currentGameNumber, gameRollId };
+      }
+    }
+  }
+
+  const configJson = JSON.stringify(config);
+  const stateJson = JSON.stringify(state);
+  if (configJson !== room.config_json || stateJson !== room.state_json) {
+    db.prepare('UPDATE draft_rooms SET config_json=?,state_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
+      .run(configJson, stateJson, room.id);
+    return db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id);
+  }
+  return room;
 }
 
 function resolveDraftRole(room, accessToken) {
@@ -1823,13 +1863,47 @@ function quickDraftConfig(input = {}) {
 // excluded from Tournament Operations and profile history.
 app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, res) => {
   try {
-    const config = quickDraftConfig(req.body?.config || req.body || {});
-    const externalId = `quick:${req.user.id}:${config.sessionId}`;
+    let config = quickDraftConfig(req.body?.config || req.body || {});
+    let externalId = `quick:${req.user.id}:${config.sessionId}`;
     let tournament = db.prepare(`SELECT * FROM tournaments
       WHERE source_platform='quick_draft' AND source_external_id=? AND host_user_id=? LIMIT 1`)
       .get(externalId, req.user.id);
     let room;
     let access;
+
+    if (tournament) {
+      const existingMatch = db.prepare(`SELECT * FROM matches
+        WHERE tournament_id=? AND stage='quick' ORDER BY id LIMIT 1`).get(tournament.id);
+      const existingRoom = existingMatch
+        ? db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(existingMatch.id)
+        : null;
+      const existingState = existingRoom ? jsonParse(existingRoom.state_json) : {};
+      const pristine = existingMatch
+        && existingRoom
+        && Number(existingMatch.current_game_number || 1) === 1
+        && Number(existingMatch.score_a || 0) === 0
+        && Number(existingMatch.score_b || 0) === 0
+        && existingRoom.status === 'waiting'
+        && existingState.status === 'waiting'
+        && !existingState.engine
+        && !existingState.preDraft
+        && !Array.isArray(existingState.chosenDivineRules);
+      if (!pristine) {
+        config = {
+          ...config,
+          sessionId: `${config.sessionId.slice(0, 96)}-${randomCode(16)}`,
+          gameNumber: 1,
+          seriesScoreA: 0,
+          seriesScoreB: 0,
+          previousPicksA: [],
+          previousPicksB: [],
+          previousBansA: [],
+          previousBansB: [],
+        };
+        externalId = `quick:${req.user.id}:${config.sessionId}`;
+        tournament = null;
+      }
+    }
 
     transaction(() => {
       if (!tournament) {
@@ -1856,10 +1930,11 @@ app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, re
           VALUES (?,1,'waiting_draft','Asia','')`).run(matchId);
         access = { host: randomCode(32), teamA: randomCode(32), teamB: randomCode(32), broadcaster: randomCode(32) };
         const roomCode = randomCode(8);
-        const storedConfig = { ...config, matchId, tournamentId, roundName: 'Quick Draft' };
+        const gameRollId = newDraftGameRollId();
+        const storedConfig = { ...config, matchId, tournamentId, roundName: 'Quick Draft', gameRollId };
         const roomId = Number(db.prepare(`INSERT INTO draft_rooms(match_id,room_code,config_json,state_json,access_json,created_by)
           VALUES (?,?,?,?,?,?)`).run(matchId, roomCode, JSON.stringify(storedConfig),
-            JSON.stringify({ status:'waiting', gameNumber:1, seriesScoreA:0, seriesScoreB:0 }), JSON.stringify(access), req.user.id).lastInsertRowid);
+            JSON.stringify({ status:'waiting', gameNumber:1, gameRollId, seriesScoreA:0, seriesScoreB:0 }), JSON.stringify(access), req.user.id).lastInsertRowid);
         tournament = db.prepare('SELECT * FROM tournaments WHERE id=?').get(tournamentId);
         room = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(roomId);
       } else {
@@ -1880,6 +1955,7 @@ app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, re
         if (!room) throw new Error('Quick Draft room is missing. Reset the form and create a new room.');
         access = jsonParse(room.access_json);
         const oldConfig = jsonParse(room.config_json);
+        const gameRollId = validDraftGameRollId(oldConfig.gameRollId) ? oldConfig.gameRollId : newDraftGameRollId();
         const storedConfig = {
           ...config,
           matchId: match.id,
@@ -1892,9 +1968,16 @@ app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, re
           previousPicksB: oldConfig.previousPicksB || config.previousPicksB,
           previousBansA: oldConfig.previousBansA || config.previousBansA,
           previousBansB: oldConfig.previousBansB || config.previousBansB,
+          gameRollId,
         };
-        db.prepare(`UPDATE draft_rooms SET config_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-          .run(JSON.stringify(storedConfig), room.id);
+        const oldState = jsonParse(room.state_json);
+        const storedState = {
+          ...oldState,
+          gameNumber: Number(oldConfig.gameNumber || 1),
+          gameRollId,
+        };
+        db.prepare(`UPDATE draft_rooms SET config_json=?,state_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+          .run(JSON.stringify(storedConfig), JSON.stringify(storedState), room.id);
         room = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id);
       }
     });
@@ -1961,6 +2044,10 @@ function refreshedDraftConfig(match, room) {
   const series = seriesDraftHistory(match.id, match.series_rule, match.current_game_number);
   const score = seriesGameScore(match);
   const squadraBlastCarryBans = config.squadraBlastCarryBans !== false;
+  const currentGameNumber = Number(match.current_game_number || 1);
+  const gameRollId = Number(config.gameNumber || 0) === currentGameNumber && validDraftGameRollId(config.gameRollId)
+    ? config.gameRollId
+    : newDraftGameRollId();
   Object.assign(config, {
     teamA: match.team_a_name,
     teamB: match.team_b_name,
@@ -1969,7 +2056,8 @@ function refreshedDraftConfig(match, room) {
     teamALogoUrl: match.team_a_logo || '',
     teamBLogoUrl: match.team_b_logo || '',
     format: `BO${match.best_of}`,
-    gameNumber: Number(match.current_game_number || 1),
+    gameNumber: currentGameNumber,
+    gameRollId,
     seriesRule: match.series_rule,
     squadraBlastCarryBans,
     seriesScoreA: score.scoreA,
@@ -2076,6 +2164,7 @@ function recordDraftGameWinner(req, winnerSide, { nextDraftUrl = null, expectedG
   const nextState = {
     status: 'waiting',
     gameNumber: nextGameNumber,
+    gameRollId: nextConfig.gameRollId,
     seriesScoreA: score.scoreA,
     seriesScoreB: score.scoreB,
     seriesRule: updatedMatch.series_rule,
@@ -2187,8 +2276,9 @@ app.get('/api/matches/:matchId/draft-room/access', authRequired, emailVerifiedRe
   if (hasRequestedRole && requestedRole !== 'broadcaster') {
     return res.status(400).json({ error: 'Only the broadcaster read-only downgrade may be requested.' });
   }
-  const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(req.match.id);
+  let room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(req.match.id);
   if (!room) return res.status(404).json({ error: 'Draft Room has not been opened by the Host yet.' });
+  room = ensureDraftRoomRollIdentity(room);
   const access = jsonParse(room.access_json);
   const result = draftRoomAccessForRequest(req, room, access, { requestedRole });
   if (!result) {
@@ -2380,16 +2470,18 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
       scheduledAt: match.scheduled_at || match.tournament_start_at,
       roomMode: 'bandai-tool',
       roomCode: match.room_code || '',
+      gameRollId: newDraftGameRollId(),
     };
+    const gameRollId = config.gameRollId;
     const result = db.prepare(`INSERT INTO draft_rooms(match_id,room_code,config_json,state_json,access_json,created_by) VALUES (?,?,?,?,?,?)`)
-      .run(match.id, roomCode, JSON.stringify(config), JSON.stringify({ status: 'waiting', gameNumber: game.game_number, seriesScoreA: score.scoreA, seriesScoreB: score.scoreB }), JSON.stringify(access), req.user.id);
+      .run(match.id, roomCode, JSON.stringify(config), JSON.stringify({ status: 'waiting', gameNumber: game.game_number, gameRollId, seriesScoreA: score.scoreA, seriesScoreB: score.scoreB }), JSON.stringify(access), req.user.id);
     room = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(Number(result.lastInsertRowid));
     addSystemMessage(match.id, `Draft Room opened for Game ${game.game_number}.`);
   } else {
     access = jsonParse(room.access_json);
     const config = refreshedDraftConfig(match, room);
     db.prepare('UPDATE draft_rooms SET config_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(JSON.stringify(config), room.id);
-    room = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id);
+    room = ensureDraftRoomRollIdentity(db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id));
   }
   res.json({ room: draftRoomPayload(req, room, access) });
 });
@@ -2468,9 +2560,10 @@ function canUseTournamentDraftRole(userId,room,role){
   return false;
 }
 app.post('/api/public/draft-rooms/:roomCode/access',(req,res)=>{
-  const room=db.prepare(`SELECT dr.*,m.tournament_id,t.source_platform FROM draft_rooms dr JOIN matches m ON m.id=dr.match_id JOIN tournaments t ON t.id=m.tournament_id WHERE dr.room_code=?`)
+  let room=db.prepare(`SELECT dr.*,m.tournament_id,t.source_platform FROM draft_rooms dr JOIN matches m ON m.id=dr.match_id JOIN tournaments t ON t.id=m.tournament_id WHERE dr.room_code=?`)
     .get(String(req.params.roomCode||'').toUpperCase());
   if(!room)return res.status(404).json({error:'Draft room not found.'});
+  room={...room,...ensureDraftRoomRollIdentity(room)};
   const accessToken=String(req.body.accessToken||'');
   const role=resolveDraftRole(room,accessToken);
   if(!role){
@@ -2552,13 +2645,15 @@ const PUBLIC_JOIN_KEYS=new Set(['tournamentId']);
 const SELECT_DATA_KEYS=new Set(['heroId','team','actionType']);
 const TIMER_DATA_KEYS=new Set(['remaining']);
 const START_DATA_KEYS=new Set(['action']);
-const DIVINE_DATA_KEYS=new Set(['rules']);
+const DIVINE_DATA_KEYS=new Set(['rules','gameNumber','gameRollId']);
+const RANDOM_RESULT_DATA_KEYS=new Set(['assignments','gameNumber','gameRollId']);
+const RANDOM_ASSIGNMENT_KEYS=new Set(['A','B']);
 const RANDOM_BAN_DATA_KEYS=new Set(['heroIds']);
 const PRE_COIN_CALL_DATA_KEYS=new Set(['face','teamKey']);
 const PRE_COIN_FLIP_DATA_KEYS=new Set(['teamKey']);
 const PRE_SIDE_SELECT_DATA_KEYS=new Set(['side','teamKey']);
 const PRE_DIVINE_SELECT_DATA_KEYS=new Set(['index','teamSide']);
-const STATE_KEYS=new Set(['status','engine','chosenDivineRules','hostBannedHeroIds','preDraft','seriesComplete','gameNumber','seriesScoreA','seriesScoreB','seriesRule','reloadRequired','nextConfig']);
+const STATE_KEYS=new Set(['status','engine','chosenDivineRules','hostBannedHeroIds','preDraft','seriesComplete','gameNumber','gameRollId','seriesScoreA','seriesScoreB','seriesRule','reloadRequired','nextConfig']);
 const ENGINE_STATE_KEYS=new Set(['version','state','currentStep','sequence','selectedHero','timerRemaining','teamA','teamB','heroStatuses','seriesRule','gameNumber','squadraBlastCarryBans','previousPicksA','previousPicksB','previousBansA','previousBansB','protectList','globalBanList','mirrorPickMode','roleLimits']);
 function validDraftCommandPayload(payload){
   if(!hasOnlyKeys(payload,DRAFT_COMMAND_KEYS)||!validRoomCode(payload.roomCode)||typeof payload.action!=='string')return false;
@@ -2589,7 +2684,12 @@ function validDraftEventPayload(payload){
   if(['hero:locked','hero:banned'].includes(payload.type))return hasOnlyKeys(data,SELECT_DATA_KEYS)&&validHeroId(data.heroId)&&['A','B'].includes(data.team)&&['pick','ban','divine-ban'].includes(data.actionType);
   if(['timer:tick','draft:paused','draft:resumed'].includes(payload.type))return hasOnlyKeys(data,TIMER_DATA_KEYS)&&Number.isFinite(Number(data.remaining))&&Number(data.remaining)>=0&&Number(data.remaining)<=3600;
   if(payload.type==='draft:started')return hasOnlyKeys(data,START_DATA_KEYS)&&validSocketObject(data.action||{},8*1024);
-  if(payload.type==='divine:result')return hasOnlyKeys(data,DIVINE_DATA_KEYS)&&Array.isArray(data.rules)&&data.rules.length<=20;
+  if(payload.type==='divine:result')return hasOnlyKeys(data,DIVINE_DATA_KEYS)&&Array.isArray(data.rules)&&data.rules.length<=20
+    &&Number.isInteger(Number(data.gameNumber))&&Number(data.gameNumber)>0&&validDraftGameRollId(data.gameRollId);
+  if(payload.type==='all-random:result')return hasOnlyKeys(data,RANDOM_RESULT_DATA_KEYS)
+    &&hasOnlyKeys(data.assignments,RANDOM_ASSIGNMENT_KEYS)
+    &&['A','B'].every(side=>Array.isArray(data.assignments[side])&&data.assignments[side].length===4&&data.assignments[side].every(validHeroId))
+    &&Number.isInteger(Number(data.gameNumber))&&Number(data.gameNumber)>0&&validDraftGameRollId(data.gameRollId);
   if(payload.type==='all-random:bans')return hasOnlyKeys(data,RANDOM_BAN_DATA_KEYS)&&Array.isArray(data.heroIds)&&data.heroIds.length<=100&&data.heroIds.every(validHeroId);
   if(['draft:completed','draft:reset'].includes(payload.type))return hasOnlyKeys(data,EMPTY_KEYS);
   return false;
@@ -2770,8 +2870,15 @@ io.on('connection',socket=>{
     if(!room||socket.data.draftRoomId!==room.id)return;
     const role=socket.data.draftRole;
     const authority=draftAuthority(room.room_code);
-    const authorityEvents=['draft:started','hero:locked','hero:banned','timer:tick','draft:paused','draft:resumed','divine:result','all-random:bans','draft:completed','draft:reset'];
+    const authorityEvents=['draft:started','hero:locked','hero:banned','timer:tick','draft:paused','draft:resumed','divine:result','all-random:result','all-random:bans','draft:completed','draft:reset'];
     if(!authority||socket.id!==authority.socketId||!authorityEvents.includes(type))return;
+    if(['divine:result','all-random:result'].includes(type)){
+      const config=jsonParse(room.config_json);
+      const match=db.prepare('SELECT current_game_number FROM matches WHERE id=?').get(room.match_id);
+      if(!match||Number(data.gameNumber)!==Number(match.current_game_number||1)||Number(data.gameNumber)!==Number(config.gameNumber||1)||data.gameRollId!==config.gameRollId){
+        return socket.emit('draft:error',{message:'Stale random result ignored. Reload the current game before rolling again.'});
+      }
+    }
     recordDraftAction(room.id,role,type,data,socket.user?.id||socket.data.ticket?.user_id||null);
     socket.to(`draft:${room.room_code}`).emit('draft:event',{type,data,by:role});
   });
@@ -2805,7 +2912,12 @@ io.on('connection',socket=>{
     const match=db.prepare('SELECT current_game_number FROM matches WHERE id=?').get(room.match_id);
     const configGameNumber=Number(config.gameNumber||match?.current_game_number||1);
     const stateGameNumber=Number(safe.gameNumber||safe.engine?.gameNumber||0);
-    if(!match||!Number.isInteger(stateGameNumber)||stateGameNumber!==configGameNumber||stateGameNumber!==Number(match.current_game_number||1)){
+    const stateRollMatches=validDraftGameRollId(safe.gameRollId)&&safe.gameRollId===config.gameRollId;
+    const preDraftRollMatches=!safe.preDraft
+      ||(Number(safe.preDraft.gameNumber)===stateGameNumber
+        &&safe.preDraft.gameRollId===safe.gameRollId
+        &&(!safe.preDraft.divine||(Number(safe.preDraft.divine.gameNumber)===stateGameNumber&&safe.preDraft.divine.gameRollId===safe.gameRollId)));
+    if(!match||!Number.isInteger(stateGameNumber)||stateGameNumber!==configGameNumber||stateGameNumber!==Number(match.current_game_number||1)||!stateRollMatches||!preDraftRollMatches){
       socket.emit('draft:error',{message:`Stale Draft state ignored. This room is on Game ${Number(match?.current_game_number||configGameNumber)}.`});
       socket.emit('draft:state',jsonParse(room.state_json));
       return;

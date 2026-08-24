@@ -86,15 +86,18 @@ try {
     },
   });
   const token = registered.payload.token;
+  const quickConfig = {
+    sessionId: 'quick-role-session-001', teamA: 'Blue Warriors', teamB: 'Red Warriors',
+    format: 'BO3', seriesRule: 'squadra_blast', timerSeconds: 30, heroBans: 1,
+    enableCoinFlip: false, enableDivineDraw: false, draftStyle: 'all-random',
+  };
   const created = await request('/api/quick-draft-rooms', {
     token, method: 'POST',
-    body: { config: {
-      sessionId: 'quick-role-session-001', teamA: 'Blue Warriors', teamB: 'Red Warriors',
-      format: 'BO3', seriesRule: 'squadra_blast', timerSeconds: 30, heroBans: 1,
-      enableCoinFlip: false, enableDivineDraw: false,
-    } },
+    body: { config: quickConfig },
   });
   const room = created.payload.room;
+  const gameOneRollId = room.config.gameRollId;
+  assert.match(gameOneRollId, /^[A-Za-z0-9_-]{16,80}$/);
   assert.ok(room.roomCode);
   assert.match(room.links.host, /\/draft-room\.html#room=/);
   assert.match(room.links.teamA, /\/draft-room\.html#room=/);
@@ -114,6 +117,20 @@ try {
   assert.equal(teamA.result.role, 'teamA');
   assert.equal(teamB.result.role, 'teamB');
   assert.equal(broadcaster.result.role, 'broadcaster');
+
+  host.socket.emit('draft:event', {
+    roomCode: room.roomCode,
+    type: 'all-random:result',
+    data: {
+      assignments: { A: ['0001','0002','0003','0004'], B: ['0005','0006','0007','0008'] },
+      gameNumber: 1,
+      gameRollId: gameOneRollId,
+    },
+  });
+  await new Promise(resolve => setTimeout(resolve, 80));
+  const randomAudit = await request(`/api/matches/${room.config.matchId}/draft-room/actions`, { token });
+  const randomResultAction = randomAudit.payload.actions.find(action => action.actionType === 'all-random:result');
+  assert.equal(randomResultAction?.payload?.gameRollId, gameOneRollId, 'All Random output must be auditable by game roll identity.');
 
   const hostCommand = waitForEvent(host.socket, 'draft:command');
   teamA.socket.emit('draft:command', {
@@ -143,7 +160,8 @@ try {
     state: {
       status: 'waiting',
       gameNumber: 1,
-      preDraft: { stage: 'side-select', sideAssignment: { A: 'teamB', B: 'teamA' } },
+      gameRollId: gameOneRollId,
+      preDraft: { stage: 'side-select', gameNumber: 1, gameRollId: gameOneRollId, sideAssignment: { A: 'teamB', B: 'teamA' } },
     },
   });
   await swappedStateSeen;
@@ -182,7 +200,8 @@ try {
     state: {
       status: 'complete',
       gameNumber: 1,
-      preDraft: { stage: 'complete', sideAssignment: { A: 'teamA', B: 'teamB' } },
+      gameRollId: gameOneRollId,
+      preDraft: { stage: 'complete', gameNumber: 1, gameRollId: gameOneRollId, sideAssignment: { A: 'teamA', B: 'teamB' } },
       engine: {
         state: 'complete', gameNumber: 1,
         teamA: { picks: ['0001','0002','0003','0004'], bans: ['0009'] },
@@ -213,6 +232,8 @@ try {
     method: 'POST', body: { accessToken: hostAccess },
   });
   assert.equal(gameTwoRoom.payload.room.config.gameNumber, 2);
+  const gameTwoRollId = gameTwoRoom.payload.room.config.gameRollId;
+  assert.notEqual(gameTwoRollId, gameOneRollId, 'Game 2 must use a fresh random-roll identity.');
   assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksA, ['0001','0002','0003','0004']);
   assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksB, ['0005','0006','0007','0008']);
   assert.deepEqual(gameTwoRoom.payload.room.config.previousBansA, ['0009']);
@@ -228,6 +249,7 @@ try {
     state: {
       status: 'complete',
       gameNumber: 2,
+      gameRollId: gameTwoRollId,
       engine: {
         state: 'complete', gameNumber: 2,
         teamA: { picks: ['0011','0012','0013','0014'], bans: ['0009'] },
@@ -246,6 +268,8 @@ try {
     method: 'POST', body: { accessToken: teamAAccess },
   });
   assert.equal(gameThreeRoom.payload.room.config.gameNumber, 3);
+  const gameThreeRollId = gameThreeRoom.payload.room.config.gameRollId;
+  assert.notEqual(gameThreeRollId, gameTwoRollId, 'Game 3 must use a fresh random-roll identity.');
   assert.deepEqual(gameThreeRoom.payload.room.config.previousPicksA, [], 'Squadra Blast Game 3 must clear prior picks.');
   assert.deepEqual(gameThreeRoom.payload.room.config.previousPicksB, []);
   assert.deepEqual(gameThreeRoom.payload.room.config.previousBansA, [], 'Squadra Blast Game 3 must clear prior bans.');
@@ -257,6 +281,7 @@ try {
     state: {
       status: 'complete',
       gameNumber: 3,
+      gameRollId: gameThreeRollId,
       engine: {
         state: 'complete', gameNumber: 3,
         teamA: { picks: ['0019','0020','0021','0022'], bans: ['0027'] },
@@ -272,7 +297,24 @@ try {
   assert.equal(gameThreeResult.payload.seriesComplete, true);
   assert.equal(gameThreeResult.payload.final, true, 'The shared Quick Draft controller must finalize the BO series.');
 
-  console.log('Quick Draft shared links, role controls, next-game history and BO finalization passed.');
+  const rematch = await request('/api/quick-draft-rooms', {
+    token, method: 'POST', body: { config: quickConfig },
+  });
+  assert.notEqual(rematch.payload.room.roomCode, room.roomCode, 'Reusing a played Quick Draft session must create a new room.');
+  assert.equal(rematch.payload.room.config.gameNumber, 1);
+  assert.equal(rematch.payload.room.config.seriesScoreA, 0);
+  assert.equal(rematch.payload.room.config.seriesScoreB, 0);
+  assert.notEqual(rematch.payload.room.config.gameRollId, gameThreeRollId);
+  const cleanRematch = await request(`/api/public/draft-rooms/${rematch.payload.room.roomCode}/access`, {
+    method: 'POST', body: { accessToken: fragmentValue(rematch.payload.room.links.host, 'access') },
+  });
+  assert.equal(cleanRematch.payload.room.state.status, 'waiting');
+  assert.equal(cleanRematch.payload.room.state.gameNumber, 1);
+  assert.equal(cleanRematch.payload.room.state.gameRollId, rematch.payload.room.config.gameRollId);
+  assert.equal(cleanRematch.payload.room.state.engine, undefined);
+  assert.equal(cleanRematch.payload.room.state.preDraft, undefined);
+
+  console.log('Quick Draft shared links, fresh game rolls, clean rematch and BO finalization passed.');
 } finally {
   sockets.forEach(socket => socket.disconnect());
   if (!child.killed) child.kill('SIGTERM');

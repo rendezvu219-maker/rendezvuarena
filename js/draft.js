@@ -1,5 +1,6 @@
 // Draft Engine - 4v4 State Management
 import { HEROES, generateDraftSequence } from './heroes.js';
+import { secureRandomUnit } from './pre-draft.js';
 
 const MIRROR_PICK_MODES = new Set([
   'none',
@@ -72,13 +73,13 @@ function mirrorModeAllowsRole(mode, role) {
   return false;
 }
 
-function normalizedRandom(rng = Math.random) {
+function normalizedRandom(rng = secureRandomUnit) {
   const value = Number(rng());
-  if (!Number.isFinite(value)) return Math.random();
+  if (!Number.isFinite(value)) return secureRandomUnit();
   return Math.min(0.9999999999999999, Math.max(0, value));
 }
 
-function shuffleWithRng(items, rng = Math.random) {
+function shuffleWithRng(items, rng = secureRandomUnit) {
   const shuffled = [...items];
   for (let index = shuffled.length - 1; index > 0; index--) {
     const swapIndex = Math.floor(normalizedRandom(rng) * (index + 1));
@@ -87,7 +88,7 @@ function shuffleWithRng(items, rng = Math.random) {
   return shuffled;
 }
 
-function orderedRandomPool(pool, avoidHeroIds, rng = Math.random) {
+function orderedRandomPool(pool, avoidHeroIds, rng = secureRandomUnit) {
   const fresh = [];
   const recent = [];
   pool.forEach(hero => (avoidHeroIds.has(hero.id) ? recent : fresh).push(hero));
@@ -327,7 +328,7 @@ export class DraftEngine {
     ));
   }
 
-  generateAllRandomAssignments({ rng = Math.random, avoidHeroIds = [] } = {}) {
+  generateAllRandomAssignments({ rng = secureRandomUnit, avoidHeroIds = [] } = {}) {
     if (this.teamA.picks.length || this.teamB.picks.length) {
       throw new Error('All Random assignments can only be generated before either team has picked.');
     }
@@ -514,7 +515,7 @@ export class DraftEngine {
     });
 
     if (!available.length) return false;
-    this.selectedHero = available[Math.floor(Math.random() * available.length)].id;
+    this.selectedHero = available[Math.floor(secureRandomUnit() * available.length)].id;
     return this.lockIn();
   }
 

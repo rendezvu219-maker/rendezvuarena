@@ -20,6 +20,8 @@ assert.match(hostSetup, /gekishin\.quickDraft\.customPresets\.v1/);
 assert.match(hostSetup, /snapshotPresetConfig/);
 assert.match(hostSetup, /presetFacts/);
 assert.match(hostSetup, /SAVE CURRENT AS PRESET|saveCurrentPreset/);
+assert.match(hostSetup, /sessionId: crypto\.randomUUID/, 'Starting a Quick Draft must rotate the next rematch session identity.');
+assert.match(hostSetup, /previousPicksA: \[\]/, 'The next Quick Draft session must not inherit pick history.');
 assert.match(quick, /<details class="advanced-settings"/);
 assert.match(rulesForm, /\['all-random', 'All Random'/);
 assert.match(rulesForm, /Host bans unwanted heroes first/);
@@ -62,5 +64,7 @@ assert.doesNotMatch(app, /team=preview`;/);
 assert.match(server, /app\.get\('\/draft-room\.html'/);
 assert.match(server, /app\.get\('\/broadcast\.html'/);
 assert.match(server, /role === 'broadcaster' \? '\/broadcast\.html' : '\/draft-room\.html'/);
+assert.match(server, /if \(!pristine\)/, 'A reused Quick Draft session must create a fresh backing room after play begins.');
+assert.match(server, /newDraftGameRollId/, 'Each server-backed game must receive an auditable random-roll identity.');
 
 console.log('Quick Draft route separation and pre-draft isolation checks passed.');

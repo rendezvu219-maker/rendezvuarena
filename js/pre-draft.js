@@ -9,6 +9,29 @@ export const DIVINE_RULES = Object.freeze([
   { name: 'Burst Step', file: 'Burst Step.png', desc: 'Dashes and vanishing steps consume 20% less energy.' },
 ]);
 
+export function secureRandomUnit() {
+  if (globalThis.crypto?.getRandomValues) {
+    const value = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(value);
+    return value[0] / 0x100000000;
+  }
+  return Math.random();
+}
+
+export function drawRandomDivineIndices(excludedIndices = [], rng = secureRandomUnit) {
+  const excluded = new Set((Array.isArray(excludedIndices) ? excludedIndices : []).map(Number));
+  const remaining = DIVINE_RULES.map((_, index) => index).filter(index => !excluded.has(index));
+  for (let index = remaining.length - 1; index > 0; index -= 1) {
+    const value = Number(rng());
+    const normalized = Number.isFinite(value)
+      ? Math.min(0.9999999999999999, Math.max(0, value))
+      : secureRandomUnit();
+    const swap = Math.floor(normalized * (index + 1));
+    [remaining[index], remaining[swap]] = [remaining[swap], remaining[index]];
+  }
+  return remaining.slice(0, 2);
+}
+
 export function normalizeSideAssignment(value) {
   if (!value || typeof value !== 'object') return null;
   const left = value.A;
