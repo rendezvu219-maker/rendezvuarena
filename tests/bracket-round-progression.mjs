@@ -26,7 +26,7 @@ async function request(url,{token,method='GET',body}={}){
 }
 async function waitForServer(){for(let i=0;i<80;i++){try{await request('/api/health');return;}catch{await new Promise(resolve=>setTimeout(resolve,75));}}throw new Error(`Bracket progression test server did not start.\n${serverOutput}`);}
 async function play(match,captainTokens,{scoreA=1,scoreB=0}={}){const a=Number(match.team_a_id),b=Number(match.team_b_id);await request(`/api/matches/${match.id}/results/submit`,{token:captainTokens.get(a),method:'POST',body:{scoreA,scoreB,note:'Regression test result.'}});const confirmed=await request(`/api/matches/${match.id}/results/confirm`,{token:captainTokens.get(b),method:'POST',body:{decision:'confirm'}});assert.equal(confirmed.final,true);}
-async function playHostVerified(match,adminToken,captainTokens){const a=Number(match.team_a_id),b=Number(match.team_b_id);await request(`/api/matches/${match.id}/results/submit`,{token:adminToken,method:'POST',body:{sourceType:'host',scoreA:1,scoreB:0,note:'Host-submitted result requires both Captains.'}});const afterA=await request(`/api/matches/${match.id}/results/confirm`,{token:captainTokens.get(a),method:'POST',body:{decision:'confirm'}});assert.notEqual(afterA.final,true,'One Captain must not finalize a Host report.');const afterB=await request(`/api/matches/${match.id}/results/confirm`,{token:captainTokens.get(b),method:'POST',body:{decision:'confirm'}});assert.equal(afterB.final,true);}
+async function playHostVerified(match,adminToken){const confirmed=await request(`/api/matches/${match.id}/results/submit`,{token:adminToken,method:'POST',body:{sourceType:'host',scoreA:1,scoreB:0,note:'Host-confirmed result.'}});assert.equal(confirmed.autoFinalized,true,'Host/Admin confirmation should finalize immediately.');assert.equal(confirmed.match.result_status,'final');}
 
 try{
   await waitForServer();
@@ -50,7 +50,7 @@ try{
   const semis=detail.matches.filter(match=>match.round_no===1).sort((a,b)=>a.position-b.position);
   const final=detail.matches.find(match=>match.round_no===2);
   assert.ok(semis.every(match=>match.match_status==='checkin_open'),'Every playable first-round match must allow Captain check-in.');
-  await playHostVerified(semis[0],admin,captainTokensByTeam);
+  await playHostVerified(semis[0],admin);
   detail=await request(`/api/tournaments/${tournament.id}`,{token:admin});
   let waitingFinal=detail.matches.find(match=>match.id===final.id);
   assert.notEqual(waitingFinal.result_status,'final','Final must not auto-complete after only one semifinal finishes.');

@@ -20,9 +20,10 @@ function activeSubmission(matchId) {
 }
 
 function requiredConfirmationTeams(match, submission) {
-  if (submission.source_type === 'host' || submission.source_type === 'admin') {
+  if (submission.source_type === 'host_reconfirmation') {
     return [match.team_a_id, match.team_b_id].filter(Boolean);
   }
+  if (submission.source_type === 'host' || submission.source_type === 'admin') return [];
   if (submission.source_type === 'team') {
     return [match.team_a_id, match.team_b_id].filter(id => id && id !== submission.submitted_by_team_id);
   }
@@ -219,7 +220,7 @@ function requestResultReconfirmation({matchId,userId,reason,scoreA=null,scoreB=n
     db.prepare('UPDATE result_submissions SET active=0,superseded_at=COALESCE(superseded_at,CURRENT_TIMESTAMP) WHERE match_id=?').run(match.id);
     const revision=Number(db.prepare('SELECT COALESCE(MAX(revision),0)+1 revision FROM result_submissions WHERE match_id=?').get(match.id).revision);
     const inserted=db.prepare(`INSERT INTO result_submissions(match_id,revision,submitted_by_user_id,source_type,score_a,score_b,winner_team_id,note,active)
-      VALUES (?,?,?,'host',?,?,?,?,1)`).run(match.id,revision,userId,validated.scoreA,validated.scoreB,validated.winnerTeamId,`Re-confirmation requested: ${normalizedReason}`);
+      VALUES (?,?,?,'host_reconfirmation',?,?,?,?,1)`).run(match.id,revision,userId,validated.scoreA,validated.scoreB,validated.winnerTeamId,`Re-confirmation requested: ${normalizedReason}`);
     const submission=db.prepare('SELECT * FROM result_submissions WHERE id=?').get(Number(inserted.lastInsertRowid));
     db.prepare(`UPDATE matches SET score_a=NULL,score_b=NULL,winner_team_id=NULL,result_status='awaiting_confirmation',match_status='completed',status='completed',resolution_type='normal',resolution_reason='',result_finalized_at=NULL,final_submission_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
     db.prepare('INSERT INTO audit_logs(tournament_id,match_id,user_id,action,details_json) VALUES (?,?,?,?,?)')

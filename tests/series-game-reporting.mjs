@@ -169,13 +169,6 @@ try {
   });
   assert.equal(selfConfirm.response.status, 403);
 
-  const hostOverrideBlocked = await request(`/api/matches/${match.id}/draft-room/game-result`, {
-    token: hostToken,
-    method: 'POST',
-    body: { winnerSide: 'A' },
-  });
-  assert.equal(hostOverrideBlocked.response.status, 403, 'A normal Host must not operate per-game winners.');
-
   const confirmGame1 = await request(`/api/matches/${match.id}/games/current/confirm`, {
     token: captainBToken,
     method: 'POST',
@@ -206,16 +199,10 @@ try {
   assert.deepEqual(nextGameExchange.payload.room.config.previousBansB, []);
 
   setDraftComplete(db, match.id, 2);
-  const reportGame2 = await request(`/api/matches/${match.id}/games/current/report`, {
-    token: captainBToken,
+  const confirmGame2 = await request(`/api/matches/${match.id}/draft-room/game-result`, {
+    token: hostToken,
     method: 'POST',
-    body: { winnerSide: 'B' },
-  });
-  assert.equal(reportGame2.response.status, 200);
-  const confirmGame2 = await request(`/api/matches/${match.id}/games/current/confirm`, {
-    token: captainAToken,
-    method: 'POST',
-    body: { decision: 'confirm' },
+    body: { winnerSide: 'B', gameNumber: 2 },
   });
   assert.equal(confirmGame2.response.status, 200, JSON.stringify(confirmGame2.payload));
   assert.equal(confirmGame2.payload.nextGameNumber, 3);
@@ -224,11 +211,12 @@ try {
   const game3Url = new URL(confirmGame2.payload.nextDraftUrl);
   const game3Access = new URLSearchParams(game3Url.hash.slice(1));
   const game3Exchange = await request(`/api/public/draft-rooms/${game3Access.get('room')}/access`, {
-    token: captainAToken,
+    token: hostToken,
     method: 'POST',
     body: { accessToken: game3Access.get('access') },
   });
   assert.equal(game3Exchange.response.status, 200, JSON.stringify(game3Exchange.payload));
+  assert.equal(game3Exchange.payload.room.role, 'host');
   assert.equal(game3Exchange.payload.room.config.gameNumber, 3);
   assert.deepEqual(game3Exchange.payload.room.config.previousPicksA, []);
   assert.deepEqual(game3Exchange.payload.room.config.previousPicksB, []);
@@ -272,10 +260,12 @@ try {
   assert.doesNotMatch(dashboardSource, /\['team_a','team_b','host','referee'\]/, 'Host and Referee Ready buttons must be removed.');
   assert.match(portalSource, /games\/current\/report/);
   assert.match(portalSource, /games\/current\/confirm/);
+  assert.match(dashboardSource, /draft-room\/game-result/);
+  assert.match(dashboardSource, /can\('result\.verify'\)/);
   assert.match(css, /width:min\(1760px,calc\(100vw - 24px\)\)/);
   assert.match(css, /portal-settings-grid[\s\S]*grid-template-areas/);
 
-  console.log('Game-by-game Captain reporting, automatic series finalization, readiness cleanup and wide layout checks passed.');
+  console.log('Host/Admin direct confirmation, Captain fallback reporting, automatic series finalization and layout checks passed.');
 } finally {
   try { db?.close(); } catch {}
   await stopServer();

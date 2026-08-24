@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { io } = require('socket.io-client');
@@ -6,8 +7,9 @@ const { io } = require('socket.io-client');
 const root = path.resolve(__dirname, '..');
 const port = 3117;
 const base = `http://127.0.0.1:${port}`;
-const dbPath = path.join(root, 'data', 'smoke.sqlite');
-const uploadPath = path.join(root, 'data', 'smoke-uploads');
+const smokeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'rendezvu-smoke-'));
+const dbPath = path.join(smokeRoot, 'smoke.sqlite');
+const uploadPath = path.join(smokeRoot, 'uploads');
 fs.rmSync(uploadPath, { recursive: true, force: true });
 for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${dbPath}${suffix}`, { force: true });
 
@@ -189,17 +191,15 @@ function accessFromFragment(url) {
     assert(!Object.prototype.hasOwnProperty.call(publicMatch, 'room_code'), 'Public API must not expose the room code.');
     assert(!Object.prototype.hasOwnProperty.call(publicMatch, 'private_notes'), 'Public API must not expose staff notes.');
 
-    // Host submission requires both linked Captains.
+    // Host/Admin confirmation is sufficient and finalizes immediately.
     let result = await request(`/api/matches/${playable.id}/results/submit`, {
       token: hostToken, method: 'POST', body: { scoreA: 2, scoreB: 1, sourceType: 'host' },
     });
-    assert(result.match.result_status === 'awaiting_confirmation' && result.requiredTeams.length === 2, 'Host result must wait for both Captains.');
+    assert(result.autoFinalized && result.match.result_status === 'final' && result.requiredTeams.length === 0, 'Host result should finalize without Captain confirmation.');
     const teamAToken = teams.find(team => team.id === playable.team_a_id).captainToken;
     const teamBToken = teams.find(team => team.id === playable.team_b_id).captainToken;
-    await request(`/api/matches/${playable.id}/results/confirm`, { token: teamAToken, method: 'POST', body: { decision: 'confirm' } });
-    result = await request(`/api/matches/${playable.id}/results/confirm`, { token: teamBToken, method: 'POST', body: { decision: 'confirm' } });
-    assert(result.final && result.match.result_status === 'final', 'Matching Captain confirmations should auto-finalize without referee review.');
 
+    // Host may still explicitly ask both Captains to re-confirm a result.
     const reconfirmation = await request(`/api/matches/${playable.id}/results/request-reconfirmation`, {
       token: hostToken, method: 'POST', body: { reason: 'Host asks both Captains to verify the result again.' },
     });
@@ -214,9 +214,8 @@ function accessFromFragment(url) {
     const corrected = await request(`/api/matches/${playable.id}/results/correct`, {
       token: hostToken, method: 'POST', body: { scoreA: 0, scoreB: 2, reason: 'Host entered the winner incorrectly.' },
     });
-    assert(corrected.match.result_status === 'awaiting_confirmation', 'Correct Final should reopen and create a new host submission.');
-    await request(`/api/matches/${playable.id}/results/confirm`, { token: teamAToken, method: 'POST', body: { decision: 'confirm' } });
-    result = await request(`/api/matches/${playable.id}/results/confirm`, { token: teamBToken, method: 'POST', body: { decision: 'confirm' } });
+    assert(corrected.autoFinalized && corrected.match.result_status === 'final', 'A Host correction should finalize immediately.');
+    result = corrected;
     assert(result.match.winner_team_id !== wrongWinner, 'Corrected final should replace the bracket winner.');
 
     tournament = await request(`/api/tournaments/${tournamentId}`, { token: hostToken });
@@ -333,5 +332,6 @@ function accessFromFragment(url) {
     await new Promise(resolve => setTimeout(resolve, 150));
     for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${dbPath}${suffix}`, { force: true });
     fs.rmSync(uploadPath, { recursive: true, force: true });
+    fs.rmSync(smokeRoot, { recursive: true, force: true });
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });

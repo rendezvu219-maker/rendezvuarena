@@ -1592,13 +1592,13 @@ app.post('/api/matches/:matchId/results/submit',authRequired,emailVerifiedRequir
     const room=db.prepare('SELECT status FROM draft_rooms WHERE match_id=?').get(match.id);
     if(room&&room.status!=='series_complete')return res.status(409).json({error:'Report and confirm the current game first. The full BO score is no longer submitted before all games are verified.'});
     let sourceType='team',teamId=req.matchTeamId;
-    if(hasTournamentPermission(req.user.id,match.tournament_id,'result.verify')||hasTournamentPermission(req.user.id,match.tournament_id,'match.manage')){sourceType=String(req.body.sourceType||'host');teamId=sourceType==='team'?Number(req.body.teamId):null;}
+    if(hasTournamentPermission(req.user.id,match.tournament_id,'result.verify')||hasTournamentPermission(req.user.id,match.tournament_id,'match.manage')){sourceType=req.user.role==='admin'?'admin':'host';teamId=null;}
     else if(!teamId||!teamForCaptain(req.user.id,teamId))return res.status(403).json({error:'Only the linked Captain or authorized staff can submit results.'});
     const payload=submitResult({matchId:match.id,userId:req.user.id,sourceType,submittedByTeamId:teamId,scoreA:req.body.scoreA,scoreB:req.body.scoreB,note:req.body.note});
     addSystemMessage(match.id,`Result submitted: ${req.body.scoreA}-${req.body.scoreB}.`);emitBracketUpdated(match.tournament_id);res.json(payload);
   }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
-// Backward-compatible endpoint now follows host confirmation flow instead of instant finalization.
+// Backward-compatible endpoint: an authorized Host/Admin result is final immediately.
 app.post('/api/matches/:matchId/result',authRequired,requireMatchAccess,(req,res)=>{if(!hasTournamentPermission(req.user.id,req.match.tournament_id,'result.submit'))return res.status(403).json({error:'Result submit permission required.'});try{const room=db.prepare('SELECT status FROM draft_rooms WHERE match_id=?').get(req.match.id);if(room&&room.status!=='series_complete')return res.status(409).json({error:'Report and confirm each game before submitting a full BO score.'});const payload=submitResult({matchId:req.match.id,userId:req.user.id,sourceType:'host',scoreA:req.body.scoreA,scoreB:req.body.scoreB,note:req.body.note});res.json({...payload,matches:listMatches(req.match.tournament_id)});}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
 app.post('/api/matches/:matchId/results/confirm',authRequired,emailVerifiedRequired,requireMatchAccess,(req,res)=>{try{const teamId=req.matchTeamId||Number(req.body.teamId);if(!teamId||!teamForCaptain(req.user.id,teamId))return res.status(403).json({error:'Only the linked Captain can confirm this team result.'});const payload=confirmResult({matchId:req.match.id,userId:req.user.id,teamId,decision:req.body.decision,comment:req.body.comment});addSystemMessage(req.match.id,payload.final?'Result confirmed and finalized.':'Result confirmation was updated.');emitBracketUpdated(req.match.tournament_id);res.json(payload);}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
 app.post('/api/matches/:matchId/results/review',authRequired,requireMatchAccess,(req,res)=>{if(!hasTournamentPermission(req.user.id,req.match.tournament_id,'dispute.review'))return res.status(403).json({error:'Dispute review permission required.'});try{res.json({dispute:reviewDispute({matchId:req.match.id,userId:req.user.id,status:'under_review',note:req.body.note})});}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
@@ -2205,14 +2205,14 @@ function finalizeSeriesFromVerifiedGames(req, payload) {
       match_id,revision,submitted_by_user_id,source_type,score_a,score_b,winner_team_id,note,active
     ) VALUES (?,?,?,'verified_games',?,?,?,?,1)`).run(
       match.id, revision, actorUserId, Number(payload.scoreA), Number(payload.scoreB), winnerTeamId,
-      'Automatically finalized from game-by-game Captain confirmations.'
+      'Automatically finalized from verified game results.'
     );
     return applyFinalResultUnsafe(match, {
       scoreA: Number(payload.scoreA),
       scoreB: Number(payload.scoreB),
       winnerTeamId,
       resolutionType: 'verified_games',
-      resolutionReason: 'Every game result was confirmed before the next game opened.',
+      resolutionReason: 'Every game result was verified before the next game opened.',
       submissionId: Number(inserted.lastInsertRowid),
       userId: actorUserId,
     });
@@ -2509,11 +2509,11 @@ function canDirectlyRecordDraftGame(req) {
   if (tournament?.source_platform === 'quick_draft') {
     return hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control');
   }
-  return req.user.role === 'admin';
+  return hasTournamentPermission(req.user.id, req.match.tournament_id, 'result.verify');
 }
 
 app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMatchAccess, (req, res) => {
-  if (!canDirectlyRecordDraftGame(req)) return res.status(403).json({ error: 'Only an Admin may override a tournament game result. Quick Draft creators may record their own games.' });
+  if (!canDirectlyRecordDraftGame(req)) return res.status(403).json({ error: 'Only an authorized Host or Admin may directly confirm a tournament game result. Quick Draft creators may record their own games.' });
   try {
     const match = draftMatchContext(req.match.id);
     const game = currentMatchGame(match);
@@ -2537,9 +2537,9 @@ app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMa
   }
 });
 
-// Backward-compatible administrative route. Normal tournament flow uses Captain report + opponent confirmation.
+// Backward-compatible administrative route. Host/Admin confirmation is direct; Captain fallback uses report + opponent confirmation.
 app.post('/api/matches/:matchId/draft-room/next-game', authRequired, requireMatchAccess, (req, res) => {
-  if (!canDirectlyRecordDraftGame(req)) return res.status(403).json({ error: 'Only an Admin may override a tournament game result. Quick Draft creators may record their own games.' });
+  if (!canDirectlyRecordDraftGame(req)) return res.status(403).json({ error: 'Only an authorized Host or Admin may directly confirm a tournament game result. Quick Draft creators may record their own games.' });
   try {
     let payload = recordDraftGameWinner(req, req.body.winnerSide, { expectedGameNumber: req.body.gameNumber });
     payload = finalizeSeriesFromVerifiedGames(req, payload);
