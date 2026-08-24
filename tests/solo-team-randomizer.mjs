@@ -55,6 +55,27 @@ try{
   db=new DatabaseSync(databasePath);
   const formationColumn=db.prepare('PRAGMA table_info(teams)').all().find(column=>column.name==='formation_source');
   assert.ok(formationColumn,'The normal migration path must add solo-team provenance.');
+  const registrationModeColumn=db.prepare('PRAGMA table_info(tournaments)').all().find(column=>column.name==='registration_mode');
+  assert.ok(registrationModeColumn,'The normal migration path must add the per-tournament registration mode.');
+  assert.equal(db.prepare('SELECT registration_mode FROM tournaments WHERE id=?').get(registration.id).registration_mode,'team_or_solo');
+
+  const invalidMode=await request(`/api/tournaments/${registration.id}`,{
+    token:hostToken,method:'PATCH',body:{registrationMode:'unknown_mode'},allowError:true,
+  });
+  assert.equal(invalidMode.response.status,400,'Unknown registration modes must be rejected.');
+  const soloOnly=await request(`/api/tournaments/${registration.id}`,{
+    token:hostToken,method:'PATCH',body:{registrationMode:'solo_pool_only'},
+  });
+  assert.equal(soloOnly.payload.tournament.registration_mode,'solo_pool_only');
+  const soloOnlyOptions=await request(`/api/public/tournaments/${registration.slug}/join-options`);
+  assert.equal(soloOnlyOptions.payload.tournament.registration_mode,'solo_pool_only');
+  assert.deepEqual(soloOnlyOptions.payload.teams,[],'Solo-only registration must not expose team choices.');
+  const existingTeam=db.prepare('SELECT id FROM teams WHERE tournament_id=? ORDER BY id LIMIT 1').get(registration.id);
+  const blockedTeamSignup=await request(`/api/tournaments/${registration.slug}/join-requests`,{
+    token:applicantToken,method:'POST',body:{requestedRole:'player',teamId:existingTeam?.id||null,requestedTeamName:existingTeam?'':'Bypass Team',gamerTag:'BYPASS'},allowError:true,
+  });
+  assert.equal(blockedTeamSignup.response.status,400,'Solo-only mode must reject direct team registration even when the API is called manually.');
+  assert.match(blockedTeamSignup.payload.error,/Solo Pool registrations only/i);
 
   const submitted=await request(`/api/tournaments/${registration.slug}/join-requests`,{
     token:applicantToken,method:'POST',body:{requestedRole:'captain',soloSignup:true,gamerTag:'SOLO-CAPTAIN',message:'Please assign me.'},
@@ -167,8 +188,10 @@ try{
   const joinPage=fs.readFileSync(path.join(root,'js','join-tournament.js'),'utf8');
   assert.match(dashboard,/solo-randomizer\/preview/);
   assert.match(dashboard,/confirmSoloTeams/);
+  assert.match(dashboard,/registrationMode/);
   assert.match(joinPage,/soloSignup/);
-  console.log('Solo signup preview/confirm, Captain-safe teams, privacy, match access and undo snapshot checks passed.');
+  assert.match(joinPage,/soloPoolOnly/);
+  console.log('Solo-only registration, preview/confirm, Captain-safe teams, privacy, match access and undo snapshot checks passed.');
 }finally{
   try{db?.close();}catch{}
   await stopServer();

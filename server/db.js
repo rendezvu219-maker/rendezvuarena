@@ -813,6 +813,7 @@ const migrations = {
   tournaments: [
     ['start_at', 'TEXT'],
     ['schedule_mode', "TEXT NOT NULL DEFAULT 'fixed_tournament_start'"],
+    ['registration_mode', "TEXT NOT NULL DEFAULT 'team_or_solo'"],
     ['roster_lock_at', 'TEXT'],
     ['finalized_at', 'TEXT'],
     ['result_reopen_hours', 'INTEGER NOT NULL DEFAULT 24'],

@@ -352,6 +352,7 @@ function renderRules() {
         <label>Status<select id="rule-status">${['preparing','ongoing','paused','completed','cancelled','archived'].map(value => `<option value="${value}" ${tournament.status === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label>
         <label>Tournament start<input id="rule-start-at" type="datetime-local" value="${tournament.start_at ? escapeHtml(tournament.start_at.slice(0,16)) : ''}"></label>
         <label>Timezone<input id="rule-timezone" value="${escapeHtml(tournament.timezone)}"></label>
+        <label>${escapeHtml(t('registrationMode'))}<select id="rule-registration-mode"><option value="team_or_solo" ${tournament.registration_mode !== 'solo_pool_only' ? 'selected' : ''}>${escapeHtml(t('registrationModeTeamOrSolo'))}</option><option value="solo_pool_only" ${tournament.registration_mode === 'solo_pool_only' ? 'selected' : ''}>${escapeHtml(t('registrationModeSoloOnly'))}</option></select></label>
         <label>Roster lock deadline<input id="rule-roster-lock" type="datetime-local" value="${tournament.roster_lock_at ? escapeHtml(tournament.roster_lock_at.slice(0,16)) : ''}"></label>
         <label>Result reopen window (hours)<input id="rule-reopen-hours" type="number" min="1" max="168" value="${Number(tournament.result_reopen_hours || 24)}"></label>
         <label>Evidence retention after Tournament Final<input id="rule-evidence-days" type="number" min="1" value="${Number(tournament.evidence_retention_days || 90)}"></label>
@@ -403,6 +404,7 @@ function renderRules() {
         status: $('#rule-status').value,
         startAt: $('#rule-start-at').value || null,
         timezone: $('#rule-timezone').value,
+        registrationMode: $('#rule-registration-mode').value,
         rosterLockAt: $('#rule-roster-lock').value || null,
         resultReopenHours: Number($('#rule-reopen-hours').value),
         evidenceRetentionDays: Number($('#rule-evidence-days').value),

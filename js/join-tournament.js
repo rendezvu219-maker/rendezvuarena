@@ -34,6 +34,7 @@ function renderMemberOptions() {
 }
 function renderSource() {
   const tournament = state.options.tournament;
+  const soloPoolOnly=tournament.registration_mode==='solo_pool_only';
   const title = String(tournament.name || t('linkTournamentAccount')).trim();
   const titleElement = $('#join-title');
   titleElement.textContent = title;
@@ -43,6 +44,10 @@ function renderSource() {
   $('#join-source').innerHTML = tournament.source_url
     ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(tournament.source_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t('registerViewOnProvider',{provider:(tournament.source_platform||'SOURCE').toUpperCase()}))}</a>`
     : `<span class="join-muted">${escapeHtml(t('noExternalRegistrationLink'))}</span>`;
+  if(soloPoolOnly){
+    const step=$('.join-steps article:nth-child(2) span');
+    if(step)step.textContent=t('soloOnlyJoinStep');
+  }
 }
 function renderEligibility(){
   const panel=$('#join-requirements');
@@ -68,13 +73,21 @@ function renderEligibility(){
 
 function renderForm() {
   const teams = state.options.teams || [];
-  $('#join-team').innerHTML = `<option value="__solo__">${escapeHtml(t('soloSignupOption'))}</option>${teams.length
+  const soloPoolOnly=state.options.tournament.registration_mode==='solo_pool_only';
+  const teamSelect=$('#join-team');
+  teamSelect.innerHTML = `<option value="__solo__">${escapeHtml(t('soloSignupOption'))}</option>${!soloPoolOnly&&teams.length
     ? `${teams.map(team => `<option value="${team.id}">${escapeHtml(team.name)}${team.tag ? ` [${escapeHtml(team.tag)}]` : ''}${team.captainLinked ? ' · Captain linked' : ''}</option>`).join('')}<option value="">My team is not listed</option>`
-    : '<option value="">Team list is not synced — enter it manually</option>'}`;
+    : !soloPoolOnly?'<option value="">Team list is not synced — enter it manually</option>':''}`;
+  teamSelect.disabled=soloPoolOnly;
+  if(soloPoolOnly){
+    const label=teamSelect.closest('label');
+    label.querySelector('span').textContent=t('soloPoolLabel');
+    label.querySelector('small').textContent=t('soloOnlyJoinNotice');
+  }
   const matched=state.eligibility?.matchingMembers?.[0];
-  if(matched&&teams.some(team=>Number(team.id)===Number(matched.team_id)))$('#join-team').value=String(matched.team_id);
-  else if (teams.length) $('#join-team').value = String(teams[0].id);
-  else $('#join-team').value = '__solo__';
+  if(!soloPoolOnly&&matched&&teams.some(team=>Number(team.id)===Number(matched.team_id)))teamSelect.value=String(matched.team_id);
+  else if(!soloPoolOnly&&teams.length)teamSelect.value=String(teams[0].id);
+  else teamSelect.value='__solo__';
   renderMemberOptions();
   if(matched&&[...$('#join-member').options].some(option=>Number(option.value)===Number(matched.id)))$('#join-member').value=String(matched.id);
   $('#join-form').classList.remove('hidden');

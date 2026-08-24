@@ -311,6 +311,11 @@ function sourceVerificationFields(tournament) {
   const sourceSyncStatus=String(tournament?.source_sync_status||'');
   return {sourceSyncStatus,unverified:sourceSyncStatus==='url_verified'};
 }
+function normalizeRegistrationMode(value) {
+  const mode=String(value||'team_or_solo');
+  if(!['team_or_solo','solo_pool_only'].includes(mode))throw new Error('Choose team registration with optional solo signup, or Solo Pool only.');
+  return mode;
+}
 function logAction({ tournamentId=null,matchId=null,userId=null,action,details={} }) {
   db.prepare('INSERT INTO audit_logs(tournament_id,match_id,user_id,action,details_json) VALUES (?,?,?,?,?)')
     .run(tournamentId,matchId,userId,action,JSON.stringify(details));
@@ -961,10 +966,11 @@ app.get('/api/public/tournaments/:slug',(req,res)=>{
 
 // Public event joining links a normal account to an already-listed external entrant/team.
 app.get('/api/public/tournaments/:slug/join-options',(req,res)=>{
-  const tournament=db.prepare(`SELECT id,name,slug,description,discord_url,status,timezone,start_at,is_public,source_platform,source_url,roster_lock_at FROM tournaments WHERE slug=? AND is_public=1`).get(req.params.slug);
+  const tournament=db.prepare(`SELECT id,name,slug,description,discord_url,status,timezone,start_at,is_public,source_platform,source_url,roster_lock_at,registration_mode FROM tournaments WHERE slug=? AND is_public=1`).get(req.params.slug);
   if(!tournament)return res.status(404).json({error:'Tournament not found.'});
-  const teams=db.prepare(`SELECT id,name,tag,logo_url,source,team_status,captain_user_id FROM teams WHERE tournament_id=? AND team_status NOT IN ('withdrawn','disqualified') AND COALESCE(formation_source,'')!='solo_randomizer' ORDER BY name`).all(tournament.id);
-  const members=db.prepare(`SELECT tm.id,tm.team_id,tm.display_name,tm.gamer_tag,tm.member_role,tm.is_captain,tm.is_substitute,tm.user_id FROM team_members tm JOIN teams t ON t.id=tm.team_id WHERE t.tournament_id=? ORDER BY tm.team_id,tm.is_captain DESC,tm.id`).all(tournament.id);
+  const soloPoolOnly=tournament.registration_mode==='solo_pool_only';
+  const teams=soloPoolOnly?[]:db.prepare(`SELECT id,name,tag,logo_url,source,team_status,captain_user_id FROM teams WHERE tournament_id=? AND team_status NOT IN ('withdrawn','disqualified') AND COALESCE(formation_source,'')!='solo_randomizer' ORDER BY name`).all(tournament.id);
+  const members=soloPoolOnly?[]:db.prepare(`SELECT tm.id,tm.team_id,tm.display_name,tm.gamer_tag,tm.member_role,tm.is_captain,tm.is_substitute,tm.user_id FROM team_members tm JOIN teams t ON t.id=tm.team_id WHERE t.tournament_id=? ORDER BY tm.team_id,tm.is_captain DESC,tm.id`).all(tournament.id);
   const grouped=new Map(teams.map(team=>[team.id,{...team,captainLinked:Boolean(team.captain_user_id),members:[]}])) ;
   members.forEach(member=>grouped.get(member.team_id)?.members.push({id:member.id,displayName:member.display_name,gamerTag:member.gamer_tag,memberRole:member.member_role,isCaptain:Boolean(member.is_captain),isSubstitute:Boolean(member.is_substitute),accountLinked:Boolean(member.user_id)}));
   const requirement=providerRequirement(tournament);
@@ -1020,6 +1026,7 @@ app.post('/api/tournaments/:slug/join-requests',authRequired,emailVerifiedRequir
     const requestedRole=String(req.body.requestedRole||'player');
     if(!['player','captain','substitute','coach'].includes(requestedRole))return res.status(400).json({error:'Choose a valid tournament role.'});
     const soloSignup=req.body.soloSignup===true;
+    if(tournament.registration_mode==='solo_pool_only'&&!soloSignup)return res.status(400).json({error:'This tournament accepts Solo Pool registrations only.'});
     if(soloSignup&&!['player','captain'].includes(requestedRole))return res.status(400).json({error:'Solo signups may register as a player or self-nominated Captain.'});
     const teamId=req.body.teamId?Number(req.body.teamId):null;
     const selectedMemberId=req.body.memberId?Number(req.body.memberId):null;
@@ -1144,14 +1151,15 @@ app.post('/api/tournaments/:id/verify-source',authRequired,requireTournamentPerm
 app.patch('/api/tournaments/:id',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{
   const current=db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId);if(!current)return res.status(404).json({error:'Tournament not found.'});
   const rules=req.body.rules??jsonParse(current.rules_json);const status=req.body.status??current.status;
+  let registrationMode;try{registrationMode=normalizeRegistrationMode(req.body.registrationMode??current.registration_mode);}catch(error){return res.status(400).json({error:clientErrorMessage(error)});}
   const finalizedAt=status==='completed'&&!current.finalized_at?new Date().toISOString():current.finalized_at;
   if(req.body.publicStreamUrl!==undefined&&!isSafeExternalUrl(req.body.publicStreamUrl))return res.status(400).json({error:isProduction?'Stream URL must use HTTPS.':'Stream URL must use HTTP or HTTPS.'});
   const requestedDiscordUrl=req.body.discordUrl===undefined?current.discord_url:String(req.body.discordUrl||'').trim();
   const discordUrl=normalizeDiscordInviteUrl(requestedDiscordUrl);
   if(requestedDiscordUrl&&!discordUrl)return res.status(400).json({error:'Discord invite must be a valid discord.gg or discord.com/invite HTTPS link.'});
   const isPublic=req.body.isPublic===undefined?Number(current.is_public):(req.body.isPublic?1:0);
-  db.prepare(`UPDATE tournaments SET name=?,description=?,discord_url=?,status=?,timezone=?,default_server=?,start_at=?,schedule_mode=?,roster_lock_at=?,finalized_at=?,result_reopen_hours=?,evidence_retention_days=?,chat_retention_days=?,public_stream_platform=?,public_stream_url=?,public_stream_label=?,is_public=?,rules_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-    .run(sanitizeText(req.body.name??current.name,160),sanitizeText(req.body.description??current.description,2000),discordUrl,status,sanitizeText(req.body.timezone??current.timezone,80),sanitizeText(req.body.defaultServer??current.default_server,80),req.body.startAt===undefined?current.start_at:(req.body.startAt||null),req.body.scheduleMode??current.schedule_mode,req.body.rosterLockAt===undefined?current.roster_lock_at:(req.body.rosterLockAt||null),finalizedAt,Number(req.body.resultReopenHours??current.result_reopen_hours),Number(req.body.evidenceRetentionDays??current.evidence_retention_days),Number(req.body.chatRetentionDays??current.chat_retention_days),sanitizeText(req.body.publicStreamPlatform??current.public_stream_platform,40),String(req.body.publicStreamUrl??current.public_stream_url).trim(),sanitizeText(req.body.publicStreamLabel??current.public_stream_label,100),isPublic,JSON.stringify(rules),req.tournamentId);
+  db.prepare(`UPDATE tournaments SET name=?,description=?,discord_url=?,status=?,timezone=?,default_server=?,start_at=?,schedule_mode=?,registration_mode=?,roster_lock_at=?,finalized_at=?,result_reopen_hours=?,evidence_retention_days=?,chat_retention_days=?,public_stream_platform=?,public_stream_url=?,public_stream_label=?,is_public=?,rules_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+    .run(sanitizeText(req.body.name??current.name,160),sanitizeText(req.body.description??current.description,2000),discordUrl,status,sanitizeText(req.body.timezone??current.timezone,80),sanitizeText(req.body.defaultServer??current.default_server,80),req.body.startAt===undefined?current.start_at:(req.body.startAt||null),req.body.scheduleMode??current.schedule_mode,registrationMode,req.body.rosterLockAt===undefined?current.roster_lock_at:(req.body.rosterLockAt||null),finalizedAt,Number(req.body.resultReopenHours??current.result_reopen_hours),Number(req.body.evidenceRetentionDays??current.evidence_retention_days),Number(req.body.chatRetentionDays??current.chat_retention_days),sanitizeText(req.body.publicStreamPlatform??current.public_stream_platform,40),String(req.body.publicStreamUrl??current.public_stream_url).trim(),sanitizeText(req.body.publicStreamLabel??current.public_stream_label,100),isPublic,JSON.stringify(rules),req.tournamentId);
   if(finalizedAt)refreshTournamentRetention(req.tournamentId);logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'tournament.updated',details:req.body});res.json({tournament:db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId)});
 });
 app.post('/api/tournaments/:id/publish',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{
