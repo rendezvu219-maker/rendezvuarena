@@ -46,6 +46,7 @@
   --header-height: 64px;
   --content-max: 1440px;
   --reading-max: 760px;
+  --mobile-drawer-width: 360px;
 
   /* Motion */
   --duration-fast: 120ms;

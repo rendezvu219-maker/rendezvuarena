@@ -171,7 +171,7 @@
       const mark = document.createElement('span');
       mark.className = 'gs-ops-home-mark';
       mark.setAttribute('aria-hidden', 'true');
-      mark.textContent = 'GS';
+      mark.textContent = 'RA';
       titleBlock.replaceWith(anchor);
       anchor.append(mark, titleBlock);
     });
@@ -182,7 +182,7 @@
       brand.className = 'gs-standalone-brand';
       brand.href = '/';
       brand.title = text().homeTitle;
-      brand.innerHTML = '<span aria-hidden="true">GS</span><b>GEKISHIN</b>';
+      brand.innerHTML = '<span aria-hidden="true">RA</span><b>RENDEZVU ARENA</b>';
       nav.prepend(brand);
     });
 
@@ -193,7 +193,7 @@
       home.href = '/';
       home.title = text().homeTitle;
       home.setAttribute('aria-label', text().homeTitle);
-      home.textContent = 'GS';
+      home.textContent = 'RA';
       draftTools.prepend(home);
     }
   }
@@ -257,7 +257,7 @@
   }
 
   function initials(user) {
-    const source = String(user?.displayName || user?.username || 'GS').trim();
+    const source = String(user?.displayName || user?.username || 'RA').trim();
     const words = source.split(/\s+/).filter(Boolean);
     return (words.length > 1 ? `${words[0][0]}${words.at(-1)[0]}` : source.slice(0, 2)).toUpperCase();
   }
@@ -293,12 +293,12 @@
     menu.className = 'gs-global-menu';
     menu.innerHTML = `
       <button class="gs-global-menu-trigger" type="button" aria-expanded="false" aria-haspopup="menu" aria-label="${escapeHtml(copy.accountMenu)}" title="${escapeHtml(copy.accountMenu)}">
-        <span class="gs-global-menu-avatar" aria-hidden="true">GS</span>
-        <span class="gs-global-menu-trigger-copy"><b data-trigger-name>${escapeHtml(copy.guest)}</b><small data-trigger-meta>GEKISHIN SQUADRA</small></span>
+        <span class="gs-global-menu-avatar" aria-hidden="true">RA</span>
+        <span class="gs-global-menu-trigger-copy"><b data-trigger-name>${escapeHtml(copy.guest)}</b><small data-trigger-meta>RENDEZVU ARENA</small></span>
         <span class="gs-global-menu-chevron" aria-hidden="true">⌄</span>
       </button>
       <div class="gs-global-menu-panel" role="menu" hidden>
-        <div class="gs-global-menu-user"><span class="gs-global-menu-user-avatar">GS</span><div><b>${escapeHtml(copy.guest)}</b><small>GEKISHIN SQUADRA</small></div></div>
+        <div class="gs-global-menu-user"><span class="gs-global-menu-user-avatar">RA</span><div><b>${escapeHtml(copy.guest)}</b><small>RENDEZVU ARENA</small></div></div>
         <div class="gs-global-menu-links">
           <a data-public-profile href="/auth.html" role="menuitem"><span aria-hidden="true">◉</span>${escapeHtml(copy.publicProfile)}</a>
           <a data-account-settings href="/portal.html#profile-settings" role="menuitem"><span aria-hidden="true">⚙</span>${escapeHtml(copy.portal)}</a>
@@ -350,9 +350,9 @@
 
     function renderUser(user, failed = false) {
       currentUser = user;
-      const avatarText = user ? initials(user) : 'GS';
+      const avatarText = user ? initials(user) : 'RA';
       const displayName = user?.displayName || user?.username || copy.guest;
-      const accountMeta = failed ? copy.accountUnavailable : (user ? String(user.username || '') : 'GEKISHIN SQUADRA');
+      const accountMeta = failed ? copy.accountUnavailable : (user ? String(user.username || '') : 'RENDEZVU ARENA');
       menu.querySelector('.gs-global-menu-avatar').textContent = avatarText;
       menu.querySelector('.gs-global-menu-user-avatar').textContent = avatarText;
       menu.querySelector('[data-trigger-name]').textContent = displayName;
@@ -432,4 +432,11 @@
     get: () => ({ ...state, resolvedTheme: root.dataset.theme, resolvedMotion: root.dataset.motion }),
     set: setPreference,
   });
+
+  const mobileNavStyles = document.createElement('link');
+  mobileNavStyles.rel = 'stylesheet';
+  mobileNavStyles.href = '/css/mobile-nav.css?v=0.7.0-mobile-nav';
+  mobileNavStyles.dataset.mobileNavAsset = 'true';
+  document.head.appendChild(mobileNavStyles);
+  import('/js/mobile-nav.js?v=0.7.0-mobile-nav').catch(() => { /* Keep the page usable if the optional mobile controls fail to load. */ });
 })();

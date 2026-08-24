@@ -15,6 +15,7 @@ Web cần Node.js, SQLite, upload storage và Socket.IO nên GitHub Pages không
 - Gắn Railway Volume tại `/data`.
 - Đặt `RAILWAY_VOLUME_MOUNT_PATH=/data`.
 - Dùng Node.js 22.5+ và start command `npm start`.
+- Chỉ chạy một instance/replica: `draftPresence` và bầu quyền điều khiển Draft đang lưu trong bộ nhớ tiến trình; muốn scale ngang phải dùng Socket.IO adapter và presence store dùng chung.
 
 ## 4. Biến môi trường bắt buộc
 

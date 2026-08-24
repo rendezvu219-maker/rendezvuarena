@@ -22,8 +22,8 @@ function resolveTournamentName(config = {}) {
     || config.eventName
     || config.tournament?.name
     || config.competitionName
-    || 'GEKISHIN SQUADRA'
-  ).trim() || 'GEKISHIN SQUADRA';
+    || 'RENDEZVU ARENA'
+  ).trim() || 'RENDEZVU ARENA';
 }
 
 export class BroadcastUI {
@@ -55,7 +55,7 @@ export class BroadcastUI {
       <div class="bc-background" aria-hidden="true"></div>
       <main class="bc-overlay-shell">
         <header class="bc-event-banner" aria-label="Tournament name">
-          <div class="bc-tournament-name" id="bc-tournament-name">GEKISHIN SQUADRA</div>
+          <div class="bc-tournament-name" id="bc-tournament-name">RENDEZVU ARENA</div>
         </header>
         <section class="bc-hero-stage" id="bc-hero-stage" aria-live="polite">
           <video class="bc-trailer-video" id="bc-hero-video" muted playsinline preload="auto"></video>

@@ -400,6 +400,27 @@ function existingTournamentMembership(userId, tournamentId) {
     ORDER BY tm.is_captain DESC,tm.id LIMIT 1`).get(userId,tournamentId);
 }
 
+// Captain identity has two deliberate representations: the authorization pointer
+// on teams and the roster flag on team_members. Call inside the caller's existing
+// transaction so transfers cannot expose one representation without the other.
+function syncTeamCaptain(teamId,user,{gamerTag=''}={}){
+  const userId=Number(user?.id);
+  if(!Number.isInteger(userId)||userId<=0)throw new Error('A valid Captain account is required.');
+  const linked=db.prepare(`SELECT * FROM team_members WHERE team_id=? AND user_id=? ORDER BY membership_status='active' DESC,id LIMIT 1`).get(teamId,userId);
+  const placeholder=linked?null:db.prepare(`SELECT * FROM team_members WHERE team_id=? AND user_id IS NULL AND is_captain=1 ORDER BY id LIMIT 1`).get(teamId);
+  const member=linked||placeholder;
+  db.prepare(`UPDATE team_members SET is_captain=0,
+    member_role=CASE WHEN is_captain=1 OR member_role='captain' THEN 'player' ELSE member_role END,
+    updated_at=CURRENT_TIMESTAMP WHERE team_id=?`).run(teamId);
+  if(member){
+    if(placeholder)db.prepare(`UPDATE team_members SET user_id=?,display_name=?,gamer_tag=?,member_role='captain',membership_status='active',is_captain=1,is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+      .run(userId,user.display_name,String(gamerTag||user.gamer_tag||user.username||''),member.id);
+    else db.prepare(`UPDATE team_members SET member_role='captain',membership_status='active',is_captain=1,is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(member.id);
+  }else db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,membership_status,is_captain,is_substitute) VALUES (?,?,?,?,'captain','active',1,0)`)
+    .run(teamId,userId,user.display_name,String(gamerTag||user.gamer_tag||user.username||''));
+  db.prepare(`UPDATE teams SET captain_user_id=?,team_status='ready',status='approved',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(userId,teamId);
+}
+
 function soloRandomizerPool(tournamentId) {
   return db.prepare(`SELECT jr.id request_id,jr.user_id,jr.requested_role,jr.gamer_tag,u.display_name,u.username
     FROM tournament_join_requests jr JOIN users u ON u.id=jr.user_id AND u.is_active=1
@@ -1173,17 +1194,23 @@ app.post('/api/tournaments/:id/import-startgg',authRequired,emailVerifiedRequire
   try{
     const url=req.body.url||db.prepare('SELECT startgg_url FROM tournaments WHERE id=?').get(req.tournamentId)?.startgg_url;const imported=await importTournament(url);const selected=req.body.eventId?String(req.body.eventId):null;const events=selected?imported.events.filter(event=>String(event.id)===selected):imported.events;let teamCount=0,memberCount=0;
     transaction(()=>{db.prepare(`UPDATE tournaments SET name=?,startgg_url=?,startgg_slug=?,startgg_tournament_id=?,source_platform='startgg',source_url=?,source_external_id=?,source_sync_status='api_verified',source_last_synced_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(imported.name,url,imported.slug,String(imported.id),url,imported.slug,req.tournamentId);
-      for(const event of events)for(const entrant of event.entrants?.nodes||[]){const existing=db.prepare('SELECT * FROM teams WHERE tournament_id=? AND startgg_entrant_id=?').get(req.tournamentId,String(entrant.id));let teamId;if(existing){teamId=existing.id;db.prepare("UPDATE teams SET name=?,source='startgg',updated_at=CURRENT_TIMESTAMP WHERE id=?").run(entrant.name,teamId);db.prepare('DELETE FROM team_members WHERE team_id=? AND startgg_participant_id IS NOT NULL').run(teamId);}else{const result=db.prepare(`INSERT INTO teams(tournament_id,name,tag,startgg_entrant_id,source,status,team_status) VALUES (?,?,?,?,'startgg','pending','captain_pending')`).run(req.tournamentId,entrant.name,makeTeamTag(entrant.name),String(entrant.id));teamId=Number(result.lastInsertRowid);teamCount++;}
+      for(const event of events)for(const entrant of event.entrants?.nodes||[]){const existing=db.prepare('SELECT * FROM teams WHERE tournament_id=? AND startgg_entrant_id=?').get(req.tournamentId,String(entrant.id));let teamId;if(existing){teamId=existing.id;db.prepare("UPDATE teams SET name=?,source='startgg',updated_at=CURRENT_TIMESTAMP WHERE id=?").run(entrant.name,teamId);db.prepare('DELETE FROM team_members WHERE team_id=? AND startgg_participant_id IS NOT NULL AND user_id IS NULL').run(teamId);}else{const result=db.prepare(`INSERT INTO teams(tournament_id,name,tag,startgg_entrant_id,source,status,team_status) VALUES (?,?,?,?,'startgg','pending','captain_pending')`).run(req.tournamentId,entrant.name,makeTeamTag(entrant.name),String(entrant.id));teamId=Number(result.lastInsertRowid);teamCount++;}
         (entrant.participants||[]).forEach(participant=>{
           const profileSlug=String(participant.user?.slug||'').replace(/^user\//,'');
-          db.prepare(`INSERT INTO team_members(
+          const participantId=String(participant.id);const preserved=db.prepare('SELECT id FROM team_members WHERE team_id=? AND startgg_participant_id=?').get(teamId,participantId);
+          if(preserved)db.prepare(`UPDATE team_members SET display_name=?,gamer_tag=?,external_provider='startgg',external_user_id=?,external_profile_slug=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(
+            participant.gamerTag||profileSlug||'Player',participant.gamerTag||'',participant.user?.id?String(participant.user.id):'',profileSlug,preserved.id
+          );
+          else db.prepare(`INSERT INTO team_members(
             team_id,display_name,gamer_tag,startgg_participant_id,external_provider,external_user_id,external_profile_slug,is_captain
           ) VALUES (?,?,?,?,'startgg',?,?,0)`).run(
-            teamId,participant.gamerTag||profileSlug||'Player',participant.gamerTag||'',String(participant.id),
+            teamId,participant.gamerTag||profileSlug||'Player',participant.gamerTag||'',participantId,
             participant.user?.id?String(participant.user.id):'',profileSlug
           );
           memberCount++;
-        });}}
+        });
+        if(existing?.captain_user_id){const captain=db.prepare('SELECT * FROM users WHERE id=? AND is_active=1').get(existing.captain_user_id);if(captain)syncTeamCaptain(teamId,captain);}
+      }}
     );logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'startgg.imported',details:{slug:imported.slug}});res.json({imported:{id:imported.id,name:imported.name,slug:imported.slug,events:imported.events.map(event=>({id:event.id,name:event.name,numEntrants:event.numEntrants}))},teamCount,memberCount});
   }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
@@ -1260,7 +1287,7 @@ app.delete('/api/portal/teams/:teamId/members/:memberId',authRequired,emailVerif
 app.post('/api/tournaments/:id/teams/:teamId/captain/assign',authRequired,requireTournamentPermission('team.transfer_captain'),(req,res)=>{
   const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(Number(req.params.teamId),req.tournamentId);if(!team)return res.status(404).json({error:'Team not found.'});
   const identity=String(req.body.identity||'').trim();const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND username=? COLLATE NOCASE`).get(identity);if(!user)return res.status(404).json({error:'Captain account not found. Ask the Captain to register a username first.'});
-  transaction(()=>{db.prepare('UPDATE teams SET captain_user_id=?,team_status=\'ready\',status=\'approved\',updated_at=CURRENT_TIMESTAMP WHERE id=?').run(user.id,team.id);db.prepare('UPDATE team_members SET is_captain=0 WHERE team_id=?').run(team.id);const member=db.prepare('SELECT * FROM team_members WHERE team_id=? AND user_id=?').get(team.id,user.id);if(member)db.prepare('UPDATE team_members SET is_captain=1,member_role=\'captain\',membership_status=\'active\' WHERE id=?').run(member.id);else db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,is_captain) VALUES (?,?,?,?, 'captain',1)`).run(team.id,user.id,user.display_name,user.username);});
+  transaction(()=>syncTeamCaptain(team.id,user));
   logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'team.captain_assigned',details:{teamId:team.id,captainUserId:user.id}});res.json({team:db.prepare('SELECT * FROM teams WHERE id=?').get(team.id),captain:cleanUser(user)});
 });
 app.post('/api/tournaments/:id/teams/:teamId/captain/invite',authRequired,requireTournamentPermission('team.invite_captain'),(req,res)=>{
@@ -1284,10 +1311,7 @@ app.post('/api/team-invitations/accept',authRequired,emailVerifiedRequired,(req,
       db.prepare(`UPDATE team_invitations SET status='accepted',accepted_at=CURRENT_TIMESTAMP,invited_user_id=? WHERE id=?`).run(req.user.id,invitation.id);
       const member=db.prepare('SELECT * FROM team_members WHERE team_id=? AND user_id=?').get(team.id,req.user.id);
       if(invitedRole==='captain'){
-        db.prepare(`UPDATE teams SET captain_user_id=?,team_status='ready',status='approved',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(req.user.id,team.id);
-        db.prepare('UPDATE team_members SET is_captain=0 WHERE team_id=?').run(team.id);
-        if(member)db.prepare(`UPDATE team_members SET is_captain=1,member_role='captain',membership_status='active',is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(member.id);
-        else db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,is_captain) VALUES (?,?,?,?, 'captain',1)`).run(team.id,req.user.id,req.user.display_name,req.user.gamer_tag||req.user.username);
+        syncTeamCaptain(team.id,req.user,{gamerTag:req.user.gamer_tag||req.user.username});
       }else if(member){
         db.prepare(`UPDATE team_members SET display_name=?,gamer_tag=?,member_role=?,membership_status='active',is_captain=0,is_substitute=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
           .run(req.user.display_name,req.user.gamer_tag||req.user.username,invitedRole,invitedRole==='substitute'?1:0,member.id);
@@ -1363,9 +1387,7 @@ app.post('/api/tournaments/:id/join-requests/:requestId/review',authRequired,req
         );
       if(request.requested_role==='captain'){
         if(team.captain_user_id&&Number(team.captain_user_id)!==Number(request.user_id))throw new Error('This team already has a Captain. Transfer the role first.');
-        db.prepare('UPDATE team_members SET is_captain=0 WHERE team_id=?').run(teamId);
-        db.prepare(`UPDATE team_members SET is_captain=1,member_role='captain',is_substitute=0 WHERE id=?`).run(member.id);
-        db.prepare(`UPDATE teams SET captain_user_id=?,team_status='ready',status='approved',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(request.user_id,teamId);
+        syncTeamCaptain(teamId,{id:request.user_id,display_name:request.display_name,username:request.username},{gamerTag:request.gamer_tag});
       }
       db.prepare(`UPDATE tournament_join_requests SET team_id=?,selected_member_id=?,status='approved',review_note=?,reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(teamId,member.id,reviewNote,req.user.id,request.id);
     });
@@ -1440,6 +1462,12 @@ app.post('/api/tournaments/:id/solo-randomizer/confirm',authRequired,requireTour
           db.prepare(`UPDATE tournament_join_requests SET team_id=?,selected_member_id=?,status='approved',reviewed_by=COALESCE(reviewed_by,?),reviewed_at=COALESCE(reviewed_at,CURRENT_TIMESTAMP),updated_at=CURRENT_TIMESTAMP WHERE id=? AND tournament_id=?`)
             .run(teamId,memberId,req.user.id,poolRecord.request_id,req.tournamentId);
         }
+        syncTeamCaptain(teamId,{
+          id:captainPoolRecord.user_id,
+          display_name:captainPoolRecord.display_name,
+          username:captainPoolRecord.username,
+          gamer_tag:captainPoolRecord.gamer_tag,
+        },{gamerTag:captainPoolRecord.gamer_tag});
         const captainCount=Number(db.prepare('SELECT COUNT(*) count FROM team_members WHERE team_id=? AND is_captain=1 AND user_id=?').get(teamId,captain.user_id)?.count||0);
         if(captainCount!==1)throw new Error('Captain assignment could not be synchronized.');
         generated.push({teamId,name:assignment.name,tag:assignment.tag,captainUserId:Number(captain.user_id),userIds});
