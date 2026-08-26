@@ -382,6 +382,7 @@ function emitBracketUpdated(tournamentId,matches=listMatches(tournamentId),extra
   teamIds.forEach(team=>io.to(internalTeamRoom(team.id)).emit('bracket:updated',{tournamentId:Number(tournamentId)}));
 }
 function emitMatchUpdated(match){
+  if(!match)return;
   io.to(publicTournamentRoom(match.tournament_id)).emit('match:updated',serializePublicMatch(match));
   io.to(internalTournamentRoom(match.tournament_id)).emit('match:updated',match);
   if(match.team_a_id)io.to(internalTeamRoom(match.team_a_id)).emit('match:updated',serializePublicMatch(match));
@@ -1036,6 +1037,8 @@ app.post('/api/tournaments/:slug/join-requests',authRequired,emailVerifiedRequir
     if(membership)return res.status(409).json({error:`This account is already linked to ${membership.team_name}.`});
     const pending=db.prepare(`SELECT id FROM tournament_join_requests WHERE tournament_id=? AND user_id=? AND status='pending'`).get(tournament.id,req.user.id);
     if(pending)return res.status(409).json({error:'You already have a pending request for this tournament.'});
+    const approved=db.prepare(`SELECT id FROM tournament_join_requests WHERE tournament_id=? AND user_id=? AND status='approved'`).get(tournament.id,req.user.id);
+    if(approved)return res.status(409).json({error:'This account has already been approved for this tournament.'});
     const requestedRole=String(req.body.requestedRole||'player');
     if(!['player','captain','substitute','coach'].includes(requestedRole))return res.status(400).json({error:'Choose a valid tournament role.'});
     const soloSignup=req.body.soloSignup===true;
@@ -1612,28 +1615,33 @@ app.patch('/api/matches/:matchId',authRequired,requireMatchAccess,(req,res)=>{
 });
 app.post('/api/tournaments/:id/matches/apply-best-of',authRequired,requireTournamentPermission('match.manage'),(req,res)=>{const bestOf=Number(req.body.bestOf),roundNo=req.body.roundNo==null?null:Number(req.body.roundNo),stage=req.body.stage||null;if(![1,3,5,7].includes(bestOf))return res.status(400).json({error:'Best-of must be BO1, BO3, BO5 or BO7.'});let sql=`UPDATE matches SET best_of=?,updated_at=CURRENT_TIMESTAMP WHERE tournament_id=? AND result_status!='final'`,params=[bestOf,req.tournamentId];if(roundNo!=null){sql+=' AND round_no=?';params.push(roundNo);}if(stage){sql+=' AND stage=?';params.push(stage);}db.prepare(sql).run(...params);const matches=listMatches(req.tournamentId);emitBracketUpdated(req.tournamentId,matches);res.json({matches});});
 app.post('/api/matches/:matchId/checkin',authRequired,emailVerifiedRequired,requireMatchAccess,(req,res)=>{
-  const match=req.match;
-  let actorType=String(req.body.actorType||'');
-  let actorId=String(req.body.actorId||'');
-  if(req.matchTeamId){
-    if(!teamForCaptain(req.user.id,req.matchTeamId))return res.status(403).json({error:'Only the linked Captain can check in the team.'});
-    if(!['checkin_open','ready'].includes(String(match.match_status||'')))return res.status(409).json({error:'The Host has not opened Captain check-in for this match yet.'});
-    if(actorType==='team'&&actorId&&actorId!==String(req.matchTeamId))return res.status(400).json({error:'actorId does not match your linked team; you can only check in your own team.'});
-    actorType='team';actorId=String(req.matchTeamId);
-  }else if(!hasTournamentPermission(req.user.id,match.tournament_id,'match.checkin')&&!hasTournamentPermission(req.user.id,match.tournament_id,'match.manage'))return res.status(403).json({error:'Check-in permission required.'});
-  if(!actorType||!actorId)return res.status(400).json({error:'Check-in actor is required.'});
-  db.prepare(`INSERT INTO match_checkins(match_id,actor_type,actor_id,status,checked_in_by) VALUES (?,?,?,'ready',?) ON CONFLICT(match_id,actor_type,actor_id) DO UPDATE SET status='ready',checked_in_by=excluded.checked_in_by,checked_in_at=CURRENT_TIMESTAMP`).run(match.id,actorType,actorId,req.user.id);
-  addSystemMessage(match.id,`${req.user.display_name} checked in ${actorType} ${actorId}.`);
-  const checkins=db.prepare('SELECT * FROM match_checkins WHERE match_id=?').all(match.id);
-  const checkedTeamIds=new Set(checkins.filter(item=>item.actor_type==='team'&&item.status==='ready').map(item=>Number(item.actor_id)));
-  const bothTeamsReady=Boolean(match.team_a_id&&match.team_b_id&&checkedTeamIds.has(Number(match.team_a_id))&&checkedTeamIds.has(Number(match.team_b_id)));
-  if(bothTeamsReady&&['available','checkin_open'].includes(match.match_status)){
-    db.prepare(`UPDATE matches SET status='ready',match_status='ready',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
-    addSystemMessage(match.id,'Both teams are checked in. The Host may now open the Draft Room.');
-    emitMatchUpdated(listMatches(match.tournament_id).find(item=>Number(item.id)===Number(match.id)));
+  try{
+    const match=req.match;
+    let actorType=String(req.body?.actorType||'');
+    let actorId=String(req.body?.actorId||'');
+    if(req.matchTeamId){
+      if(!teamForCaptain(req.user.id,req.matchTeamId))return res.status(403).json({error:'Only the linked Captain can check in the team.'});
+      if(!['checkin_open','ready'].includes(String(match.match_status||'')))return res.status(409).json({error:'The Host has not opened Captain check-in for this match yet.'});
+      if(actorType==='team'&&actorId&&actorId!==String(req.matchTeamId))return res.status(400).json({error:'actorId does not match your linked team; you can only check in your own team.'});
+      actorType='team';actorId=String(req.matchTeamId);
+    }else if(!hasTournamentPermission(req.user.id,match.tournament_id,'match.checkin')&&!hasTournamentPermission(req.user.id,match.tournament_id,'match.manage'))return res.status(403).json({error:'Check-in permission required.'});
+    if(!actorType||!actorId)return res.status(400).json({error:'Check-in actor is required.'});
+    db.prepare(`INSERT INTO match_checkins(match_id,actor_type,actor_id,status,checked_in_by) VALUES (?,?,?,'ready',?) ON CONFLICT(match_id,actor_type,actor_id) DO UPDATE SET status='ready',checked_in_by=excluded.checked_in_by,checked_in_at=CURRENT_TIMESTAMP`).run(match.id,actorType,actorId,req.user.id);
+    addSystemMessage(match.id,`${req.user.display_name} checked in ${actorType} ${actorId}.`);
+    const checkins=db.prepare('SELECT * FROM match_checkins WHERE match_id=?').all(match.id);
+    const checkedTeamIds=new Set(checkins.filter(item=>item.actor_type==='team'&&item.status==='ready').map(item=>Number(item.actor_id)));
+    const bothTeamsReady=Boolean(match.team_a_id&&match.team_b_id&&checkedTeamIds.has(Number(match.team_a_id))&&checkedTeamIds.has(Number(match.team_b_id)));
+    if(bothTeamsReady&&['available','checkin_open'].includes(match.match_status)){
+      db.prepare(`UPDATE matches SET status='ready',match_status='ready',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
+      addSystemMessage(match.id,'Both teams are checked in. The Host may now open the Draft Room.');
+      emitMatchUpdated(listMatches(match.tournament_id).find(item=>Number(item.id)===Number(match.id)));
+    }
+    emitInternalTournamentEvent(match.tournament_id,'match:checkin',{tournamentId:match.tournament_id,matchId:match.id,actorType,actorId,status:'ready',checkedInBy:req.user.id,bothTeamsReady,checkins});
+    res.json({checkins,bothTeamsReady});
+  }catch(error){
+    console.error('[MATCH_CHECKIN_ERROR]', error);
+    res.status(400).json({error:clientErrorMessage(error)});
   }
-  emitInternalTournamentEvent(match.tournament_id,'match:checkin',{tournamentId:match.tournament_id,matchId:match.id,actorType,actorId,status:'ready',checkedInBy:req.user.id,bothTeamsReady,checkins});
-  res.json({checkins,bothTeamsReady});
 });
 app.get('/api/matches/:matchId/checkin',authRequired,requireMatchAccess,(req,res)=>res.json({checkins:db.prepare('SELECT * FROM match_checkins WHERE match_id=?').all(req.match.id)}));
 

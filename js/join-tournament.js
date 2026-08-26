@@ -112,6 +112,12 @@ function renderStatus(payload) {
     });
     return true;
   }
+  if (request?.status === 'approved') {
+    panel.className = 'join-account-status approved';
+    panel.innerHTML = `<span>${escapeHtml(t('approvedSoloPool', { count: 1 }) || 'APPROVED FOR SOLO POOL')}</span><h2>${escapeHtml(request.team_name || request.requested_team_name || t('soloSignupOption') || 'Solo Pool Registration')}</h2><p>${escapeHtml(t('soloAssignmentPending') || 'Your account is approved for the solo assignment pool. You will be assigned to a team when the Host forms teams.')}</p><a class="btn btn-primary" href="/portal.html">OPEN PLAYER & CAPTAIN PORTAL</a>`;
+    panel.classList.remove('hidden');
+    return true;
+  }
   if (request?.status === 'rejected') {
     panel.className = 'join-account-status rejected';
     panel.innerHTML = `<span>PREVIOUS REQUEST REJECTED</span><h2>YOU MAY SUBMIT AGAIN</h2><p>${escapeHtml(request.review_note || 'Check the selected team and external gamer tag before submitting again.')}</p>`;
