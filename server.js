@@ -1419,6 +1419,18 @@ app.post('/api/tournaments/:id/join-requests/:requestId/review',authRequired,req
   }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
 
+app.delete('/api/tournaments/:id/solo-pool/:requestId',authRequired,requireTournamentPermission('team.edit'),(req,res)=>{
+  try{
+    const request=db.prepare(`SELECT jr.*,u.display_name,u.username FROM tournament_join_requests jr JOIN users u ON u.id=jr.user_id WHERE jr.id=? AND jr.tournament_id=?`).get(Number(req.params.requestId),req.tournamentId);
+    if(!request)return res.status(404).json({error:'Join request not found.'});
+    if(request.status!=='approved'||request.team_id||request.selected_member_id)return res.status(409).json({error:'This player is not in the solo signup pool.'});
+    // Revert to pending so the host can re-review or the player is no longer in the pool
+    db.prepare(`UPDATE tournament_join_requests SET status='pending',reviewed_by=NULL,reviewed_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=? AND tournament_id=?`).run(request.id,req.tournamentId);
+    logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'join.solo_pool_removed',details:{requestId:request.id,requestUserId:request.user_id,displayName:request.display_name}});
+    res.json({ok:true});
+  }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
+});
+
 app.post('/api/tournaments/:id/solo-randomizer/preview',authRequired,requireTournamentPermission('team.randomize_solo'),(req,res)=>{
   try{
     const built=buildSoloTeamPreview(req.tournamentId,req.body||{});
