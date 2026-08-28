@@ -1,9 +1,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
+const { resolveDatabasePath } = require('../server/storage-paths');
 
 // Database setup
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'data', 'rendezvu-arena.sqlite');
+// Keep manual migrations pointed at the same database as the application.
+// In Railway this resolves to the attached volume when RAILWAY_VOLUME_MOUNT_PATH is set.
+const dbPath = resolveDatabasePath();
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });

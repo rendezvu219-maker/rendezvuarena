@@ -34,6 +34,8 @@ try {
 const serverSource = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
 assert.match(serverSource, /server\.listen\(port,\s*'0\.0\.0\.0'/);
 assert.match(serverSource, /\/api\/public\/site-config/);
+const migrationSource = fs.readFileSync(path.join(root, 'scripts', 'migrate-old-tournaments.js'), 'utf8');
+assert.match(migrationSource, /resolveDatabasePath/);
 for (const name of ['copyright.html', 'privacy.html', 'terms.html', 'support-development.html']) {
   assert.ok(fs.existsSync(path.join(root, name)), `${name} must exist`);
 }
