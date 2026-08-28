@@ -213,12 +213,22 @@ try{
   const pickedIds=handPicked.payload.preview.assignments.map(team=>Number(team.members.find(member=>member.isCaptain).user_id)).sort((a,b)=>a-b);
   assert.deepEqual(pickedIds,hostCaptainIds.sort((a,b)=>a-b),'Host-selected mode must use exactly the chosen Captains.');
 
+  const randomAssigned=await request(`/api/tournaments/${registration.id}/solo-randomizer/preview`,{
+    token:hostToken,method:'POST',body:{totalSlots:8,teamSize:4,captainMode:'random_assigned'},
+  });
+  assert.equal(randomAssigned.payload.preview.assignments.length,2);
+  randomAssigned.payload.preview.assignments.forEach(team=>{
+    assert.equal(team.members.length,4);
+    assert.equal(team.members.filter(member=>member.isCaptain).length,1,'Each team in random_assigned mode must have exactly one Captain.');
+  });
+
   const dashboard=fs.readFileSync(path.join(root,'js','dashboard.js'),'utf8');
   const joinPage=fs.readFileSync(path.join(root,'js','join-tournament.js'),'utf8');
   assert.match(dashboard,/solo-randomizer\/preview/);
   assert.match(dashboard,/confirmSoloTeams/);
   assert.match(dashboard,/registrationMode/);
   assert.match(dashboard,/targetTeamIds/);
+  assert.match(dashboard,/random_assigned/);
   assert.match(joinPage,/soloSignup/);
   assert.match(joinPage,/soloPoolOnly/);
   console.log('Solo-only registration, preview/confirm, Captain-safe teams, privacy, match access and undo snapshot checks passed.');

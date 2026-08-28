@@ -469,17 +469,21 @@ function buildSoloTeamPreview(tournamentId,{totalSlots,teamSize=4,captainMode='s
   if(slots%size!==0)throw new Error(`${slots} approved solo signups cannot be divided evenly into teams of ${size}.`);
   const teamCount=slots/size;
   const mode=String(captainMode||'self_nominated');
-  if(!['self_nominated','host_selected'].includes(mode))throw new Error('Choose self-nominated or Host-selected Captains.');
+  if(!['self_nominated','host_selected','random_assigned'].includes(mode))throw new Error('Choose self-nominated, Host-selected, or Random Captains.');
   const byUserId=new Map(pool.map(player=>[Number(player.user_id),player]));
   let captains=[];
   if(mode==='self_nominated'){
     captains=pool.filter(player=>player.requested_role==='captain');
     if(captains.length!==teamCount)throw new Error(`Exactly ${teamCount} Captain signup(s) are required; ${captains.length} are approved. Captain slots are capped at one per team.`);
-  }else{
+  }else if(mode==='host_selected'){
     const selected=[...new Set((Array.isArray(captainUserIds)?captainUserIds:[]).map(Number).filter(Number.isInteger))];
     if(selected.length!==teamCount)throw new Error(`Select exactly ${teamCount} Captain(s) for ${teamCount} teams.`);
     captains=selected.map(userId=>byUserId.get(userId));
     if(captains.some(player=>!player))throw new Error('Every selected Captain must be in the approved teamless solo pool.');
+  }else if(mode==='random_assigned'){
+    const nominated=shuffledBySortKey(pool.filter(player=>player.requested_role==='captain'));
+    const nonNominated=shuffledBySortKey(pool.filter(player=>player.requested_role!=='captain'));
+    captains=[...nominated,...nonNominated].slice(0,teamCount);
   }
   const captainIds=new Set(captains.map(player=>Number(player.user_id)));
   const requestedTargetIds=[...new Set((Array.isArray(targetTeamIds)?targetTeamIds:[]).map(Number))];
@@ -1677,10 +1681,264 @@ app.post('/api/matches/:matchId/results/request-reconfirmation',authRequired,ema
   }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
 
+// Automatic Match Report Generator
+function generateMatchReport(matchId) {
+  const match = db.prepare(`
+    SELECT m.*, t.name tournament_name, t.slug tournament_slug,
+           a.name team_a_name, a.tag team_a_tag, b.name team_b_name, b.tag team_b_tag,
+           w.name winner_team_name
+    FROM matches m
+    JOIN tournaments t ON t.id=m.tournament_id
+    LEFT JOIN teams a ON a.id=m.team_a_id
+    LEFT JOIN teams b ON b.id=m.team_b_id
+    LEFT JOIN teams w ON w.id=m.winner_team_id
+    WHERE m.id=?
+  `).get(matchId);
+  if (!match) return null;
+
+  const games = db.prepare(`SELECT * FROM match_games WHERE match_id=? ORDER BY game_number ASC`).all(matchId);
+  const draftRoom = db.prepare(`SELECT id, room_code, status FROM draft_rooms WHERE match_id=?`).get(matchId);
+  const logs = draftRoom ? db.prepare(`SELECT * FROM draft_logs WHERE draft_room_id=? ORDER BY id ASC`).all(draftRoom.id) : [];
+  const pinnedMessages = db.prepare(`SELECT * FROM match_messages WHERE match_id=? AND (pinned=1 OR is_pinned=1) ORDER BY id ASC`).all(matchId);
+
+  const reportsDir = path.join(__dirname, 'reports');
+  if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Match Report #${match.id} — ${match.tournament_name}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; background: #1e293b; border-radius: 12px; padding: 2rem; border: 1px solid #334155; }
+    h1, h2, h3 { color: #38bdf8; margin-top: 0; }
+    .header-box { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .score-card { display: flex; justify-content: space-around; background: #0f172a; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; text-align: center; border: 1px solid #38bdf8; }
+    .team-box { flex: 1; }
+    .team-name { font-size: 1.5rem; font-weight: bold; color: #f8fafc; }
+    .score { font-size: 2.5rem; font-weight: 900; color: #fbbf24; }
+    .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; background: #22c55e; color: #000; }
+    .section { margin-top: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #334155; }
+    th { background: #0f172a; color: #94a3b8; }
+    .log-entry { font-family: monospace; font-size: 0.85rem; background: #0f172a; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-box">
+      <div>
+        <h1>${match.tournament_name}</h1>
+        <p style="color: #94a3b8; margin: 0;">Match ID: #${match.id} · ${match.round_name || 'Round ' + match.round_no} (BO${match.best_of}) · Stage: ${match.stage}</p>
+      </div>
+      <div>
+        <span class="badge">STATUS: ${String(match.result_status || 'FINAL').toUpperCase()}</span>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="team-box">
+        <div class="team-name">${match.team_a_name || 'Team A'}</div>
+        <div class="score">${match.score_a ?? 0}</div>
+      </div>
+      <div style="display: flex; align-items: center; font-size: 1.5rem; color: #64748b;">VS</div>
+      <div class="team-box">
+        <div class="team-name">${match.team_b_name || 'Team B'}</div>
+        <div class="score">${match.score_b ?? 0}</div>
+      </div>
+    </div>
+
+    ${match.winner_team_name ? `<div style="text-align: center; margin-bottom: 2rem;"><span class="badge" style="background: #eab308; font-size: 1.1rem; padding: 0.5rem 1.5rem;">🏆 WINNER: ${match.winner_team_name}</span></div>` : ''}
+
+    <div class="section">
+      <h2>Game Results Breakdown</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Game #</th>
+            <th>Winner Side / Team</th>
+            <th>Status</th>
+            <th>Picks / Bans</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${games.map(g => `
+            <tr>
+              <td>Game ${g.game_number}</td>
+              <td style="color: #38bdf8; font-weight: bold;">${g.winner_team_id === match.team_a_id ? match.team_a_name : (g.winner_team_id === match.team_b_id ? match.team_b_name : (g.winner_side || 'TBD'))}</td>
+              <td>${g.result_status || g.status}</td>
+              <td>Picks A: ${g.picks_a_json || '[]'} · Picks B: ${g.picks_b_json || '[]'}</td>
+            </tr>
+          `).join('') || '<tr><td colspan="4">No individual game details recorded.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    ${pinnedMessages.length ? `
+      <div class="section">
+        <h2>Pinned Staff Messages & Decisions</h2>
+        ${pinnedMessages.map(m => `
+          <div class="log-entry" style="border-left: 3px solid #38bdf8;">
+            <strong>[${m.sender_role.toUpperCase()}] ${m.sender_name}</strong> (${m.created_at}): ${m.message}
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    ${logs.length ? `
+      <div class="section">
+        <h2>Draft Timeline & Logs (${logs.length} Events)</h2>
+        <div style="max-height: 250px; overflow-y: auto; background: #0f172a; padding: 1rem; border-radius: 8px;">
+          ${logs.map(l => `
+            <div class="log-entry">
+              <span style="color: #94a3b8;">${l.created_at}</span> · <strong style="color: #38bdf8;">${l.event_type}</strong>: ${l.event_data}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="section" style="border-top: 1px solid #334155; padding-top: 1rem; margin-top: 2rem; color: #64748b; font-size: 0.85rem; text-align: center;">
+      Generated automatically by RendezVu Arena Match Operations System on ${new Date().toISOString()}.
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const filename = `match_${matchId}_${Date.now()}.html`;
+  const filePath = path.join(reportsDir, filename);
+  fs.writeFileSync(filePath, html, 'utf8');
+  return { filename, filePath, html };
+}
+
 // Match Chat and shared attachment/evidence pipeline
-app.get('/api/matches/:matchId/messages',authRequired,requireMatchAccess,(req,res)=>{const messages=db.prepare(`SELECT mm.id,mm.sender_user_id,mm.sender_role,mm.sender_name,mm.message,mm.message_type,mm.file_id,mm.pinned,mm.edited_at,mm.deleted_at,mm.created_at,f.original_name file_name,f.mime_type file_mime FROM match_messages mm LEFT JOIN files f ON f.id=mm.file_id WHERE mm.match_id=? ORDER BY mm.pinned DESC,mm.id ASC LIMIT 500`).all(req.match.id);const last=messages.at(-1)?.id||0;db.prepare(`INSERT INTO match_message_reads(match_id,user_id,last_message_id) VALUES (?,?,?) ON CONFLICT(match_id,user_id) DO UPDATE SET last_message_id=excluded.last_message_id,updated_at=CURRENT_TIMESTAMP`).run(req.match.id,req.user.id,last);res.json({messages});});
-app.post('/api/matches/:matchId/messages',authRequired,requireMatchAccess,(req,res)=>{if(!req.matchTeamId&&!matchPermission(req,'chat.send'))return res.status(403).json({error:'Chat permission required.'});const message=sanitizeText(req.body.message,1000);const fileId=req.body.fileId?Number(req.body.fileId):null;if(!message&&!fileId)return res.status(400).json({error:'Message or attachment is required.'});let role=req.user.role;if(req.matchTeamId){const member=db.prepare(`SELECT member_role,is_captain FROM team_members WHERE team_id=? AND user_id=? AND membership_status='active' ORDER BY is_captain DESC,id LIMIT 1`).get(req.matchTeamId,req.user.id);role=member?.is_captain?'captain':(member?.member_role||'player');}const result=db.prepare(`INSERT INTO match_messages(match_id,sender_user_id,sender_role,sender_name,message,file_id) VALUES (?,?,?,?,?,?)`).run(req.match.id,req.user.id,role,req.user.display_name,message,fileId);const saved=db.prepare(`SELECT mm.*,f.original_name file_name,f.mime_type file_mime FROM match_messages mm LEFT JOIN files f ON f.id=mm.file_id WHERE mm.id=?`).get(Number(result.lastInsertRowid));emitInternalTournamentEvent(req.match.tournament_id,'match:chat',{matchId:req.match.id,message:saved});const room=db.prepare('SELECT room_code FROM draft_rooms WHERE match_id=?').get(req.match.id);if(room)io.to(`draft:${room.room_code}`).emit('draft:chat',saved);res.status(201).json({message:saved});});
-app.patch('/api/matches/:matchId/messages/:messageId',authRequired,requireMatchAccess,(req,res)=>{const message=db.prepare('SELECT * FROM match_messages WHERE id=? AND match_id=?').get(Number(req.params.messageId),req.match.id);if(!message)return res.status(404).json({error:'Message not found.'});const canModerate=hasTournamentPermission(req.user.id,req.match.tournament_id,'chat.moderate');if(message.sender_user_id!==req.user.id&&!canModerate)return res.status(403).json({error:'You cannot edit this message.'});if(req.body.pinned!==undefined&&!canModerate)return res.status(403).json({error:'Only staff can pin messages.'});if(req.body.message!==undefined){if(message.message_type==='system')return res.status(400).json({error:'System messages cannot be edited.'});db.prepare('UPDATE match_messages SET message=?,edited_at=CURRENT_TIMESTAMP WHERE id=?').run(String(req.body.message||'').trim().slice(0,1000),message.id);}if(req.body.pinned!==undefined)db.prepare('UPDATE match_messages SET pinned=? WHERE id=?').run(req.body.pinned?1:0,message.id);res.json({message:db.prepare('SELECT * FROM match_messages WHERE id=?').get(message.id)});});
+app.get('/api/matches/:matchId/messages',authRequired,requireMatchAccess,(req,res)=>{
+  const limit = Math.max(1, Math.min(500, parseInt(req.query.limit, 10) || 300));
+  const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+  const raw = db.prepare(`SELECT mm.id,mm.sender_user_id,mm.sender_role,mm.sender_name,mm.message,mm.message_type,mm.file_id,mm.pinned,mm.is_pinned,mm.mentions_json,mm.edited_at,mm.deleted_at,mm.created_at,f.original_name file_name,f.mime_type file_mime FROM match_messages mm LEFT JOIN files f ON f.id=mm.file_id WHERE mm.match_id=? AND mm.deleted_at IS NULL ORDER BY mm.pinned DESC,mm.id ASC LIMIT ? OFFSET ?`).all(req.match.id, limit, offset);
+  const messages = raw.map(m => ({ ...m, mentions: jsonParse(m.mentions_json, []), is_pinned: Boolean(m.pinned || m.is_pinned), pinned: Boolean(m.pinned || m.is_pinned) }));
+  const pinnedMessages = messages.filter(m => m.is_pinned);
+  const participants = db.prepare(`SELECT DISTINCT u.id, u.username, u.display_name, tm.team_id, tm.is_captain, tm.member_role FROM team_members tm JOIN users u ON u.id=tm.user_id WHERE tm.team_id IN (?,?) AND tm.membership_status='active'`).all(req.match.team_a_id || -1, req.match.team_b_id || -1);
+  const last = messages.at(-1)?.id||0;
+  if (last) db.prepare(`INSERT INTO match_message_reads(match_id,user_id,last_message_id) VALUES (?,?,?) ON CONFLICT(match_id,user_id) DO UPDATE SET last_message_id=excluded.last_message_id,updated_at=CURRENT_TIMESTAMP`).run(req.match.id,req.user.id,last);
+  res.json({messages, pinnedMessages, participants});
+});
+
+app.post('/api/matches/:matchId/messages',authRequired,requireMatchAccess,(req,res)=>{
+  if(!req.matchTeamId&&!matchPermission(req,'chat.send'))return res.status(403).json({error:'Chat permission required.'});
+  const message=sanitizeText(req.body.message,1000);
+  const fileId=req.body.fileId?Number(req.body.fileId):null;
+  const mentions = Array.isArray(req.body.mentions) ? req.body.mentions.map(Number).filter(id => Number.isInteger(id) && id > 0) : [];
+  const messageType = ['text', 'system', 'pin', 'user'].includes(req.body.messageType) ? req.body.messageType : 'user';
+  if(!message&&!fileId)return res.status(400).json({error:'Message or attachment is required.'});
+  let role=req.user.role;
+  if(req.matchTeamId){
+    const member=db.prepare(`SELECT member_role,is_captain FROM team_members WHERE team_id=? AND user_id=? AND membership_status='active' ORDER BY is_captain DESC,id LIMIT 1`).get(req.matchTeamId,req.user.id);
+    role=member?.is_captain?'captain':(member?.member_role||'player');
+  }
+  const result=db.prepare(`INSERT INTO match_messages(match_id,sender_user_id,sender_role,sender_name,message,message_type,file_id,mentions_json,is_pinned,pinned) VALUES (?,?,?,?,?,?,?,?,0,0)`)
+    .run(req.match.id,req.user.id,role,req.user.display_name,message,messageType,fileId,JSON.stringify(mentions));
+  const saved=db.prepare(`SELECT mm.*,f.original_name file_name,f.mime_type file_mime FROM match_messages mm LEFT JOIN files f ON f.id=mm.file_id WHERE mm.id=?`).get(Number(result.lastInsertRowid));
+  const formatted = { ...saved, mentions: jsonParse(saved.mentions_json, []), is_pinned: Boolean(saved.pinned || saved.is_pinned), pinned: Boolean(saved.pinned || saved.is_pinned) };
+  emitInternalTournamentEvent(req.match.tournament_id,'match:chat',{matchId:req.match.id,message:formatted});
+  io.to(internalTournamentRoom(req.match.tournament_id)).emit('chat:message', { matchId: req.match.id, message: formatted });
+  const room=db.prepare('SELECT room_code FROM draft_rooms WHERE match_id=?').get(req.match.id);
+  if(room){
+    io.to(`draft:${room.room_code}`).emit('draft:chat',formatted);
+    io.to(`draft:${room.room_code}`).emit('chat:message',formatted);
+  }
+  res.status(201).json({message:formatted});
+});
+
+app.post('/api/matches/:matchId/messages/:messageId/pin',authRequired,requireMatchAccess,(req,res)=>{
+  if(!hasTournamentPermission(req.user.id,req.match.tournament_id,'chat.moderate'))return res.status(403).json({error:'Only staff can pin messages.'});
+  const messageId=Number(req.params.messageId);
+  const msg=db.prepare('SELECT * FROM match_messages WHERE id=? AND match_id=?').get(messageId,req.match.id);
+  if(!msg)return res.status(404).json({error:'Message not found.'});
+  const targetPin=req.body.pinned!==undefined?(req.body.pinned?1:0):(msg.is_pinned||msg.pinned?0:1);
+  db.prepare('UPDATE match_messages SET pinned=?,is_pinned=?,edited_at=CURRENT_TIMESTAMP WHERE id=?').run(targetPin,targetPin,messageId);
+  const updated=db.prepare(`SELECT mm.*,f.original_name file_name,f.mime_type file_mime FROM match_messages mm LEFT JOIN files f ON f.id=mm.file_id WHERE mm.id=?`).get(messageId);
+  const formatted={ ...updated, mentions: jsonParse(updated.mentions_json, []), is_pinned: Boolean(updated.pinned || updated.is_pinned), pinned: Boolean(updated.pinned || updated.is_pinned) };
+  emitInternalTournamentEvent(req.match.tournament_id,'match:chat_pin',{matchId:req.match.id,message:formatted,pinned:Boolean(targetPin)});
+  io.to(internalTournamentRoom(req.match.tournament_id)).emit('chat:pin', { matchId: req.match.id, message: formatted, pinned: Boolean(targetPin) });
+  const room=db.prepare('SELECT room_code FROM draft_rooms WHERE match_id=?').get(req.match.id);
+  if(room){
+    io.to(`draft:${room.room_code}`).emit('draft:chat_pin',formatted);
+    io.to(`draft:${room.room_code}`).emit('chat:pin',formatted);
+  }
+  res.json({message:formatted,pinned:Boolean(targetPin)});
+});
+
+app.get('/api/matches/:matchId/report',authRequired,requireMatchAccess,(req,res)=>{
+  const matchId=Number(req.params.matchId);
+  const reportsDir=path.join(__dirname,'reports');
+  let reportHtml=null;
+  if(fs.existsSync(reportsDir)){
+    const files=fs.readdirSync(reportsDir).filter(f=>f.startsWith(`match_${matchId}_`)).sort().reverse();
+    if(files.length>0) reportHtml=fs.readFileSync(path.join(reportsDir,files[0]),'utf8');
+  }
+  if(!reportHtml){
+    const generated=generateMatchReport(matchId);
+    if(!generated)return res.status(404).json({error:'Match report could not be generated.'});
+    reportHtml=generated.html;
+  }
+  if(req.query.download==='1'){
+    res.setHeader('Content-Disposition',`attachment; filename="match_${matchId}_report.html"`);
+  }
+  res.type('html').send(reportHtml);
+});
+
+app.get('/api/draft-rooms/:roomId/logs',(req,res)=>{
+  const roomIdParam=req.params.roomId;
+  const limit=Math.max(1,Math.min(200,parseInt(req.query.limit,10)||100));
+  const offset=Math.max(0,parseInt(req.query.offset,10)||0);
+  const room=db.prepare('SELECT id,match_id,room_code FROM draft_rooms WHERE id=? OR room_code=?').get(roomIdParam,roomIdParam);
+  if(!room)return res.status(404).json({error:'Draft room not found.'});
+  const total=db.prepare('SELECT COUNT(*) count FROM draft_logs WHERE draft_room_id=?').get(room.id)?.count||0;
+  const logs=db.prepare(`SELECT id,draft_room_id,match_id,event_type,event_data,created_at FROM draft_logs WHERE draft_room_id=? ORDER BY id ASC LIMIT ? OFFSET ?`)
+    .all(room.id,limit,offset).map(row=>({...row,event_data:jsonParse(row.event_data,{})}));
+  res.json({logs,total,limit,offset,roomCode:room.room_code});
+});
+
+app.get(['/broadcast/overlay','/broadcast/overlay/:matchId','/overlay/:matchId'],(req,res)=>{
+  res.sendFile(path.join(__dirname,'overlay.html'));
+});
+
+app.get('/api/overlay/:matchId',(req,res)=>{
+  const matchId=Number(req.params.matchId);
+  const match=db.prepare(`
+    SELECT m.*, t.name tournament_name, t.slug tournament_slug, t.rules_json tournament_rules_json,
+           a.name team_a_name, a.tag team_a_tag, a.logo_url team_a_logo,
+           b.name team_b_name, b.tag team_b_tag, b.logo_url team_b_logo,
+           w.name winner_team_name
+    FROM matches m
+    JOIN tournaments t ON t.id=m.tournament_id
+    LEFT JOIN teams a ON a.id=m.team_a_id
+    LEFT JOIN teams b ON b.id=m.team_b_id
+    LEFT JOIN teams w ON w.id=m.winner_team_id
+    WHERE m.id=?
+  `).get(matchId);
+  if(!match)return res.status(404).json({error:'Match not found.'});
+  const draftRoom=db.prepare('SELECT id, room_code, status, config_json, state_json FROM draft_rooms WHERE match_id=?').get(matchId);
+  const games=db.prepare('SELECT * FROM match_games WHERE match_id=? ORDER BY game_number ASC').all(matchId);
+  const miniBracket=listMatches(match.tournament_id);
+  res.json({
+    match:serializePublicMatch(match),
+    tournament:{id:match.tournament_id,name:match.tournament_name,slug:match.tournament_slug},
+    draft:draftRoom?{
+      roomCode:draftRoom.room_code,
+      status:draftRoom.status,
+      config:jsonParse(draftRoom.config_json),
+      state:jsonParse(draftRoom.state_json)
+    }:null,
+    games,
+    miniBracket:miniBracket.map(serializePublicMatch)
+  });
+});
+
+app.patch('/api/matches/:matchId/messages/:messageId',authRequired,requireMatchAccess,(req,res)=>{const message=db.prepare('SELECT * FROM match_messages WHERE id=? AND match_id=?').get(Number(req.params.messageId),req.match.id);if(!message)return res.status(404).json({error:'Message not found.'});const canModerate=hasTournamentPermission(req.user.id,req.match.tournament_id,'chat.moderate');if(message.sender_user_id!==req.user.id&&!canModerate)return res.status(403).json({error:'You cannot edit this message.'});if(req.body.pinned!==undefined&&!canModerate)return res.status(403).json({error:'Only staff can pin messages.'});if(req.body.message!==undefined){if(message.message_type==='system')return res.status(400).json({error:'System messages cannot be edited.'});db.prepare('UPDATE match_messages SET message=?,edited_at=CURRENT_TIMESTAMP WHERE id=?').run(String(req.body.message||'').trim().slice(0,1000),message.id);}if(req.body.pinned!==undefined)db.prepare('UPDATE match_messages SET pinned=?,is_pinned=? WHERE id=?').run(req.body.pinned?1:0,req.body.pinned?1:0,message.id);res.json({message:db.prepare('SELECT * FROM match_messages WHERE id=?').get(message.id)});});
 app.delete('/api/matches/:matchId/messages/:messageId',authRequired,requireMatchAccess,(req,res)=>{const message=db.prepare('SELECT * FROM match_messages WHERE id=? AND match_id=?').get(Number(req.params.messageId),req.match.id);if(!message)return res.status(404).json({error:'Message not found.'});const canModerate=hasTournamentPermission(req.user.id,req.match.tournament_id,'chat.moderate');if(message.sender_user_id!==req.user.id&&!canModerate)return res.status(403).json({error:'You cannot delete this message.'});if(message.message_type==='system')return res.status(400).json({error:'System messages cannot be deleted.'});db.prepare('UPDATE match_messages SET deleted_at=CURRENT_TIMESTAMP,message=\'[deleted]\' WHERE id=?').run(message.id);res.json({deleted:true});});
 app.post('/api/matches/:matchId/files',authRequired,requireMatchAccess,(req,res)=>{try{const purpose=String(req.body.purpose||'evidence');let entityType='match',entityId=req.match.id,visibility='match_members';if(purpose==='evidence'){if(!req.matchTeamId&&!hasTournamentPermission(req.user.id,req.match.tournament_id,'evidence.read'))return res.status(403).json({error:'Evidence permission required.'});const dispute=db.prepare(`SELECT id FROM disputes WHERE match_id=? AND status IN ('open','under_review','recommended') ORDER BY id DESC LIMIT 1`).get(req.match.id);if(!dispute)return res.status(409).json({error:'Evidence can only be uploaded while a dispute is open.'});entityType='dispute';entityId=dispute.id;visibility='staff_only';}else if(purpose!=='chat_attachment')return res.status(400).json({error:'Unsupported file purpose.'});const file=saveFile({userId:req.user.id,tournamentId:req.match.tournament_id,entityType,entityId,purpose,originalName:req.body.originalName,mimeType:req.body.mimeType,dataBase64:req.body.dataBase64,visibility});res.status(201).json({file:{id:file.id,originalName:file.original_name,mimeType:file.mime_type,sizeBytes:file.size_bytes,visibility:file.visibility}});}catch(error){res.status(400).json({error:clientErrorMessage(error)});}});
 app.get('/api/files/:fileId',authRequired,(req,res)=>{const file=fileRecord(Number(req.params.fileId));if(!file)return res.status(404).json({error:'File not found.'});let allowed=false;if(file.entity_type==='match'||file.entity_type==='dispute'||file.entity_type==='match_chat_message'){const matchId=file.entity_type==='match'?file.entity_id:file.entity_type==='dispute'?db.prepare('SELECT match_id FROM disputes WHERE id=?').get(file.entity_id)?.match_id:db.prepare('SELECT match_id FROM match_messages WHERE id=?').get(file.entity_id)?.match_id;const context=canAccessMatch(req.user.id,matchId);allowed=context.allowed&&(file.visibility!=='staff_only'||hasTournamentPermission(req.user.id,context.match.tournament_id,'evidence.read'));}if(!allowed)return res.status(403).json({error:'File access denied.'});const full=filePath(file);if(!full||!fs.existsSync(full))return res.status(410).json({error:'File has expired or was removed.'});const fileName=String(file.original_name).replace(/["\r\n]/g,'');const inline=req.query.inline==='1'&&String(file.mime_type||'').startsWith('image/');res.type(file.mime_type);res.setHeader('Content-Disposition',`${inline?'inline':'attachment'}; filename="${fileName}"`);res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");res.setHeader('Cache-Control','private, max-age=300');res.setHeader('Content-Length',String(file.size_bytes));res.sendFile(full);});
@@ -2490,6 +2748,9 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
       ON CONFLICT(match_id,game_number) DO UPDATE SET server_region=excluded.server_region
       RETURNING *
     `).get(match.id, match.current_game_number, match.server_region, match.room_code || '');
+    const banDuration = Math.min(600, Math.max(5, Math.floor(Number(req.body?.ban_duration || effectiveRules.ban_duration || effectiveRules.timerSeconds || 30))));
+    const pickDuration = Math.min(600, Math.max(5, Math.floor(Number(req.body?.pick_duration || effectiveRules.pick_duration || 60))));
+    const extraTime = Math.min(600, Math.max(0, Math.floor(Number(req.body?.extra_time ?? effectiveRules.extra_time ?? 15))));
     const config = {
       teamA: match.team_a_name,
       teamB: match.team_b_name,
@@ -2507,7 +2768,10 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
       previousPicksB: series.picksB,
       previousBansA: effectiveRules.squadraBlastCarryBans === false ? [] : series.bansA,
       previousBansB: effectiveRules.squadraBlastCarryBans === false ? [] : series.bansB,
-      timerSeconds: Math.min(90, Math.max(30, Math.floor(Number(effectiveRules.timerSeconds ?? 30)))),
+      ban_duration: banDuration,
+      pick_duration: pickDuration,
+      extra_time: extraTime,
+      timerSeconds: banDuration,
       heroBans: Number(effectiveRules.heroBans ?? 2),
       divineBans: Number(effectiveRules.divineBans ?? 0),
       draftStyle: effectiveRules.draftStyle === 'all-random' ? 'all-random' : 'standard',
@@ -2792,8 +3056,21 @@ io.use((socket,next)=>{
   }
 });
 function recordDraftAction(roomId,role,actionType,payload={},actorUserId=null){
+  const room = typeof roomId === 'number' 
+    ? db.prepare('SELECT id, match_id FROM draft_rooms WHERE id=?').get(roomId)
+    : db.prepare('SELECT id, match_id FROM draft_rooms WHERE room_code=?').get(String(roomId));
+  const rId = room ? room.id : roomId;
+  const mId = room ? room.match_id : null;
+
   db.prepare('INSERT INTO draft_actions(draft_room_id,actor_user_id,actor_role,action_type,payload_json) VALUES (?,?,?,?,?)')
-    .run(roomId,actorUserId||null,role||'unknown',String(actionType||'').slice(0,80),JSON.stringify(payload));
+    .run(rId,actorUserId||null,role||'unknown',String(actionType||'').slice(0,80),JSON.stringify(payload));
+
+  try {
+    db.prepare('INSERT INTO draft_logs(draft_room_id,match_id,event_type,event_data) VALUES (?,?,?,?)')
+      .run(rId,mId,String(actionType||''),JSON.stringify(payload));
+  } catch (err) {
+    console.error('[DRAFT_LOG_ERROR]', err);
+  }
 }
 
 // Draft Rooms elect one authoritative connected controller. Tournament Host is
@@ -2808,7 +3085,7 @@ function draftPresenceBucket(roomCode){
 }
 function draftPresenceSnapshot(roomCode){
   const bucket=draftPresence.get(String(roomCode||'').toUpperCase());
-  return Object.fromEntries(['host','teamA','teamB','referee','broadcaster'].map(role=>[role,bucket?.get(role)?.size||0]));
+  return Object.fromEntries(['host','teamA','teamB','referee','broadcaster','spectator'].map(role=>[role,bucket?.get(role)?.size||0]));
 }
 function addDraftPresence(socket,roomCode,role){
   removeDraftPresence(socket,{emit:false});
@@ -2885,7 +3162,7 @@ io.on('connection',socket=>{
       if(Number(socket.data.ticket.draft_room_id)!==Number(room.id))return ack({ok:false,error:'Socket ticket is for another room.'});
       role=socket.data.ticket.role;
     }else if(socket.user){role=resolveDraftRoleForUser(room,socket.user.id);}
-    if(!role)return ack({ok:false,error:'Draft room access denied.'});
+    if(!role) role='spectator';
     socket.data.draftRoomId=room.id;
     socket.data.draftRoomCode=room.room_code;
     socket.data.draftRole=role;
@@ -2893,10 +3170,19 @@ io.on('connection',socket=>{
     socket.join(`draft:${room.room_code}:${role}`);
     addDraftPresence(socket,room.room_code,role);
     const authority=draftAuthority(room.room_code);
-    const messages=db.prepare(`SELECT id,sender_role,sender_name,message,message_type,file_id,pinned,created_at
-      FROM match_messages WHERE match_id=? AND deleted_at IS NULL ORDER BY id ASC LIMIT 300`).all(room.match_id);
+    const messages=db.prepare(`SELECT id,sender_role,sender_name,message,message_type,file_id,pinned,is_pinned,mentions_json,created_at
+      FROM match_messages WHERE match_id=? AND deleted_at IS NULL ORDER BY id ASC LIMIT 300`).all(room.match_id).map(m=>({...m,mentions:jsonParse(m.mentions_json,[]),is_pinned:Boolean(m.is_pinned||m.pinned)}));
     const presence=draftPresenceSnapshot(room.room_code);
-    ack({ok:true,role,authorityRole:authority?.role||null,authoritySocketId:authority?.socketId||null,presence,config:jsonParse(room.config_json),state:jsonParse(room.state_json),messages,resynced:true});
+    const config=jsonParse(room.config_json);
+    const state=jsonParse(room.state_json);
+    let remaining_time=null;
+    if(state.timer_started_at&&state.timer_duration){
+      const elapsed=Math.floor((Date.now()-state.timer_started_at)/1000);
+      remaining_time=Math.max(0,state.timer_duration-elapsed);
+    }
+    const syncPayload={ok:true,role,authorityRole:authority?.role||null,authoritySocketId:authority?.socketId||null,presence,config,state,remaining_time,messages,resynced:true};
+    ack(syncPayload);
+    socket.emit('draft:state_sync',syncPayload);
     io.to(`draft:${room.room_code}`).emit('draft:presence',{role,connected:true,presence});
     emitDraftAuthority(room.room_code);
   });
@@ -2914,6 +3200,7 @@ io.on('connection',socket=>{
       teamB:['select','lock',...preDraftActions],
       referee:['pause','resume'],
       broadcaster:[],
+      spectator:[],
     };
     if(!(allowed[role]||[]).includes(action))return socket.emit('draft:error',{message:'This room role cannot perform that action.'});
     const expected=draftSideForRoomRole(room,role);

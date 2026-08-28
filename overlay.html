@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RendezVu Arena — Live Stream Overlay</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/overlay.css">
+</head>
+<body class="overlay-body">
+  <div class="overlay-root" id="overlay-root">
+    <!-- Match Scoreboard Header -->
+    <header class="overlay-scoreboard" id="overlay-scoreboard">
+      <div class="team-card team-a" id="team-a-card">
+        <img class="team-logo" id="team-a-logo" src="/assets/heroes/0001.webp" alt="Team A Logo">
+        <div class="team-meta">
+          <span class="team-tag" id="team-a-tag">TEAM A</span>
+          <span class="team-name" id="team-a-name">Team Alpha</span>
+        </div>
+        <div class="team-score" id="team-a-score">0</div>
+      </div>
+
+      <div class="match-info-center">
+        <span class="tournament-name" id="overlay-tournament-name">RendezVu Arena</span>
+        <div class="match-round-badge" id="overlay-round-badge">GRAND FINALS · BO3</div>
+        <div class="match-timer-badge" id="overlay-timer-badge" style="display: none;">30s</div>
+      </div>
+
+      <div class="team-card team-b" id="team-b-card">
+        <div class="team-score" id="team-b-score">0</div>
+        <div class="team-meta" style="text-align: right;">
+          <span class="team-tag" id="team-b-tag">TEAM B</span>
+          <span class="team-name" id="team-b-name">Team Beta</span>
+        </div>
+        <img class="team-logo" id="team-b-logo" src="/assets/heroes/0002.webp" alt="Team B Logo">
+      </div>
+    </header>
+
+    <!-- Live Draft Showcase Panel -->
+    <section class="overlay-draft-panel" id="overlay-draft-panel">
+      <div class="draft-side draft-side-a">
+        <div class="draft-bans" id="draft-bans-a"></div>
+        <div class="draft-picks" id="draft-picks-a"></div>
+      </div>
+
+      <div class="draft-status-center" id="draft-status-center">
+        <div class="status-indicator" id="draft-status-text">LIVE DRAFT</div>
+      </div>
+
+      <div class="draft-side draft-side-b">
+        <div class="draft-picks" id="draft-picks-b"></div>
+        <div class="draft-bans" id="draft-bans-b"></div>
+      </div>
+    </section>
+
+    <!-- Mini Bracket Ticker (Optional) -->
+    <footer class="overlay-bracket-ticker" id="overlay-bracket-ticker" style="display: none;">
+      <div class="bracket-matches-list" id="bracket-matches-list"></div>
+    </footer>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/js/overlay.js"></script>
+</body>
+</html>

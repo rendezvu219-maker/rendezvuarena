@@ -1031,7 +1031,20 @@
       "verifyWhenNeeded": "Verify when needed",
       "resultSubmittedForCaptainConfirmation": "Result submitted for opposing Captain confirmation.",
       "reportGameWinnerConfirm": "Report {team} as the winner of Game {game}?",
-      "gameIncorrectPrompt": "Why is this game result incorrect?"
+      "gameIncorrectPrompt": "Why is this game result incorrect?",
+      "spectatorMode": "Spectator Mode",
+      "spectatorNotice": "You are watching as a spectator (Read-only).",
+      "replayLogs": "Replay Logs",
+      "matchReport": "Match Report",
+      "downloadReport": "Download Report",
+      "pinMessage": "Pin Message",
+      "unpinMessage": "Unpin Message",
+      "pinnedMessages": "Pinned Messages",
+      "customDuration": "Turn Durations",
+      "banDuration": "Ban Duration (s)",
+      "pickDuration": "Pick Duration (s)",
+      "extraTime": "Extra Time (s)",
+      "obsOverlay": "OBS Stream Overlay"
     },
     "ja": {
       "backHomeArrow": "← ホームへ戻る",
@@ -2063,7 +2076,20 @@
       "verifyWhenNeeded": "必要時に確認",
       "resultSubmittedForCaptainConfirmation": "相手キャプテンの確認待ちとして結果を提出しました。",
       "reportGameWinnerConfirm": "ゲーム{game}の勝者を{team}として報告しますか？",
-      "gameIncorrectPrompt": "このゲーム結果が正しくない理由を入力してください。"
+      "gameIncorrectPrompt": "このゲーム結果が正しくない理由を入力してください。",
+      "spectatorMode": "観戦モード",
+      "spectatorNotice": "観戦者として閲覧しています（読み取り専用）。",
+      "replayLogs": "リプレイログ",
+      "matchReport": "試合レポート",
+      "downloadReport": "レポートをダウンロード",
+      "pinMessage": "メッセージを固定",
+      "unpinMessage": "固定を解除",
+      "pinnedMessages": "固定されたメッセージ",
+      "customDuration": "ターンの所要時間",
+      "banDuration": "BAN時間（秒）",
+      "pickDuration": "PICK時間（秒）",
+      "extraTime": "予備時間（秒）",
+      "obsOverlay": "OBSストリームオーバーレイ"
     },
     "zh-CN": {
       "backHomeArrow": "← 返回首页",
@@ -3095,7 +3121,20 @@
       "verifyWhenNeeded": "需要时核验",
       "resultSubmittedForCaptainConfirmation": "结果已提交，等待对方队长确认。",
       "reportGameWinnerConfirm": "将{team}报告为第{game}局胜者？",
-      "gameIncorrectPrompt": "为什么这一局的结果不正确？"
+      "gameIncorrectPrompt": "为什么这一局的结果不正确？",
+      "spectatorMode": "观战模式",
+      "spectatorNotice": "您正在以观战者身份观看（只读）。",
+      "replayLogs": "回放日志",
+      "matchReport": "比赛报告",
+      "downloadReport": "下载报告",
+      "pinMessage": "置顶消息",
+      "unpinMessage": "取消置顶",
+      "pinnedMessages": "置顶消息",
+      "customDuration": "回合持续时间",
+      "banDuration": "禁用时间（秒）",
+      "pickDuration": "挑选时间（秒）",
+      "extraTime": "额外时间（秒）",
+      "obsOverlay": "OBS 直播推流浮层"
     },
     "ko": {
       "backHomeArrow": "← 홈으로",
@@ -4127,7 +4166,20 @@
       "verifyWhenNeeded": "필요 시 검증",
       "resultSubmittedForCaptainConfirmation": "상대 주장 확인을 위해 결과를 제출했습니다.",
       "reportGameWinnerConfirm": "{team}을 게임 {game}의 승자로 보고할까요?",
-      "gameIncorrectPrompt": "이 게임 결과가 올바르지 않은 이유는 무엇인가요?"
+      "gameIncorrectPrompt": "이 게임 결과가 올바르지 않은 이유는 무엇인가요?",
+      "spectatorMode": "관전자 모드",
+      "spectatorNotice": "관전자로 시청 중입니다 (읽기 전용).",
+      "replayLogs": "리플레이 로그",
+      "matchReport": "매치 리포트",
+      "downloadReport": "리포트 다운로드",
+      "pinMessage": "메시지 고정",
+      "unpinMessage": "고정 해제",
+      "pinnedMessages": "고정된 메시지",
+      "customDuration": "턴 지속 시간",
+      "banDuration": "밴 시간 (초)",
+      "pickDuration": "픽 시간 (초)",
+      "extraTime": "추가 시간 (초)",
+      "obsOverlay": "OBS 스트림 오버레이"
     },
     "es": {
       "backHomeArrow": "← VOLVER AL INICIO",
@@ -5159,7 +5211,20 @@
       "verifyWhenNeeded": "Verificar cuando sea necesario",
       "resultSubmittedForCaptainConfirmation": "Resultado enviado para la confirmación del Capitán rival.",
       "reportGameWinnerConfirm": "¿Informar a {team} como ganador de la partida {game}?",
-      "gameIncorrectPrompt": "¿Por qué es incorrecto el resultado de esta partida?"
+      "gameIncorrectPrompt": "¿Por qué es incorrecto el resultado de esta partida?",
+      "spectatorMode": "Modo espectador",
+      "spectatorNotice": "Estás viendo como espectador (Solo lectura).",
+      "replayLogs": "Registros de repetición",
+      "matchReport": "Informe del partido",
+      "downloadReport": "Descargar informe",
+      "pinMessage": "Fijar mensaje",
+      "unpinMessage": "Desfijar mensaje",
+      "pinnedMessages": "Mensajes fijados",
+      "customDuration": "Duración del turno",
+      "banDuration": "Tiempo de bloqueo (s)",
+      "pickDuration": "Tiempo de selección (s)",
+      "extraTime": "Tiempo extra (s)",
+      "obsOverlay": "Superposición de transmisión OBS"
     },
     "vi": {
       "backHomeArrow": "← VỀ TRANG CHỦ",
@@ -6191,7 +6256,20 @@
       "verifyWhenNeeded": "Kiểm tra khi cần",
       "resultSubmittedForCaptainConfirmation": "Đã gửi kết quả để Đội trưởng đối phương xác nhận.",
       "reportGameWinnerConfirm": "Báo {team} là đội thắng Ván {game}?",
-      "gameIncorrectPrompt": "Vì sao kết quả ván này không đúng?"
+      "gameIncorrectPrompt": "Vì sao kết quả ván này không đúng?",
+      "spectatorMode": "Chế độ Người quan sát",
+      "spectatorNotice": "Bạn đang xem ở chế độ người quan sát (Chỉ xem).",
+      "replayLogs": "Lịch sử diễn biến (Replay)",
+      "matchReport": "Báo cáo trận đấu",
+      "downloadReport": "Tải báo cáo",
+      "pinMessage": "Ghim tin nhắn",
+      "unpinMessage": "Bỏ ghim tin nhắn",
+      "pinnedMessages": "Tin nhắn đã ghim",
+      "customDuration": "Thời lượng mỗi lượt",
+      "banDuration": "Thời gian Cấm (giây)",
+      "pickDuration": "Thời gian Chọn (giây)",
+      "extraTime": "Thời gian dự phòng (giây)",
+      "obsOverlay": "Overlay Livestream OBS"
     }
   }
 }

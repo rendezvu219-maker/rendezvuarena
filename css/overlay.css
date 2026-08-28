@@ -1,0 +1,237 @@
+/* OBS Live Stream Overlay Styling */
+body.overlay-body {
+  background: transparent !important;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #f8fafc;
+  overflow: hidden;
+  user-select: none;
+}
+
+.overlay-root {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+/* Scoreboard Top Bar */
+.overlay-scoreboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
+  border-radius: 16px;
+  padding: 0.75rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.team-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.team-card.team-b {
+  justify-content: flex-end;
+}
+
+.team-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #38bdf8;
+  background: #0f172a;
+}
+
+.team-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-tag {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #38bdf8;
+  text-transform: uppercase;
+}
+
+.team-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-score {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #fbbf24;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.2rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  min-width: 45px;
+  text-align: center;
+}
+
+.match-info-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 1.5rem;
+}
+
+.tournament-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.match-round-badge {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.25rem 0.85rem;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+}
+
+.match-timer-badge {
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 900;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.08); opacity: 0.85; }
+}
+
+/* Draft Panel */
+.overlay-draft-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  max-width: 1400px;
+  width: 100%;
+  margin: auto auto 2rem auto;
+  gap: 2rem;
+}
+
+.draft-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.draft-picks {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.draft-bans {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.hero-slot {
+  width: 72px;
+  height: 96px;
+  border-radius: 8px;
+  background: #1e293b;
+  border: 2px solid #334155;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.hero-slot.active-turn {
+  border-color: #fbbf24;
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.7);
+  animation: pulse 1s infinite alternate;
+}
+
+.hero-slot.ban-slot {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  border-color: #ef4444;
+  filter: grayscale(80%) brightness(0.8);
+}
+
+.hero-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-slot-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.75);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.draft-status-center {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #38bdf8;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  color: #38bdf8;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+/* Compact Mode */
+.compact-mode .hero-slot {
+  width: 54px;
+  height: 72px;
+}
+.compact-mode .overlay-scoreboard {
+  max-width: 900px;
+  padding: 0.5rem 1rem;
+}

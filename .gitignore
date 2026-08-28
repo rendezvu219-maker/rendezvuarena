@@ -23,3 +23,6 @@ temp/
 cache/
 logs/
 Thumbs.db
+*.apk
+*.patch
+.figma*

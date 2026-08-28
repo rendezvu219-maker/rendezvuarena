@@ -516,6 +516,17 @@ CREATE TABLE IF NOT EXISTS draft_actions (
   FOREIGN KEY(actor_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS draft_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draft_room_id INTEGER NOT NULL,
+  match_id INTEGER,
+  event_type TEXT NOT NULL,
+  event_data TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(draft_room_id) REFERENCES draft_rooms(id) ON DELETE CASCADE,
+  FOREIGN KEY(match_id) REFERENCES matches(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS files (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   uploader_user_id INTEGER,
@@ -602,7 +613,7 @@ CREATE TABLE IF NOT EXISTS solo_team_previews (
   created_by INTEGER NOT NULL,
   total_slots INTEGER NOT NULL,
   team_size INTEGER NOT NULL,
-  captain_mode TEXT NOT NULL CHECK(captain_mode IN ('self_nominated','host_selected')),
+  captain_mode TEXT NOT NULL CHECK(captain_mode IN ('self_nominated','host_selected','random_assigned')),
   assignments_json TEXT NOT NULL,
   request_ids_json TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','confirmed','cancelled','expired')),
@@ -915,6 +926,8 @@ const migrations = {
     ['message_type', "TEXT NOT NULL DEFAULT 'user'"],
     ['file_id', 'INTEGER REFERENCES files(id) ON DELETE SET NULL'],
     ['pinned', 'INTEGER NOT NULL DEFAULT 0'],
+    ['is_pinned', 'INTEGER NOT NULL DEFAULT 0'],
+    ['mentions_json', "TEXT NOT NULL DEFAULT '[]'"],
     ['edited_at', 'TEXT'],
     ['deleted_at', 'TEXT'],
   ],
@@ -924,6 +937,35 @@ const migrations = {
 };
 for (const [table, columns] of Object.entries(migrations)) {
   for (const [column, definition] of columns) ensureColumn(table, column, definition);
+}
+
+// Sync is_pinned with pinned
+db.exec(`UPDATE match_messages SET is_pinned = pinned WHERE is_pinned = 0 AND pinned = 1;`);
+
+const previewTableSql = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='solo_team_previews'`).get()?.sql || '';
+if (previewTableSql && !previewTableSql.includes('random_assigned')) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS solo_team_previews_new (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tournament_id INTEGER NOT NULL,
+      created_by INTEGER NOT NULL,
+      total_slots INTEGER NOT NULL,
+      team_size INTEGER NOT NULL,
+      captain_mode TEXT NOT NULL CHECK(captain_mode IN ('self_nominated','host_selected','random_assigned')),
+      assignments_json TEXT NOT NULL,
+      request_ids_json TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','confirmed','cancelled','expired')),
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      confirmed_at TEXT,
+      FOREIGN KEY(tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+      FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE CASCADE
+    );
+    INSERT INTO solo_team_previews_new SELECT * FROM solo_team_previews;
+    DROP TABLE solo_team_previews;
+    ALTER TABLE solo_team_previews_new RENAME TO solo_team_previews;
+    CREATE INDEX IF NOT EXISTS idx_solo_team_previews_tournament ON solo_team_previews(tournament_id, status, created_at);
+  `);
 }
 
 // Existing accounts predate email verification. Preserve their access once, while all newly
@@ -984,6 +1026,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_join_requests_one_pending ON tournament_jo
 CREATE INDEX IF NOT EXISTS idx_solo_team_previews_tournament ON solo_team_previews(tournament_id, status, created_at);
 CREATE INDEX IF NOT EXISTS idx_solo_team_history_tournament ON solo_team_history(tournament_id, undone_at, created_at);
 CREATE INDEX IF NOT EXISTS idx_draft_actions_room ON draft_actions(draft_room_id);
+CREATE INDEX IF NOT EXISTS idx_draft_logs_room ON draft_logs(draft_room_id, id);
+CREATE INDEX IF NOT EXISTS idx_draft_logs_match ON draft_logs(match_id, id);
 CREATE INDEX IF NOT EXISTS idx_match_messages_match ON match_messages(match_id, id);
 CREATE INDEX IF NOT EXISTS idx_result_submissions_match ON result_submissions(match_id, revision);
 CREATE INDEX IF NOT EXISTS idx_disputes_match ON disputes(match_id, status);
