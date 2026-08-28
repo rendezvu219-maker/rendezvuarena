@@ -1535,11 +1535,12 @@ app.post('/api/tournaments/:id/solo-pool/:requestId/assign',authRequired,require
     if(!team)return res.status(404).json({error:'Team not found.'});
     const effectiveLock=team.roster_locked_at||db.prepare('SELECT roster_lock_at FROM tournaments WHERE id=?').get(req.tournamentId)?.roster_lock_at;
     if(effectiveLock&&Date.parse(effectiveLock)<=Date.now())return res.status(409).json({error:'Roster is locked. Ask the Host to make roster changes.'});
+    let memberId;
     transaction(()=>{
       const insertResult=db.prepare(`INSERT INTO team_members (team_id,display_name,gamer_tag,game_id,member_role,is_substitute,membership_status,user_id,external_provider,external_user_id,external_profile_slug) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(
         teamId,request.display_name,request.gamer_tag||request.selected_member_tag||'',request.game_id||'',request.requested_role,request.requested_role==='substitute'?1:0,'active',request.user_id,request.external_provider||'',request.external_user_id||'',request.external_profile_slug||''
       );
-      const memberId=Number(insertResult.lastInsertRowid);
+      memberId=Number(insertResult.lastInsertRowid);
       if(request.requested_role==='captain'){
         if(team.captain_user_id&&Number(team.captain_user_id)!==Number(request.user_id))throw new Error('This team already has a Captain. Transfer the role first.');
         syncTeamCaptain(teamId,{id:request.user_id,display_name:request.display_name,username:request.username},{gamerTag:request.gamer_tag});

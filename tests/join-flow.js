@@ -52,6 +52,14 @@ async function wait() { for(let i=0;i<60;i++){try{await request('/api/health');r
     const myJoin=await request(`/api/tournaments/${slug}/my-join`,{token:player.token});
     assert(myJoin.membership?.team_id===team.id,'Join page should show the approved membership.');
 
+    const soloPlayer=await request('/api/auth/register',{method:'POST',body:{displayName:'Solo Player',username:'soloplayer',password:'Password123!',passwordConfirmation:'Password123!',role:'player'}});
+    const soloRequest=await request(`/api/tournaments/${slug}/join-requests`,{token:soloPlayer.token,method:'POST',body:{requestedRole:'player',soloSignup:true,gamerTag:'SOLO-PLAYER'}});
+    const soloApproved=await request(`/api/tournaments/${tournamentId}/join-requests/${soloRequest.request.id}/review`,{token:host.token,method:'POST',body:{decision:'approve',soloPool:true}});
+    assert(soloApproved.soloPool===true,'Host should be able to approve a player into the solo pool.');
+    const assigned=await request(`/api/tournaments/${tournamentId}/solo-pool/${soloRequest.request.id}/assign`,{token:host.token,method:'POST',body:{teamId:team.id}});
+    assert(assigned.request.team_id===team.id,'Assigning from the solo pool must return a successful response.');
+    assert(Boolean(assigned.request.selected_member_id),'Assigned solo player must retain the created roster member ID.');
+
     console.log('Tournament join/link flow tests passed.');
   } finally {
     child.kill('SIGTERM');
