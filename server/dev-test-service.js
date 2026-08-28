@@ -263,17 +263,28 @@ function listTestSuites() {
   });
 }
 
-async function seedMock32Players(tournamentId) {
+async function seedMock32Players(tournamentId, adminUserId) {
   const tournament = db.prepare('SELECT * FROM tournaments WHERE id=?').get(tournamentId);
   if (!tournament) throw new Error('Tournament not found.');
+
+  const adminUser = db.prepare('SELECT * FROM users WHERE id=?').get(adminUserId);
+  if (!adminUser) throw new Error('Admin user not found.');
 
   const passwordHash = await hashPassword('MockPassword123!');
   const suffix = Date.now().toString(36);
   let seeded = 0;
 
   transaction(() => {
+    // Add admin user as captain to solo pool
+    db.prepare(`INSERT INTO tournament_join_requests(
+      tournament_id,user_id,requested_role,status,gamer_tag,message,created_at,updated_at
+    ) VALUES (?,?,?,'approved',?,'Admin Captain - will be assigned to random team',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`)
+      .run(tournamentId, adminUserId, 'captain', adminUser.gamer_tag || adminUser.display_name || 'ADMIN');
+    seeded++;
+
+    // Create 31 mock bot players
     for (let i = 1; i <= 31; i++) {
-      const isCaptain = i <= 7;
+      const isCaptain = i <= 7; // 7 more captains besides admin = 8 total captains
       const username = `solo_bot_${i}_${suffix}`.slice(0, 60);
       const displayName = `Solo Bot ${i} ${isCaptain ? '★' : ''}`.trim();
       const email = `${username}@mock.local`;
@@ -291,7 +302,7 @@ async function seedMock32Players(tournamentId) {
     }
   });
 
-  return { success: true, count: seeded, message: `Successfully seeded ${seeded} mock players (7 captains + 24 players) into Solo Pool!` };
+  return { success: true, count: seeded, message: `Successfully seeded ${seeded} players (1 admin captain + 7 bot captains + 24 bot players = 32 total) into Solo Pool!` };
 }
 
 function autoCheckinOtherTeams(tournamentId) {

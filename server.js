@@ -841,7 +841,7 @@ app.delete('/api/dev-test/suites/:suiteId',authRequired,allowRoles('admin'),devT
 
 app.post('/api/tournaments/:id/mock-data/seed-32', authRequired, requireTournamentPermission('team.edit'), devTestGate, async (req, res) => {
   try {
-    const result = await seedMock32Players(Number(req.params.id));
+    const result = await seedMock32Players(Number(req.params.id), req.user.id);
     emitInternalTournamentEvent(Number(req.params.id), 'tournament:updated', {});
     res.json(result);
   } catch (error) {
