@@ -38,7 +38,10 @@ const {
   deletePreset: deleteDivineCardPreset, assignPreset: assignDivineCardPreset,
 } = require('./server/divine-card-service');
 const { seedRecommendedHeroBuilds } = require('./server/divine-card-recommendations');
-const { consumeDevAccessCode, createTestSuite, listTestSuites, cleanupTestSuite } = require('./server/dev-test-service');
+const {
+  consumeDevAccessCode, createTestSuite, listTestSuites, cleanupTestSuite,
+  seedMock32Players, autoCheckinOtherTeams, cleanupMockData, create32PlayerTournament,
+} = require('./server/dev-test-service');
 const { userTournamentHistory } = require('./server/profile-service');
 const {
   publicAccountSettings, publicUserProfile, updateProfileSettings,
@@ -138,17 +141,17 @@ for(const paramName of ['id','matchId','teamId','userId','memberId','requestId',
 
 const apiLimiter = new SlidingWindowLimiter({
   windowMs: 60 * 1000,
-  max: Number(process.env.API_RATE_LIMIT_PER_MINUTE || (process.env.NODE_ENV === 'test' ? 10_000 : 100)),
+  max: Number(process.env.API_RATE_LIMIT_PER_MINUTE || 10_000),
   name: 'api-global',
 });
 const loginFailureLimiter = new SlidingWindowLimiter({
   windowMs: 15 * 60 * 1000,
-  max: Number(process.env.LOGIN_FAILURE_LIMIT || (process.env.NODE_ENV === 'test' ? 10_000 : 5)),
+  max: Number(process.env.LOGIN_FAILURE_LIMIT || (process.env.NODE_ENV === 'production' ? 5 : 10_000)),
   name: 'auth-login-failures',
 });
 const registerLimiter = new SlidingWindowLimiter({
   windowMs: 60 * 60 * 1000,
-  max: Number(process.env.REGISTER_RATE_LIMIT_MAX || (process.env.NODE_ENV === 'test' ? 10_000 : 3)),
+  max: Number(process.env.REGISTER_RATE_LIMIT_MAX || (process.env.NODE_ENV === 'production' ? 5 : 10_000)),
   name: 'auth-register',
 });
 app.use('/api', rateLimitMiddleware(apiLimiter));
@@ -822,6 +825,48 @@ app.delete('/api/dev-test/suites/:suiteId',authRequired,allowRoles('admin'),devT
     res.json(result);
   } catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
+
+app.post('/api/tournaments/:id/mock-data/seed-32', authRequired, requireTournamentPermission('team.edit'), devTestGate, async (req, res) => {
+  try {
+    const result = await seedMock32Players(Number(req.params.id));
+    emitInternalTournamentEvent(Number(req.params.id), 'tournament:updated', {});
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: clientErrorMessage(error) });
+  }
+});
+
+app.post('/api/tournaments/:id/mock-data/auto-checkin-others', authRequired, requireTournamentPermission('match.manage'), devTestGate, (req, res) => {
+  try {
+    const result = autoCheckinOtherTeams(Number(req.params.id));
+    emitBracketUpdated(Number(req.params.id));
+    emitInternalTournamentEvent(Number(req.params.id), 'tournament:updated', {});
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: clientErrorMessage(error) });
+  }
+});
+
+app.delete('/api/tournaments/:id/mock-data/cleanup', authRequired, requireTournamentPermission('team.edit'), devTestGate, (req, res) => {
+  try {
+    const result = cleanupMockData(Number(req.params.id));
+    emitInternalTournamentEvent(Number(req.params.id), 'tournament:updated', {});
+    emitBracketUpdated(Number(req.params.id));
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: clientErrorMessage(error) });
+  }
+});
+
+app.post('/api/mock-data/create-32-player-tournament', authRequired, devTestGate, async (req, res) => {
+  try {
+    const result = await create32PlayerTournament(req.user.id);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ error: clientErrorMessage(error) });
+  }
+});
+
 app.get('/api/profile/history',authRequired,(req,res)=>{
   try { res.json(userTournamentHistory(req.user.id)); }
   catch(error){res.status(500).json({error:clientErrorMessage(error)});}
@@ -1165,7 +1210,7 @@ app.get('/api/tournaments/:id',authRequired,requireTournamentPermission('match.r
   const unread=new Map(unreadRows.map(row=>[row.match_id,row.unread_count]));
   const canReviewJoins=hasTournamentPermission(req.user.id,req.tournamentId,'team.edit');
   const joinRequests=canReviewJoins?db.prepare(`SELECT jr.*,u.username,u.email,u.display_name,t.name team_name,tm.display_name selected_member_name,tm.gamer_tag selected_member_tag FROM tournament_join_requests jr JOIN users u ON u.id=jr.user_id LEFT JOIN teams t ON t.id=jr.team_id LEFT JOIN team_members tm ON tm.id=jr.selected_member_id WHERE jr.tournament_id=? ORDER BY CASE jr.status WHEN 'pending' THEN 0 ELSE 1 END,jr.id DESC LIMIT 300`).all(req.tournamentId):[];
-  res.json({tournament:{...tournament,...sourceVerificationFields(tournament),rules:jsonParse(tournament.rules_json)},teams:[...grouped.values()],matches:matches.map(match=>({...match,unread_count:unread.get(match.id)||0})),groupStandings:calculateGroupStandings(req.tournamentId),permissions:permissionsForUser(req.user.id,req.tournamentId),preflight:preflightTournament(req.tournamentId),bracketSnapshots:listBracketSnapshots(req.tournamentId),staff,joinRequests});
+  res.json({tournament:{...tournament,...sourceVerificationFields(tournament),rules:jsonParse(tournament.rules_json)},teams:[...grouped.values()],matches:matches.map(match=>({...match,unread_count:unread.get(match.id)||0})),groupStandings:calculateGroupStandings(req.tournamentId),permissions:permissionsForUser(req.user.id,req.tournamentId),preflight:preflightTournament(req.tournamentId),bracketSnapshots:listBracketSnapshots(req.tournamentId),staff,joinRequests,mockToolsAvailable:process.env.NODE_ENV!=='production'});
 });
 app.post('/api/tournaments/:id/verify-source',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{const current=db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId);if(!current)return res.status(404).json({error:'Tournament not found.'});if(!current.source_url)return res.status(400).json({error:'This tournament does not have an external source to verify.'});const name=req.body.name===undefined?current.name:String(req.body.name||'').trim().slice(0,160);const description=req.body.description===undefined?current.description:String(req.body.description||'').trim().slice(0,1000);if(!name)return res.status(400).json({error:'Tournament name is required.'});db.prepare(`UPDATE tournaments SET name=?,description=?,source_sync_status='host_confirmed',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(name,description,req.tournamentId);const tournament=db.prepare('SELECT * FROM tournaments WHERE id=?').get(req.tournamentId);logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'tournament.source_verified',details:{previousStatus:current.source_sync_status,sourceUrl:current.source_url,nameChanged:name!==current.name,descriptionChanged:description!==current.description}});res.json({tournament:{...tournament,...sourceVerificationFields(tournament),rules:jsonParse(tournament.rules_json)},requiresVerification:false});});
 app.patch('/api/tournaments/:id',authRequired,requireTournamentPermission('tournament.manage'),(req,res)=>{
@@ -1314,11 +1359,40 @@ app.delete('/api/portal/teams/:teamId/members/:memberId',authRequired,emailVerif
     res.json({deleted:true});
   }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
 });
+app.post('/api/portal/teams/:teamId/captain/transfer',authRequired,emailVerifiedRequired,(req,res)=>{
+  try{
+    const team=assertCaptainRosterAccess(req.user.id,req.params.teamId);
+    const effectiveLock=team.roster_locked_at||db.prepare('SELECT roster_lock_at FROM tournaments WHERE id=?').get(team.tournament_id)?.roster_lock_at;
+    if(effectiveLock&&Date.parse(effectiveLock)<=Date.now())return res.status(409).json({error:'Roster is locked. Ask the Host to transfer Captain access.'});
+    const member=db.prepare(`SELECT tm.*,u.id user_id,u.username,u.display_name,u.gamer_tag
+      FROM team_members tm JOIN users u ON u.id=tm.user_id
+      WHERE tm.id=? AND tm.team_id=? AND tm.membership_status='active'`).get(Number(req.body.memberId),team.id);
+    if(!member)return res.status(404).json({error:'Choose an active roster member with a linked account.'});
+    if(Number(member.user_id)===Number(req.user.id))return res.status(400).json({error:'This player is already the Captain.'});
+    transaction(()=>syncTeamCaptain(team.id,member,{gamerTag:member.gamer_tag}));
+    logAction({tournamentId:team.tournament_id,userId:req.user.id,action:'team.captain_transferred_by_captain',details:{teamId:team.id,newCaptainUserId:member.user_id}});
+    res.json({team:db.prepare('SELECT * FROM teams WHERE id=?').get(team.id),captain:cleanUser(member)});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
+});
 app.post('/api/tournaments/:id/teams/:teamId/captain/assign',authRequired,requireTournamentPermission('team.transfer_captain'),(req,res)=>{
   const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(Number(req.params.teamId),req.tournamentId);if(!team)return res.status(404).json({error:'Team not found.'});
   const identity=String(req.body.identity||'').trim();const user=db.prepare(`SELECT * FROM users WHERE is_active=1 AND username=? COLLATE NOCASE`).get(identity);if(!user)return res.status(404).json({error:'Captain account not found. Ask the Captain to register a username first.'});
   transaction(()=>syncTeamCaptain(team.id,user));
   logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'team.captain_assigned',details:{teamId:team.id,captainUserId:user.id}});res.json({team:db.prepare('SELECT * FROM teams WHERE id=?').get(team.id),captain:cleanUser(user)});
+});
+app.post('/api/tournaments/:id/teams/:teamId/captain/transfer',authRequired,requireTournamentPermission('team.transfer_captain'),(req,res)=>{
+  try{
+    const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(Number(req.params.teamId),req.tournamentId);
+    if(!team)return res.status(404).json({error:'Team not found.'});
+    const member=db.prepare(`SELECT tm.*,u.id user_id,u.username,u.display_name,u.gamer_tag
+      FROM team_members tm JOIN users u ON u.id=tm.user_id
+      WHERE tm.id=? AND tm.team_id=? AND tm.membership_status='active'`).get(Number(req.body.memberId),team.id);
+    if(!member)return res.status(404).json({error:'Choose an active roster member with a linked account.'});
+    if(Number(member.user_id)===Number(team.captain_user_id))return res.status(400).json({error:'This player is already the Captain.'});
+    transaction(()=>syncTeamCaptain(team.id,member,{gamerTag:member.gamer_tag}));
+    logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'team.captain_transferred_by_host',details:{teamId:team.id,newCaptainUserId:member.user_id}});
+    res.json({team:db.prepare('SELECT * FROM teams WHERE id=?').get(team.id),captain:cleanUser(member)});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
 });
 app.post('/api/tournaments/:id/teams/:teamId/captain/invite',authRequired,requireTournamentPermission('team.invite_captain'),(req,res)=>{
   const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(Number(req.params.teamId),req.tournamentId);if(!team)return res.status(404).json({error:'Team not found.'});const identity=String(req.body.identity||'').trim();
@@ -1435,6 +1509,32 @@ app.delete('/api/tournaments/:id/solo-pool/:requestId',authRequired,requireTourn
     db.prepare(`UPDATE tournament_join_requests SET status='pending',reviewed_by=NULL,reviewed_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=? AND tournament_id=?`).run(request.id,req.tournamentId);
     logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'join.solo_pool_removed',details:{requestId:request.id,requestUserId:request.user_id,displayName:request.display_name}});
     res.json({ok:true});
+  }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
+});
+app.post('/api/tournaments/:id/solo-pool/:requestId/assign',authRequired,requireTournamentPermission('team.edit'),(req,res)=>{
+  try{
+    const request=db.prepare(`SELECT jr.*,u.display_name,u.username,u.gamer_tag FROM tournament_join_requests jr JOIN users u ON u.id=jr.user_id WHERE jr.id=? AND jr.tournament_id=?`).get(Number(req.params.requestId),req.tournamentId);
+    if(!request)return res.status(404).json({error:'Join request not found.'});
+    if(request.status!=='approved'||request.team_id||request.selected_member_id)return res.status(409).json({error:'This player is not in the solo signup pool.'});
+    const teamId=Number(req.body.teamId);
+    if(!teamId)return res.status(400).json({error:'Team ID is required.'});
+    const team=db.prepare('SELECT * FROM teams WHERE id=? AND tournament_id=?').get(teamId,req.tournamentId);
+    if(!team)return res.status(404).json({error:'Team not found.'});
+    const effectiveLock=team.roster_locked_at||db.prepare('SELECT roster_lock_at FROM tournaments WHERE id=?').get(req.tournamentId)?.roster_lock_at;
+    if(effectiveLock&&Date.parse(effectiveLock)<=Date.now())return res.status(409).json({error:'Roster is locked. Ask the Host to make roster changes.'});
+    transaction(()=>{
+      const insertResult=db.prepare(`INSERT INTO team_members (team_id,display_name,gamer_tag,game_id,member_role,is_substitute,membership_status,user_id,external_provider,external_user_id,external_profile_slug) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(
+        teamId,request.display_name,request.gamer_tag||request.selected_member_tag||'',request.game_id||'',request.requested_role,request.requested_role==='substitute'?1:0,'active',request.user_id,request.external_provider||'',request.external_user_id||'',request.external_profile_slug||''
+      );
+      const memberId=Number(insertResult.lastInsertRowid);
+      if(request.requested_role==='captain'){
+        if(team.captain_user_id&&Number(team.captain_user_id)!==Number(request.user_id))throw new Error('This team already has a Captain. Transfer the role first.');
+        syncTeamCaptain(teamId,{id:request.user_id,display_name:request.display_name,username:request.username},{gamerTag:request.gamer_tag});
+      }
+      db.prepare(`UPDATE tournament_join_requests SET team_id=?,selected_member_id=?,status='approved',review_note='Assigned from solo pool by Host',reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(teamId,memberId,req.user.id,request.id);
+    });
+    logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'join.solo_pool_assigned',details:{requestId:request.id,requestUserId:request.user_id,teamId,memberId}});
+    res.json({request:db.prepare('SELECT * FROM tournament_join_requests WHERE id=?').get(request.id),team:db.prepare('SELECT * FROM teams WHERE id=?').get(teamId)});
   }catch(error){res.status(400).json({error:clientErrorMessage(error)});}
 });
 
@@ -2019,6 +2119,16 @@ function resolveDraftRole(room, accessToken) {
   return Object.entries(access).find(([, token]) => token === accessToken)?.[0] || null;
 }
 
+function tournamentHasMockPlayers(tournamentId) {
+  if (!tournamentId) return false;
+  try {
+    const count = db.prepare(`SELECT COUNT(*) as count FROM users u JOIN tournament_join_requests jr ON jr.user_id=u.id WHERE jr.tournament_id=? AND (u.username LIKE '%_bot_%' OR u.username LIKE 'mock_%' OR u.username LIKE 'solo_bot_%')`).get(tournamentId)?.count;
+    return Number(count || 0) > 0;
+  } catch {
+    return false;
+  }
+}
+
 function aggregateSeriesPicks(matchId) {
   const games = db.prepare(`SELECT * FROM match_games WHERE match_id=? AND status IN ('draft_complete','completed') ORDER BY game_number`).all(matchId);
   const picksA = [];
@@ -2032,7 +2142,7 @@ function aggregateSeriesPicks(matchId) {
 function serializeTournamentMatchForUser(match,permissionContext) {
   const permissions=permissionContext?.permissions||[];
   if(permissions.includes('*')||permissions.includes('match.notes.private.read'))return match;
-  const {room_code:_roomCode,private_notes:_privateNotes,notes:_notes,...safe}=match;
+  const {private_notes:_privateNotes,notes:_notes,...safe}=match;
   return safe;
 }
 
@@ -2360,6 +2470,7 @@ function saveDraftSnapshotToGame({ match, room, state, winnerTeamId = null, stat
 
 function refreshedDraftConfig(match, room) {
   const config = jsonParse(room.config_json);
+  const effectiveRules = { ...jsonParse(match.tournament_rules_json), ...jsonParse(match.rules_json) };
   const series = seriesDraftHistory(match.id, match.series_rule, match.current_game_number);
   const score = seriesGameScore(match);
   const squadraBlastCarryBans = config.squadraBlastCarryBans !== false;
@@ -2385,6 +2496,10 @@ function refreshedDraftConfig(match, room) {
     previousPicksB: series.picksB,
     previousBansA: squadraBlastCarryBans ? series.bansA : [],
     previousBansB: squadraBlastCarryBans ? series.bansB : [],
+    enableCoinFlip: currentGameNumber > 1 ? false : (effectiveRules.enableCoinFlip !== false && config.enableCoinFlip !== false),
+    enableDivineDraw: effectiveRules.enableDivineDraw !== false && config.enableDivineDraw !== false,
+    mockAutoOpponent: tournamentHasMockPlayers(match.tournament_id),
+    roomCode: match.room_code || config.roomCode || '',
   });
   return config;
 }
@@ -2556,6 +2671,26 @@ function assertCaptainGameReporter(req) {
   return teamId;
 }
 
+function isMockUsername(username) {
+  const name = String(username || '');
+  return name.includes('_bot_') || name.startsWith('mock_') || name.startsWith('solo_bot_');
+}
+
+function opposingCaptainIsMock(match, reportingTeamId) {
+  const otherTeamId = Number(reportingTeamId) === Number(match.team_a_id) ? match.team_b_id : match.team_a_id;
+  const row = db.prepare('SELECT u.username FROM teams t JOIN users u ON u.id=t.captain_user_id WHERE t.id=?').get(otherTeamId);
+  return isMockUsername(row?.username);
+}
+
+function applyConfirmedCurrentGameWinner(req, match, game, winnerSide) {
+  req.body.winnerSide = winnerSide;
+  let payload = recordDraftGameWinner(req, winnerSide, { expectedGameNumber: game.game_number });
+  if (!payload.seriesComplete) {
+    db.prepare(`UPDATE matches SET result_status='none',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
+  }
+  return finalizeSeriesFromVerifiedGames(req, payload);
+}
+
 function assertCurrentGameReadyForReport(match, game) {
   if (!game) throw new Error('Current game record was not found.');
   if (game.status === 'completed' && game.winner_team_id) {
@@ -2570,6 +2705,21 @@ function assertCurrentGameReadyForReport(match, game) {
   const currentGameNumber = Number(match.current_game_number || 1);
   const roomGameNumber = Number(config.gameNumber || state.gameNumber || state.engine?.gameNumber || currentGameNumber);
   const stateGameNumber = Number(state.gameNumber || state.engine?.gameNumber || roomGameNumber);
+  
+  console.log('[ASSERT_GAME_READY] Game readiness check', {
+    matchId: match.id,
+    currentGameNumber,
+    gameNumber: game.game_number,
+    roomGameNumber,
+    stateGameNumber,
+    configGameNumber: config.gameNumber,
+    stateGameNumberFromState: state.gameNumber,
+    engineGameNumber: state.engine?.gameNumber,
+    engineState: state.engine?.state,
+    gameStatus: game.status,
+    roomStatus: room.status
+  });
+  
   if (Number(game.game_number) !== currentGameNumber || roomGameNumber !== currentGameNumber || stateGameNumber !== currentGameNumber) {
     const error = new Error(`The Draft Room game sequence is stale. Reload Game ${currentGameNumber} before continuing.`);
     error.status = 409;
@@ -2635,6 +2785,81 @@ app.get('/api/matches/:matchId/draft-room/actions', authRequired, requireMatchAc
   res.json({ actions });
 });
 
+// Debug endpoint to check draft room state and diagnose submission issues
+app.get('/api/matches/:matchId/draft-room/debug', authRequired, requireMatchAccess, (req, res) => {
+  const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(req.match.id);
+  if (!room) return res.status(404).json({ error: 'Draft room not found.' });
+  
+  const state = jsonParse(room.state_json);
+  const config = jsonParse(room.config_json);
+  const match = draftMatchContext(req.match.id);
+  const game = currentMatchGame(match);
+  const authority = draftAuthority(room.room_code);
+  
+  const stateSize = Buffer.byteLength(JSON.stringify(state), 'utf8');
+  const engineSize = state.engine ? Buffer.byteLength(JSON.stringify(state.engine), 'utf8') : 0;
+  const preDraftSize = state.preDraft ? Buffer.byteLength(JSON.stringify(state.preDraft), 'utf8') : 0;
+  
+  const stateGameNumber = Number(state.gameNumber || state.engine?.gameNumber || 0);
+  const configGameNumber = Number(config.gameNumber || match?.current_game_number || 1);
+  const stateRollMatches = validDraftGameRollId(state.gameRollId) && state.gameRollId === config.gameRollId;
+  const preDraftRollMatches = !state.preDraft || (
+    Number(state.preDraft.gameNumber) === stateGameNumber &&
+    state.preDraft.gameRollId === state.gameRollId &&
+    (!state.preDraft.divine || (Number(state.preDraft.divine.gameNumber) === stateGameNumber && state.preDraft.divine.gameRollId === state.gameRollId))
+  );
+  
+  res.json({
+    room: {
+      id: room.id,
+      roomCode: room.room_code,
+      status: room.status,
+      configGameNumber: config.gameNumber,
+      configGameRollId: config.gameRollId,
+    },
+    state: {
+      status: state.status,
+      gameNumber: state.gameNumber,
+      gameRollId: state.gameRollId,
+      engineState: state.engine?.state,
+      engineGameNumber: state.engine?.gameNumber,
+      seriesComplete: state.seriesComplete,
+    },
+    match: {
+      id: match.id,
+      currentGameNumber: match.current_game_number,
+      status: match.status,
+      matchStatus: match.match_status,
+    },
+    game: {
+      gameNumber: game?.game_number,
+      status: game?.status,
+      resultStatus: game?.result_status,
+      winnerTeamId: game?.winner_team_id,
+    },
+    sizes: {
+      stateTotal: stateSize,
+      engine: engineSize,
+      preDraft: preDraftSize,
+    },
+    validation: {
+      stateGameNumber,
+      configGameNumber,
+      stateRollMatches,
+      preDraftRollMatches,
+      engineStateComplete: state.engine?.state === 'complete',
+      authority: authority ? { role: authority.role, socketId: authority.socketId } : null,
+    },
+    preDraftDetails: state.preDraft ? {
+      gameNumber: state.preDraft.gameNumber,
+      gameRollId: state.preDraft.gameRollId,
+      stage: state.preDraft.stage,
+      divineGameNumber: state.preDraft.divine?.gameNumber,
+      divineGameRollId: state.preDraft.divine?.gameRollId,
+    } : null,
+  });
+});
+
 app.get('/api/matches/:matchId/games', authRequired, requireMatchAccess, (req, res) => {
   const match = draftMatchContext(req.match.id);
   const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(req.match.id);
@@ -2652,6 +2877,118 @@ app.get('/api/matches/:matchId/games', authRequired, requireMatchAccess, (req, r
   });
 });
 
+app.post('/api/matches/:matchId/room-code', authRequired, emailVerifiedRequired, requireMatchAccess, (req, res) => {
+  try {
+    const match = draftMatchContext(req.match.id);
+    const isTeamA = Number(req.matchTeamId) === Number(match.team_a_id) && Boolean(teamForCaptain(req.user.id, match.team_a_id));
+    const isTeamB = Number(req.matchTeamId) === Number(match.team_b_id) && Boolean(teamForCaptain(req.user.id, match.team_b_id));
+    const isStaff = hasTournamentPermission(req.user.id, match.tournament_id, 'match.manage') || hasTournamentPermission(req.user.id, match.tournament_id, 'draft.control');
+    if (!isTeamA && !isTeamB && !isStaff) {
+      return res.status(403).json({ error: 'Only Team Captains or Host can set the game room code.' });
+    }
+    const code = String(req.body.roomCode || '').trim();
+    if (code.length > 80) return res.status(400).json({ error: 'Room code cannot exceed 80 characters.' });
+    
+    db.prepare('UPDATE matches SET room_code=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').run(code, match.id);
+    db.prepare("UPDATE match_games SET room_code=? WHERE match_id=? AND status <> 'completed'").run(code, match.id);
+    
+    const draftRoom = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(match.id);
+    if (draftRoom) {
+      const config = jsonParse(draftRoom.config_json);
+      config.roomCode = code;
+      db.prepare('UPDATE draft_rooms SET config_json=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').run(JSON.stringify(config), draftRoom.id);
+      io.to(`draft:${draftRoom.room_code}`).emit('draft:room_code', { roomCode: code });
+    }
+    
+    const senderName = isTeamA ? match.team_a_name : isTeamB ? match.team_b_name : 'Host';
+    if (code) {
+      addSystemMessage(match.id, `🎮 ${senderName} sent game room code: ${code}`);
+    } else {
+      addSystemMessage(match.id, `Game room code was cleared.`);
+    }
+    const updated = draftMatchContext(match.id);
+    emitMatchUpdated(updated);
+    res.json({ success: true, roomCode: code, match: serializeTournamentMatchForUser(updated, permissionsForUser(req.user.id, match.tournament_id)) });
+  } catch (error) {
+    res.status(error.status || 400).json({ error: clientErrorMessage(error) });
+  }
+});
+
+app.post('/api/matches/:matchId/games/:gameNumber/edit-winner', authRequired, emailVerifiedRequired, requireMatchAccess, (req, res) => {
+  try {
+    const match = draftMatchContext(req.match.id);
+    if (!hasTournamentPermission(req.user.id, match.tournament_id, 'result.verify') && !hasTournamentPermission(req.user.id, match.tournament_id, 'draft.control')) {
+      return res.status(403).json({ error: 'Permission required to adjust game winner.' });
+    }
+    const targetGameNumber = Number(req.params.gameNumber);
+    const targetGame = db.prepare('SELECT * FROM match_games WHERE match_id=? AND game_number=?').get(match.id, targetGameNumber);
+    if (!targetGame) return res.status(404).json({ error: `Game ${targetGameNumber} not found.` });
+
+    const side = String(req.body.winnerSide || '').toUpperCase();
+    if (!['A', 'B'].includes(side)) return res.status(400).json({ error: 'Choose Team A or Team B as winner.' });
+    const winnerTeamId = side === 'A' ? Number(match.team_a_id) : Number(match.team_b_id);
+    const winnerName = side === 'A' ? match.team_a_name : match.team_b_name;
+    const reason = String(req.body.reason || '').trim();
+    const isCurrentOpenGame = Number(targetGame.game_number) === Number(match.current_game_number)
+      && !(targetGame.status === 'completed' && targetGame.winner_team_id);
+
+    if (isCurrentOpenGame) {
+      const game = currentMatchGame(match);
+      assertCurrentGameReadyForReport(match, game);
+      db.prepare(`UPDATE match_games SET result_status='confirmed',reported_winner_team_id=?,reported_by_user_id=?,reported_by_team_id=NULL,reported_at=CURRENT_TIMESTAMP,confirmed_by_user_id=?,confirmed_by_team_id=NULL,confirmed_at=CURRENT_TIMESTAMP,dispute_reason='',updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+        .run(winnerTeamId, req.user.id, req.user.id, game.id);
+      db.prepare(`UPDATE disputes SET status='resolved',resolved_by_user_id=?,resolution_note='Host game winner correction',resolved_at=CURRENT_TIMESTAMP WHERE match_id=? AND status IN ('open','under_review','recommended')`)
+        .run(req.user.id, match.id);
+      let payload = applyConfirmedCurrentGameWinner(req, match, game, side);
+      addSystemMessage(match.id, `🔧 Host recorded Game ${targetGameNumber}: ${winnerName} won.${reason ? ` Reason: ${reason}` : ''}`);
+      emitMatchUpdated(draftMatchContext(match.id));
+      return res.json(payload);
+    }
+
+    db.prepare(`UPDATE match_games SET winner_team_id=?, reported_winner_team_id=?, result_status='confirmed', status='completed', confirmed_by_user_id=?, confirmed_at=CURRENT_TIMESTAMP, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+      .run(winnerTeamId, winnerTeamId, req.user.id, targetGame.id);
+
+    const score = seriesGameScore(match);
+    const winsNeeded = Math.floor(Number(match.best_of) / 2) + 1;
+    const seriesComplete = score.scoreA >= winsNeeded || score.scoreB >= winsNeeded;
+
+    db.prepare(`UPDATE matches SET score_a=?, score_b=?, status=?, match_status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+      .run(score.scoreA, score.scoreB, seriesComplete ? 'completed' : match.match_status, seriesComplete ? 'completed' : match.match_status, match.id);
+
+    const room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(match.id);
+    if (room) {
+      const config = jsonParse(room.config_json);
+      const state = jsonParse(room.state_json);
+      config.seriesScoreA = score.scoreA;
+      config.seriesScoreB = score.scoreB;
+      state.seriesScoreA = score.scoreA;
+      state.seriesScoreB = score.scoreB;
+      if (seriesComplete) {
+        state.status = 'series_complete';
+        state.seriesComplete = true;
+      }
+      db.prepare('UPDATE draft_rooms SET config_json=?, state_json=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?')
+        .run(JSON.stringify(config), JSON.stringify(state), seriesComplete ? 'series_complete' : room.status, room.id);
+      io.to(`draft:${room.room_code}`).emit('draft:state', state);
+    }
+
+    addSystemMessage(match.id, `🔧 Host adjusted Game ${targetGameNumber} result: ${winnerName} won. Series score: ${match.team_a_name} ${score.scoreA} - ${score.scoreB} ${match.team_b_name}.${reason ? ` Reason: ${reason}` : ''} Later-game picks, bans and Divine cards were kept.`);
+    let payload = {
+      success: true,
+      gameNumber: targetGameNumber,
+      scoreA: score.scoreA,
+      scoreB: score.scoreB,
+      seriesComplete,
+    };
+    if (seriesComplete) payload = finalizeSeriesFromVerifiedGames(req, payload);
+    emitBracketUpdated(match.tournament_id);
+    const updatedMatch = draftMatchContext(match.id);
+    emitMatchUpdated(updatedMatch);
+    res.json({ ...payload, match: updatedMatch });
+  } catch (error) {
+    res.status(error.status || 400).json({ error: clientErrorMessage(error) });
+  }
+});
 
 app.post('/api/matches/:matchId/games/current/report', authRequired, emailVerifiedRequired, requireMatchAccess, (req, res) => {
   try {
@@ -2672,9 +3009,18 @@ app.post('/api/matches/:matchId/games/current/report', authRequired, emailVerifi
       .run(winnerTeamId, req.user.id, reportingTeamId, game.id);
     db.prepare(`UPDATE matches SET result_status='game_confirmation',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
     const winnerName = winnerTeamId === Number(match.team_a_id) ? match.team_a_name : match.team_b_name;
+    if (opposingCaptainIsMock(match, reportingTeamId)) {
+      db.prepare(`UPDATE match_games SET result_status='confirmed',confirmed_by_user_id=?,confirmed_by_team_id=NULL,confirmed_at=CURRENT_TIMESTAMP,dispute_reason='',updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+        .run(req.user.id, game.id);
+      const payload = applyConfirmedCurrentGameWinner(req, match, game, winnerSide);
+      addSystemMessage(match.id, `${req.user.display_name} reported ${winnerName} as the winner of Game ${game.game_number}. Mock opponent auto-confirmed.`);
+      emitMatchUpdated(draftMatchContext(match.id));
+      return res.json({ ...payload, autoConfirmed: true });
+    }
     addSystemMessage(match.id, `${req.user.display_name} reported ${winnerName} as the winner of Game ${game.game_number}. Waiting for the opposing Captain.`);
     emitBracketUpdated(match.tournament_id);
-    res.json({ game: currentMatchGame(match), waitingForTeamId: reportingTeamId === Number(match.team_a_id) ? Number(match.team_b_id) : Number(match.team_a_id) });
+    emitMatchUpdated(draftMatchContext(match.id));
+    res.json({ game: currentMatchGame(match), waitingForTeamId: reportingTeamId === Number(match.team_a_id) ? Number(match.team_b_id) : Number(match.team_a_id), autoConfirmed: false });
   } catch (error) {
     res.status(error.status || 400).json({ error: clientErrorMessage(error) });
   }
@@ -2696,24 +3042,17 @@ app.post('/api/matches/:matchId/games/current/confirm', authRequired, emailVerif
     const comment = String(req.body.comment || '').trim();
     if (decision === 'reject') {
       if (!comment) return res.status(400).json({ error: 'A reason is required when rejecting a game result.' });
-      transaction(() => {
-        db.prepare(`UPDATE match_games SET result_status='disputed',confirmed_by_user_id=?,confirmed_by_team_id=?,confirmed_at=CURRENT_TIMESTAMP,dispute_reason=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-          .run(req.user.id, confirmingTeamId, comment, game.id);
-        const existing = db.prepare(`SELECT id FROM disputes WHERE match_id=? AND status IN ('open','under_review','recommended') ORDER BY id DESC LIMIT 1`).get(match.id);
-        if (!existing) db.prepare(`INSERT INTO disputes(match_id,opened_by_user_id,opened_by_team_id,status,reason) VALUES (?,?,?,'open',?)`)
-          .run(match.id, req.user.id, confirmingTeamId, `Game ${game.game_number}: ${comment}`);
-        db.prepare(`UPDATE matches SET result_status='disputed',match_status='paused',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
-      });
-      addSystemMessage(match.id, `Game ${game.game_number} result was rejected. The series is paused for review.`);
+      db.prepare(`UPDATE match_games SET result_status='none',reported_winner_team_id=NULL,reported_by_user_id=NULL,reported_by_team_id=NULL,reported_at=NULL,confirmed_by_user_id=NULL,confirmed_by_team_id=NULL,confirmed_at=NULL,dispute_reason=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+        .run(comment, game.id);
+      db.prepare(`UPDATE matches SET result_status='none',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
+      addSystemMessage(match.id, `Game ${game.game_number} result was rejected. Both Captains may report the winner again.`);
       emitBracketUpdated(match.tournament_id);
-      return res.json({ disputed: true, game: currentMatchGame(match) });
+      emitMatchUpdated(draftMatchContext(match.id));
+      return res.json({ reopened: true, disputed: false, game: currentMatchGame(match) });
     }
     db.prepare(`UPDATE match_games SET result_status='confirmed',confirmed_by_user_id=?,confirmed_by_team_id=?,confirmed_at=CURRENT_TIMESTAMP,dispute_reason='',updated_at=CURRENT_TIMESTAMP WHERE id=?`)
       .run(req.user.id, confirmingTeamId, game.id);
-    req.body.winnerSide = sideForWinnerTeam(match, game.reported_winner_team_id);
-    let payload = recordDraftGameWinner(req, req.body.winnerSide, { expectedGameNumber: game.game_number });
-    if (!payload.seriesComplete) db.prepare(`UPDATE matches SET result_status='none',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
-    payload = finalizeSeriesFromVerifiedGames(req, payload);
+    const payload = applyConfirmedCurrentGameWinner(req, match, game, sideForWinnerTeam(match, game.reported_winner_team_id));
     addSystemMessage(match.id, `Game ${game.game_number} result confirmed by both sides.`);
     res.json(payload);
   } catch (error) {
@@ -2730,7 +3069,8 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
   let access;
   if (!room) {
     const tournament = db.prepare('SELECT source_platform FROM tournaments WHERE id=?').get(match.tournament_id);
-    if (tournament?.source_platform !== 'quick_draft') {
+    const isMockTournament = tournamentHasMockPlayers(match.tournament_id);
+    if (tournament?.source_platform !== 'quick_draft' && !isMockTournament) {
       const checkins = db.prepare(`SELECT actor_id FROM match_checkins WHERE match_id=? AND actor_type='team' AND status='ready'`).all(match.id);
       const checkedTeamIds = new Set(checkins.map(item => Number(item.actor_id)));
       if (!checkedTeamIds.has(Number(match.team_a_id)) || !checkedTeamIds.has(Number(match.team_b_id))) {
@@ -2796,6 +3136,7 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
       roomMode: 'bandai-tool',
       roomCode: match.room_code || '',
       gameRollId: newDraftGameRollId(),
+      mockAutoOpponent: tournamentHasMockPlayers(match.tournament_id),
     };
     const gameRollId = config.gameRollId;
     const result = db.prepare(`INSERT INTO draft_rooms(match_id,room_code,config_json,state_json,access_json,created_by) VALUES (?,?,?,?,?,?)`)
@@ -2834,7 +3175,8 @@ function canDirectlyRecordDraftGame(req) {
   if (tournament?.source_platform === 'quick_draft') {
     return hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control');
   }
-  return hasTournamentPermission(req.user.id, req.match.tournament_id, 'result.verify');
+  return hasTournamentPermission(req.user.id, req.match.tournament_id, 'result.verify')
+    || hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control');
 }
 
 app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMatchAccess, (req, res) => {
@@ -2842,7 +3184,21 @@ app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMa
   try {
     const match = draftMatchContext(req.match.id);
     const game = currentMatchGame(match);
-    assertCurrentGameReadyForReport(match, game);
+    
+    // Allow force mode for emergency situations where draft state is stuck
+    const forceMode = req.body.force === true && hasTournamentPermission(req.user.id, req.match.tournament_id, 'draft.control');
+    
+    if (!forceMode) {
+      assertCurrentGameReadyForReport(match, game);
+    } else {
+      console.log('[FORCE_GAME_RESULT] Host forcing game result', { 
+        matchId: match.id, 
+        userId: req.user.id, 
+        gameNumber: game.game_number,
+        engineState: jsonParse(db.prepare('SELECT state_json FROM draft_rooms WHERE match_id=?').get(match.id)?.state_json || '{}')?.engine?.state
+      });
+    }
+    
     if (Number(req.body.gameNumber) !== Number(game.game_number)) {
       return res.status(409).json({ error: `Game ${req.body.gameNumber || '?'} is stale; reload Game ${game.game_number} before recording a result.` });
     }
@@ -2853,11 +3209,15 @@ app.post('/api/matches/:matchId/draft-room/game-result', authRequired, requireMa
       .run(winnerTeamId, req.user.id, req.user.id, game.id);
     db.prepare(`UPDATE disputes SET status='resolved',resolved_by_user_id=?,resolution_note='Administrative game result override',resolved_at=CURRENT_TIMESTAMP WHERE match_id=? AND status IN ('open','under_review','recommended')`)
       .run(req.user.id, match.id);
-    let payload = recordDraftGameWinner(req, winnerSide, { expectedGameNumber: req.body.gameNumber });
-    if (!payload.seriesComplete) db.prepare(`UPDATE matches SET result_status='none',match_status='drafting',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
-    payload = finalizeSeriesFromVerifiedGames(req, payload);
+    const payload = applyConfirmedCurrentGameWinner(req, match, game, winnerSide);
     res.json(payload);
   } catch (error) {
+    console.log('[GAME_RESULT_ERROR] Error recording game result', { 
+      matchId: req.match.id, 
+      userId: req.user?.id, 
+      error: error.message, 
+      status: error.status 
+    });
     res.status(error.status || 400).json({ error: clientErrorMessage(error) });
   }
 });
@@ -2936,6 +3296,41 @@ app.post('/api/public/draft-rooms/:roomCode/game-result',(req,res)=>{
     res.json(payload);
   }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
 });
+app.post('/api/public/draft-rooms/:roomCode/room-code', (req, res) => {
+  const room = db.prepare(`SELECT dr.*, m.id as match_id, m.tournament_id, m.team_a_name, m.team_b_name, t.source_platform FROM draft_rooms dr LEFT JOIN matches m ON m.id=dr.match_id LEFT JOIN tournaments t ON t.id=m.tournament_id WHERE dr.room_code=?`)
+    .get(String(req.params.roomCode || '').toUpperCase());
+  if (!room) return res.status(404).json({ error: 'Draft room not found.' });
+  const accessToken = String(req.body.accessToken || '');
+  const role = resolveDraftRole(room, accessToken);
+  if (!['host', 'teamA', 'teamB'].includes(role || '')) {
+    return res.status(403).json({ error: 'Only Team Captains or Host can set the game room code.' });
+  }
+  const code = String(req.body.roomCode || '').trim();
+  if (code.length > 80) return res.status(400).json({ error: 'Room code cannot exceed 80 characters.' });
+
+  if (room.match_id) {
+    db.prepare('UPDATE matches SET room_code=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').run(code, room.match_id);
+    db.prepare("UPDATE match_games SET room_code=? WHERE match_id=? AND status <> 'completed'").run(code, room.match_id);
+  }
+
+  const config = jsonParse(room.config_json);
+  config.roomCode = code;
+  db.prepare('UPDATE draft_rooms SET config_json=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').run(JSON.stringify(config), room.id);
+  io.to(`draft:${room.room_code}`).emit('draft:room_code', { roomCode: code });
+
+  if (room.match_id) {
+    const senderName = role === 'teamA' ? (room.team_a_name || 'Team A') : role === 'teamB' ? (room.team_b_name || 'Team B') : 'Host';
+    if (code) {
+      addSystemMessage(room.match_id, `🎮 ${senderName} sent game room code: ${code}`);
+    } else {
+      addSystemMessage(room.match_id, `Game room code was cleared.`);
+    }
+  }
+  if (room.tournament_id) {
+    emitBracketUpdated(room.tournament_id);
+  }
+  res.json({ success: true, roomCode: code });
+});
 app.get('/api/public/draft-rooms/:roomCode',(_req,res)=>res.status(405).json({error:'Use POST access exchange; credentials are not accepted in URL query strings.'}));
 
 // Realtime
@@ -2956,8 +3351,8 @@ function validSocketObject(value,maxBytes=32*1024){
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   try{return Buffer.byteLength(JSON.stringify(value),'utf8')<=maxBytes;}catch{return false;}
 }
-function hasOnlyKeys(value,allowed){
-  return validSocketObject(value)&&Object.keys(value).every(key=>allowed.has(key));
+function hasOnlyKeys(value,allowed,maxBytes=32*1024){
+  return validSocketObject(value,maxBytes)&&Object.keys(value).every(key=>allowed.has(key));
 }
 function validRoomCode(value){return /^[A-Z0-9_-]{4,32}$/.test(String(value||'').toUpperCase());}
 function validHeroId(value){return /^[A-Za-z0-9_-]{1,80}$/.test(String(value||''));}
@@ -3020,10 +3415,10 @@ function validDraftEventPayload(payload){
   return false;
 }
 function validDraftStatePayload(payload){
-  if(!hasOnlyKeys(payload,DRAFT_STATE_KEYS)||!validRoomCode(payload.roomCode)||!validSocketObject(payload.state,96*1024))return false;
+  if(!hasOnlyKeys(payload,DRAFT_STATE_KEYS,128*1024)||!validRoomCode(payload.roomCode)||!validSocketObject(payload.state,96*1024))return false;
   const state=payload.state;
-  if(!hasOnlyKeys(state,STATE_KEYS))return false;
-  if(state.engine!==undefined&&(!validSocketObject(state.engine,48*1024)||!hasOnlyKeys(state.engine,ENGINE_STATE_KEYS)))return false;
+  if(!hasOnlyKeys(state,STATE_KEYS,96*1024))return false;
+  if(state.engine!==undefined&&(!validSocketObject(state.engine,48*1024)||!hasOnlyKeys(state.engine,ENGINE_STATE_KEYS,48*1024)))return false;
   if(state.chosenDivineRules!==undefined&&(!Array.isArray(state.chosenDivineRules)||state.chosenDivineRules.length>20))return false;
   if(state.hostBannedHeroIds!==undefined&&(!Array.isArray(state.hostBannedHeroIds)||state.hostBannedHeroIds.length>100||!state.hostBannedHeroIds.every(validHeroId)))return false;
   if(state.preDraft!==undefined&&!validSocketObject(state.preDraft,32*1024))return false;
@@ -3250,10 +3645,24 @@ io.on('connection',socket=>{
   });
 
   socket.on('draft:state',(payload={})=>{
-    if(!permitSocketEvent(socket)||!validDraftStatePayload(payload))return rejectSocketPayload(socket,'draft:state');
+    if(!permitSocketEvent(socket)||!validDraftStatePayload(payload)){
+      console.log('[DRAFT:STATE_REJECTED] Invalid payload or rate limit', { socketId: socket.id, userId: socket.user?.id });
+      return rejectSocketPayload(socket,'draft:state');
+    }
     const room=findDraftRoom(payload.roomCode);
     const authority=room?draftAuthority(room.room_code):null;
-    if(!room||socket.data.draftRoomId!==room.id||!authority||socket.id!==authority.socketId)return;
+    if(!room||socket.data.draftRoomId!==room.id||!authority||socket.id!==authority.socketId){
+      console.log('[DRAFT:STATE_REJECTED] Authority check failed', { 
+        socketId: socket.id, 
+        userId: socket.user?.id, 
+        hasRoom: !!room, 
+        draftRoomId: socket.data.draftRoomId, 
+        roomId: room?.id, 
+        hasAuthority: !!authority, 
+        authoritySocketId: authority?.socketId 
+      });
+      return;
+    }
     const safe=payload.state;
     const status=sanitizeText(safe.status||room.status,40);
     const config=jsonParse(room.config_json);
@@ -3265,7 +3674,25 @@ io.on('connection',socket=>{
       ||(Number(safe.preDraft.gameNumber)===stateGameNumber
         &&safe.preDraft.gameRollId===safe.gameRollId
         &&(!safe.preDraft.divine||(Number(safe.preDraft.divine.gameNumber)===stateGameNumber&&safe.preDraft.divine.gameRollId===safe.gameRollId)));
+    
     if(!match||!Number.isInteger(stateGameNumber)||stateGameNumber!==configGameNumber||stateGameNumber!==Number(match.current_game_number||1)||!stateRollMatches||!preDraftRollMatches){
+      console.log('[DRAFT:STATE_REJECTED] Stale state check failed', { 
+        socketId: socket.id, 
+        userId: socket.user?.id, 
+        hasMatch: !!match, 
+        stateGameNumber, 
+        configGameNumber, 
+        matchGameNumber: match?.current_game_number, 
+        stateRollMatches, 
+        preDraftRollMatches,
+        stateGameRollId: safe.gameRollId,
+        configGameRollId: config.gameRollId,
+        preDraftGameNumber: safe.preDraft?.gameNumber,
+        preDraftGameRollId: safe.preDraft?.gameRollId,
+        divineGameNumber: safe.preDraft?.divine?.gameNumber,
+        divineGameRollId: safe.preDraft?.divine?.gameRollId,
+        engineState: safe.engine?.state
+      });
       socket.emit('draft:error',{message:`Stale Draft state ignored. This room is on Game ${Number(match?.current_game_number||configGameNumber)}.`});
       socket.emit('draft:state',jsonParse(room.state_json));
       return;

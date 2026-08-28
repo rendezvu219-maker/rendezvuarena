@@ -263,4 +263,115 @@ function listTestSuites() {
   });
 }
 
-module.exports = { consumeDevAccessCode, createTestSuite, listTestSuites, cleanupTestSuite };
+async function seedMock32Players(tournamentId) {
+  const tournament = db.prepare('SELECT * FROM tournaments WHERE id=?').get(tournamentId);
+  if (!tournament) throw new Error('Tournament not found.');
+
+  const passwordHash = await hashPassword('MockPassword123!');
+  const suffix = Date.now().toString(36);
+  let seeded = 0;
+
+  transaction(() => {
+    for (let i = 1; i <= 31; i++) {
+      const isCaptain = i <= 7;
+      const username = `solo_bot_${i}_${suffix}`.slice(0, 60);
+      const displayName = `Solo Bot ${i} ${isCaptain ? '★' : ''}`.trim();
+      const email = `${username}@mock.local`;
+      const requestedRole = isCaptain ? 'captain' : 'player';
+
+      const userRes = db.prepare(`INSERT INTO users(username,email,display_name,password_hash,role,is_active,email_verified_at)
+        VALUES (?,?,?,?,'player',1,CURRENT_TIMESTAMP)`).run(username, email, displayName, passwordHash);
+      const userId = Number(userRes.lastInsertRowid);
+
+      db.prepare(`INSERT INTO tournament_join_requests(
+        tournament_id,user_id,requested_role,status,gamer_tag,message,created_at,updated_at
+      ) VALUES (?,?,?,'approved',?,'Mock Solo Player',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`)
+        .run(tournamentId, userId, requestedRole, `BOT#${1000 + i}`);
+      seeded++;
+    }
+  });
+
+  return { success: true, count: seeded, message: `Successfully seeded ${seeded} mock players (7 captains + 24 players) into Solo Pool!` };
+}
+
+function autoCheckinOtherTeams(tournamentId) {
+  const matches = db.prepare(`SELECT * FROM matches WHERE tournament_id=? AND result_status != 'final'`).all(tournamentId);
+  let checkinCount = 0;
+  transaction(() => {
+    matches.forEach(match => {
+      [match.team_a_id, match.team_b_id].forEach(teamId => {
+        if (!teamId) return;
+        db.prepare(`INSERT INTO match_checkins(match_id,actor_type,actor_id,status,checked_in_at)
+          VALUES (?,'team',?,'ready',CURRENT_TIMESTAMP)
+          ON CONFLICT(match_id,actor_type,actor_id) DO UPDATE SET status='ready',checked_in_at=CURRENT_TIMESTAMP`)
+          .run(match.id, String(teamId));
+        checkinCount++;
+      });
+      if (match.team_a_id && match.team_b_id) {
+        db.prepare(`UPDATE matches SET status='ready',match_status='ready',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
+      }
+    });
+  });
+  return { success: true, count: checkinCount, message: `Auto checked-in all mock teams for all active matches!` };
+}
+
+function cleanupMockData(tournamentId) {
+  let cleanedCount = 0;
+  transaction(() => {
+    const mockJoinRequests = db.prepare(`SELECT jr.id, jr.user_id FROM tournament_join_requests jr
+      JOIN users u ON u.id=jr.user_id
+      WHERE jr.tournament_id=? AND (u.username LIKE 'solo_bot_%' OR u.username LIKE '%_bot_%' OR u.username LIKE 'mock_%')`).all(tournamentId);
+    
+    mockJoinRequests.forEach(req => {
+      db.prepare('DELETE FROM tournament_join_requests WHERE id=?').run(req.id);
+      db.prepare('DELETE FROM team_members WHERE user_id=?').run(req.user_id);
+      db.prepare('DELETE FROM users WHERE id=?').run(req.user_id);
+      cleanedCount++;
+    });
+
+    db.prepare(`DELETE FROM teams WHERE tournament_id=? AND formation_source='solo_randomizer'`).run(tournamentId);
+    db.prepare(`DELETE FROM matches WHERE tournament_id=?`).run(tournamentId);
+    db.prepare(`UPDATE tournaments SET status='preparing', updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(tournamentId);
+  });
+  return { success: true, cleanedUsers: cleanedCount, message: 'Cleaned up all mock bot data and reset solo bracket!' };
+}
+
+async function create32PlayerTournament(hostUserId) {
+  const suffix = Date.now().toString(36);
+  const slug = `rendezvu-32p-demo-${suffix}`;
+  const name = 'RendezVu 32-Player Demo Championship';
+  const rules = {
+    structure: 'single',
+    playoffBestOf: 3,
+    grandFinalBestOf: 3,
+    timerSeconds: 30,
+    heroBans: 2,
+    divineBans: 0,
+    draftStyle: 'standard',
+    mirrorPickMode: 'none',
+    enableCoinFlip: true,
+    enableDivineDraw: true,
+    divineDrawMode: 'random',
+    cinematicLockIn: true,
+  };
+  const startAt = new Date().toISOString();
+  const res = db.prepare(`INSERT INTO tournaments(
+      host_user_id,name,slug,description,status,timezone,default_server,start_at,schedule_mode,
+      source_platform,source_url,source_external_id,source_metadata_json,source_sync_status,is_public,rules_json
+    ) VALUES (?,?,?,?,'preparing','Asia/Ho_Chi_Minh','Asia',?,'fixed_tournament_start','custom','','','{}','ready',1,?)`)
+    .run(hostUserId, name, slug, 'Auto-generated 32-player tournament for testing', startAt, JSON.stringify(rules));
+  const tournamentId = Number(res.lastInsertRowid);
+  const tournament = db.prepare('SELECT * FROM tournaments WHERE id=?').get(tournamentId);
+  return { success: true, tournament };
+}
+
+module.exports = {
+  consumeDevAccessCode,
+  createTestSuite,
+  listTestSuites,
+  cleanupTestSuite,
+  seedMock32Players,
+  autoCheckinOtherTeams,
+  cleanupMockData,
+  create32PlayerTournament,
+};

@@ -96,6 +96,7 @@ export class DraftUI {
 
   missingDraftEntrants() {
     if (!(this.sync instanceof DraftRoomSync)) return [];
+    if (this.config.mockAutoOpponent === true) return [];
     if (this.roomRole === 'teamA') return this.draftPresence.teamB > 0 ? [] : [this.entrant('teamB').name];
     if (this.roomRole === 'teamB') return this.draftPresence.teamA > 0 ? [] : [this.entrant('teamA').name];
     return ['teamA', 'teamB'].filter(role => !(this.draftPresence[role] > 0)).map(role => this.entrant(role).name);
@@ -267,6 +268,7 @@ export class DraftUI {
     if (!action) return false;
     if (!this.sync) return true;
     if (this.roomRole === 'host') return true;
+    if (this.config.mockAutoOpponent === true) return true;
     if (this.roomRole === 'teamA' || this.roomRole === 'teamB') return action.team === this.sideForRole(this.roomRole);
     return false;
   }
@@ -516,7 +518,8 @@ export class DraftUI {
     const now = Date.now();
     if (!force && now - this.lastStatePublish < 1000) return;
     this.lastStatePublish = now;
-    this.sync.publishState({
+    
+    const statePayload = {
       status: this.engine.state,
       gameNumber: Number(this.config.gameNumber || 1),
       gameRollId: this.gameRollId,
@@ -524,7 +527,21 @@ export class DraftUI {
       chosenDivineRules: this.chosenDivineRules,
       hostBannedHeroIds: this._allRandomBannedIds || [],
       preDraft: this.preDraftState || undefined,
+    };
+    
+    console.log('[PUBLISH_ROOM_STATE] Publishing state', {
+      isAuthoritativeHost: this.isAuthoritativeHost,
+      engineState: this.engine.state,
+      gameNumber: statePayload.gameNumber,
+      gameRollId: statePayload.gameRollId,
+      configGameRollId: this.config.gameRollId,
+      hasPreDraft: !!statePayload.preDraft,
+      preDraftGameNumber: statePayload.preDraft?.gameNumber,
+      preDraftGameRollId: statePayload.preDraft?.gameRollId,
+      force
     });
+    
+    this.sync.publishState(statePayload);
   }
 
   renderDivineHeader() {
@@ -781,7 +798,8 @@ export class DraftUI {
       // Highlight a dedicated action instead; the Host opens it when the game actually ends.
       this.seriesControlOverlay?.classList.add('hidden');
       if (this.seriesControlButton) {
-        this.seriesControlButton.textContent = t('gameFinishedSetWinner');
+        const isCaptain = this.roomRole === 'teamA' || this.roomRole === 'teamB';
+        this.seriesControlButton.textContent = isCaptain ? 'DRAFT COMPLETE — RETURN TO PORTAL' : t('gameFinishedSetWinner');
         this.seriesControlButton.classList.remove('hidden');
         this.seriesControlButton.classList.add('needs-attention');
       }
@@ -1380,12 +1398,18 @@ if (this.engine.selectedHero === h.id) {
   }
 
   actorTeamKey(fromRole, data = {}) {
-    if (fromRole === 'teamA' || fromRole === 'teamB') return fromRole;
+    if (fromRole === 'teamA' || fromRole === 'teamB') {
+      if (this.config.mockAutoOpponent && data.teamKey) return data.teamKey;
+      return fromRole;
+    }
     return data.teamKey === 'teamB' ? 'teamB' : data.teamKey === 'teamA' ? 'teamA' : null;
   }
 
   actorSide(fromRole, data = {}) {
-    if (fromRole === 'teamA' || fromRole === 'teamB') return this.sideForRole(fromRole);
+    if (fromRole === 'teamA' || fromRole === 'teamB') {
+      if (this.config.mockAutoOpponent && data.teamSide) return data.teamSide;
+      return this.sideForRole(fromRole);
+    }
     return data.teamSide === 'B' ? 'B' : data.teamSide === 'A' ? 'A' : null;
   }
 
@@ -1592,7 +1616,7 @@ if (this.engine.selectedHero === h.id) {
   }
 
   canActAsEntrant(teamKey) {
-    return this.roomRole === 'host' || this.roomRole === teamKey;
+    return this.roomRole === 'host' || this.roomRole === teamKey || Boolean(this.config.mockAutoOpponent);
   }
 
   renderCoinFlow() {
@@ -2076,6 +2100,9 @@ if (this.engine.selectedHero === h.id) {
     this.seriesControlButton?.addEventListener('click', () => this.showSeriesControl());
     document.getElementById('series-winner-a')?.addEventListener('click', () => this.recordGameWinner('A'));
     document.getElementById('series-winner-b')?.addEventListener('click', () => this.recordGameWinner('B'));
+    document.getElementById('series-confirm-result')?.addEventListener('click', () => this.confirmTournamentGameResult('confirm'));
+    document.getElementById('series-reject-result')?.addEventListener('click', () => this.confirmTournamentGameResult('reject'));
+    document.getElementById('report-result-error')?.addEventListener('click', () => this.reportResultErrorToHost());
   }
 
   seriesRuleDescription() {
@@ -2103,8 +2130,52 @@ if (this.engine.selectedHero === h.id) {
     return 'NORMAL series rule is active. Heroes may be picked again in later games.';
   }
 
+  isTournamentSeries() {
+    return Boolean(this.sync && this.config.matchId && !this.config.quickDraft);
+  }
+
+  canHostRecordTournamentGame() {
+    return this.roomRole === 'host';
+  }
+
+  canCaptainReportTournamentGame() {
+    return this.roomRole === 'teamA' || this.roomRole === 'teamB';
+  }
+
+  ownCaptainTeamId() {
+    if (this.roomRole === 'teamA') return Number(this.config.teamAId || 0);
+    if (this.roomRole === 'teamB') return Number(this.config.teamBId || 0);
+    return 0;
+  }
+
+  currentSeriesGame(gameData = this.seriesGameData) {
+    const games = Array.isArray(gameData?.games) ? gameData.games : [];
+    const current = Number(gameData?.currentGameNumber || this.config.gameNumber || 1);
+    return games.find(item => Number(item.game_number) === current) || games.at(-1) || null;
+  }
+
   showSeriesControl({ seriesComplete = false } = {}) {
     if (!this.seriesControlOverlay) return;
+    this.renderSeriesControlOverlay({ seriesComplete, gameData: this.seriesGameData });
+    this.seriesControlButton?.classList.add('hidden');
+    this.seriesControlButton?.classList.remove('needs-attention');
+    document.querySelector('.action-bar')?.classList.remove('result-ready');
+    this.seriesControlOverlay.classList.remove('hidden');
+    if (this.isTournamentSeries() && !seriesComplete) this.refreshSeriesGameReport();
+  }
+
+  async refreshSeriesGameReport() {
+    if (!this.config.matchId) return;
+    try {
+      this.seriesGameData = await api(`/api/matches/${this.config.matchId}/games`);
+      this.renderSeriesControlOverlay({
+        seriesComplete: Boolean(this.seriesGameData.seriesComplete),
+        gameData: this.seriesGameData,
+      });
+    } catch {}
+  }
+
+  renderSeriesControlOverlay({ seriesComplete = false, gameData = null } = {}) {
     this.updateSeriesScoreDisplay();
     const gameNumber = Math.max(1, Number(this.config.gameNumber || 1));
     const kicker = document.getElementById('series-control-kicker');
@@ -2113,74 +2184,224 @@ if (this.engine.selectedHero === h.id) {
     const buttonA = document.getElementById('series-winner-a');
     const buttonB = document.getElementById('series-winner-b');
     const openOps = document.getElementById('series-open-ops');
-    const tournamentSeries = Boolean(this.sync && this.config.matchId && !this.config.quickDraft);
-    const canRecord = this.isAuthoritativeHost && !seriesComplete && !tournamentSeries;
+    const confirmBtn = document.getElementById('series-confirm-result');
+    const rejectBtn = document.getElementById('series-reject-result');
+    const reportErrorBtn = document.getElementById('report-result-error');
+    const tournamentSeries = this.isTournamentSeries();
+    const currentGame = this.currentSeriesGame(gameData);
+    const awaiting = currentGame?.result_status === 'awaiting_confirmation';
+    const ownTeamId = this.ownCaptainTeamId();
+    const reportedByOwnTeam = awaiting && ownTeamId && Number(currentGame.reported_by_team_id) === ownTeamId;
+    const canConfirmOpponent = awaiting && this.canCaptainReportTournamentGame() && !reportedByOwnTeam;
+    const hostCanRecord = tournamentSeries && this.canHostRecordTournamentGame() && !seriesComplete;
+    const captainCanReport = tournamentSeries && this.canCaptainReportTournamentGame() && !seriesComplete && !awaiting;
+    const localCanRecord = !tournamentSeries && this.isAuthoritativeHost && !seriesComplete;
+    const canRecord = hostCanRecord || captainCanReport || localCanRecord;
 
     if (kicker) kicker.textContent = seriesComplete ? 'BO SERIES COMPLETE' : `GAME ${gameNumber} DRAFT COMPLETE`;
-    if (title) title.textContent = seriesComplete ? 'SERIES SCORE VERIFIED' : tournamentSeries ? t('playGameThenReportTitle') : 'RECORD GAME WINNER';
+    if (title) {
+      title.textContent = seriesComplete
+        ? 'SERIES SCORE VERIFIED'
+        : canConfirmOpponent
+          ? 'CONFIRM GAME RESULT'
+          : reportedByOwnTeam
+            ? 'WAITING FOR CONFIRMATION'
+            : hostCanRecord || localCanRecord
+              ? 'RECORD GAME WINNER'
+              : captainCanReport
+                ? 'REPORT GAME WINNER'
+                : t('playGameThenReportTitle');
+    }
     if (rule) rule.textContent = seriesComplete
       ? `${this.teamForSide('A').name} ${this.scoreForSide('A')} - ${this.scoreForSide('B')} ${this.teamForSide('B').name}. The confirmed game results already form the official match result.`
-      : tournamentSeries
-        ? `${this.seriesRuleDescription()} ${t('tournamentGameReportDesc')}`
-        : this.seriesRuleDescription();
+      : this.seriesRuleDescription();
 
     [buttonA, buttonB].forEach(button => {
       if (!button) return;
       button.disabled = !canRecord;
       button.classList.toggle('is-view-only', !canRecord);
+      button.classList.toggle('hidden', canConfirmOpponent || reportedByOwnTeam);
     });
-    if (buttonA?.querySelector('em')) buttonA.querySelector('em').textContent = canRecord ? `${this.teamForSide('A').name} WON THIS GAME` : tournamentSeries ? 'CAPTAINS REPORT IN PORTAL' : 'VIEW ONLY';
-    if (buttonB?.querySelector('em')) buttonB.querySelector('em').textContent = canRecord ? `${this.teamForSide('B').name} WON THIS GAME` : tournamentSeries ? 'CAPTAINS REPORT IN PORTAL' : 'VIEW ONLY';
+    const recordLabel = hostCanRecord || localCanRecord ? 'WON THIS GAME' : 'REPORT WINNER';
+    if (buttonA?.querySelector('em')) buttonA.querySelector('em').textContent = canRecord ? `${this.teamForSide('A').name} ${recordLabel}` : tournamentSeries ? 'CAPTAINS REPORT OR HOST CONFIRMS' : 'VIEW ONLY';
+    if (buttonB?.querySelector('em')) buttonB.querySelector('em').textContent = canRecord ? `${this.teamForSide('B').name} ${recordLabel}` : tournamentSeries ? 'CAPTAINS REPORT OR HOST CONFIRMS' : 'VIEW ONLY';
+
+    confirmBtn?.classList.toggle('hidden', !canConfirmOpponent);
+    rejectBtn?.classList.toggle('hidden', !canConfirmOpponent);
+    
+    // Show error reporting button for captains when there are completed games
+    const hasCompletedGames = Array.isArray(gameData?.games) && gameData.games.some(g => g.status === 'completed' || g.result_status === 'awaiting_confirmation');
+    reportErrorBtn?.classList.toggle('hidden', !hasCompletedGames || !this.canCaptainReportTournamentGame());
 
     if (this.seriesControlStatus) {
       this.seriesControlStatus.className = `series-control-status${seriesComplete ? ' success' : ''}`;
       this.seriesControlStatus.textContent = seriesComplete
         ? 'The series is final because every game result was confirmed before the next Draft opened.'
-        : tournamentSeries
-          ? t('playGameThenReportNext', { game: gameNumber, nextGame: gameNumber + 1 })
-          : canRecord
-            ? 'After the game finishes, click the winning team. The score and next draft game will update automatically.'
-            : 'Only the Quick Draft authority can record the local game winner.';
+        : canConfirmOpponent
+          ? 'Confirm the reported winner, or reject it so both Captains can report again.'
+          : reportedByOwnTeam
+            ? 'Waiting for the opposing Captain to confirm this game result.'
+            : hostCanRecord
+              ? 'After the game finishes, click the winning team. Host confirmation records the point and opens the next game immediately.'
+              : captainCanReport
+                ? this.config.mockAutoOpponent
+                  ? 'Report the winner. The mock opponent will auto-confirm and the next game will open.'
+                  : 'Report the winner. The opposing Captain must confirm before Game 2 opens.'
+                : localCanRecord
+                  ? 'After the game finishes, click the winning team. The score and next draft game will update automatically.'
+                  : 'Only the Host or a Captain can record this game result.';
     }
-    if (openOps && this.config.matchId) {
-      openOps.href = this.roomRole === 'host' ? `/dashboard.html?tournamentId=${encodeURIComponent(this.config.tournamentId || '')}` : '/portal.html';
-      openOps.textContent = this.roomRole === 'host' ? 'OPEN TOURNAMENT OPS' : 'OPEN PLAYER PORTAL';
+    if (openOps) {
+      const isHost = this.roomRole === 'host' && this.config.mockAutoOpponent !== true;
+      openOps.href = isHost ? `/dashboard.html?tournamentId=${encodeURIComponent(this.config.tournamentId || '')}` : '/portal.html';
+      openOps.textContent = isHost ? 'OPEN TOURNAMENT OPS' : 'RETURN TO PLAYER PORTAL';
+      openOps.className = 'btn btn-primary btn-sm';
+      openOps.classList.remove('hidden');
     }
-    openOps?.classList.toggle('hidden', !this.config.matchId || (!tournamentSeries && !seriesComplete));
-    this.seriesControlButton?.classList.add('hidden');
-    this.seriesControlButton?.classList.remove('needs-attention');
-    document.querySelector('.action-bar')?.classList.remove('result-ready');
-    this.seriesControlOverlay.classList.remove('hidden');
   }
 
   setSeriesControlsBusy(busy) {
-    ['series-winner-a', 'series-winner-b'].forEach(id => {
+    ['series-winner-a', 'series-winner-b', 'series-confirm-result', 'series-reject-result'].forEach(id => {
       const button = document.getElementById(id);
       if (button) button.disabled = Boolean(busy);
     });
   }
 
-  async recordGameWinner(side) {
-    if (!this.isAuthoritativeHost) return;
-    if (this.sync && this.config.matchId && !this.config.quickDraft) {
-      if (this.seriesControlStatus) {
-        this.seriesControlStatus.className = 'series-control-status';
-        this.seriesControlStatus.textContent = 'Tournament games are reported by Captains in Player Portal, not from Draft Room.';
-      }
-      return;
+  applyTournamentGamePayload(payload) {
+    this.config.seriesScoreA = Number(payload.scoreA || this.config.seriesScoreA || 0);
+    this.config.seriesScoreB = Number(payload.scoreB || this.config.seriesScoreB || 0);
+    this.updateSeriesScoreDisplay();
+    if (payload.seriesComplete) {
+      this.showSeriesControl({ seriesComplete: true });
+      return true;
     }
+    if (payload.nextGameNumber || payload.nextDraftUrl) {
+      if (this.seriesControlStatus) {
+        this.seriesControlStatus.className = 'series-control-status success';
+        this.seriesControlStatus.textContent = `Score saved. Loading Game ${payload.nextGameNumber} with ${String(this.config.seriesRule).replaceAll('_', ' ')} history…`;
+      }
+      setTimeout(() => {
+        if (payload.nextDraftUrl) window.location.assign(payload.nextDraftUrl);
+        else window.location.reload();
+      }, 900);
+      return true;
+    }
+    return false;
+  }
+
+  async confirmTournamentGameResult(decision) {
+    if (!this.isTournamentSeries() || !this.canCaptainReportTournamentGame()) return;
+    if (decision === 'reject' && !window.confirm('Reject this result so both Captains can report again?')) return;
+    this.setSeriesControlsBusy(true);
+    try {
+      const payload = await api(`/api/matches/${this.config.matchId}/games/current/confirm`, {
+        method: 'POST',
+        body: { decision, comment: decision === 'reject' ? 'Báo sai kết quả, yêu cầu vote lại' : undefined },
+      });
+      if (decision === 'reject') {
+        this.setSeriesControlsBusy(false);
+        await this.refreshSeriesGameReport();
+        if (this.seriesControlStatus) {
+          this.seriesControlStatus.className = 'series-control-status';
+          this.seriesControlStatus.textContent = 'Result rejected. Both Captains may report the winner again.';
+        }
+        return;
+      }
+      this.applyTournamentGamePayload(payload);
+    } catch (error) {
+      this.setSeriesControlsBusy(false);
+      if (this.seriesControlStatus) {
+        this.seriesControlStatus.className = 'series-control-status error';
+        this.seriesControlStatus.textContent = error.message || String(error);
+      }
+    }
+  }
+
+  async reportResultErrorToHost() {
+    if (!this.isTournamentSeries() || !this.canCaptainReportTournamentGame()) return;
+    
+    const errorDetails = prompt('Describe the error (wrong winner, incorrect score, etc.):');
+    if (!errorDetails) return;
+    
+    this.setSeriesControlsBusy(true);
+    try {
+      // Send error report via match chat first
+      await api(`/api/matches/${this.config.matchId}/chat`, {
+        method: 'POST',
+        body: { message: `⚠️ ERROR REPORT: ${errorDetails} - Please review Game ${this.config.gameNumber || 1} result. Reported by ${this.roomRole === 'teamA' ? this.config.teamA : this.config.teamB}.` }
+      });
+      
+      // Try to get tournament Discord URL for additional reporting
+      try {
+        const tournamentInfo = await api(`/api/tournaments/${this.config.tournamentId}`);
+        const discordUrl = tournamentInfo.discord_url;
+        
+        if (discordUrl) {
+          if (this.seriesControlStatus) {
+            this.seriesControlStatus.className = 'series-control-status success';
+            this.seriesControlStatus.innerHTML = `Error reported to chat. <a href="${discordUrl}" target="_blank" style="color:#4ade80;text-decoration:underline;">Also report in Discord ↗</a>`;
+          }
+        } else {
+          if (this.seriesControlStatus) {
+            this.seriesControlStatus.className = 'series-control-status success';
+            this.seriesControlStatus.textContent = 'Error reported to match chat. Host will review.';
+          }
+        }
+      } catch {
+        // If we can't get tournament info, just use chat
+        if (this.seriesControlStatus) {
+          this.seriesControlStatus.className = 'series-control-status success';
+          this.seriesControlStatus.textContent = 'Error reported to match chat. Host will review.';
+        }
+      }
+    } catch (error) {
+      this.setSeriesControlsBusy(false);
+      if (this.seriesControlStatus) {
+        this.seriesControlStatus.className = 'series-control-status error';
+        this.seriesControlStatus.textContent = 'Failed to report error: ' + (error.message || String(error));
+      }
+    } finally {
+      this.setSeriesControlsBusy(false);
+    }
+  }
+
+  async recordGameWinner(side) {
+    const tournamentSeries = this.isTournamentSeries();
+    const hostCanRecord = tournamentSeries && this.canHostRecordTournamentGame();
+    const captainCanReport = tournamentSeries && this.canCaptainReportTournamentGame();
+    if (!this.isAuthoritativeHost && !hostCanRecord && !captainCanReport) return;
     const visualSide = side === 'B' ? 'B' : 'A';
     const winnerEntrantKey = entrantForSide(this.sideAssignment, visualSide);
     const winnerSideForApi = winnerEntrantKey === 'teamB' ? 'B' : 'A';
     const teamName = this.teamForSide(visualSide).name;
-    if (!window.confirm(`Record ${teamName} as the winner of Game ${this.config.gameNumber || 1}?`)) return;
+    const prompt = hostCanRecord || !tournamentSeries
+      ? `Record ${teamName} as the winner of Game ${this.config.gameNumber || 1}?`
+      : `Report ${teamName} as the winner of Game ${this.config.gameNumber || 1}?`;
+    if (!window.confirm(prompt)) return;
     this.setSeriesControlsBusy(true);
     if (this.seriesControlStatus) {
       this.seriesControlStatus.className = 'series-control-status';
-      this.seriesControlStatus.textContent = 'Saving the game winner and preparing the next draft…';
+      this.seriesControlStatus.textContent = hostCanRecord || !tournamentSeries
+        ? 'Saving the game winner and preparing the next draft…'
+        : 'Submitting the game report…';
     }
 
     try {
+      if (tournamentSeries && captainCanReport && !hostCanRecord) {
+        const payload = await api(`/api/matches/${this.config.matchId}/games/current/report`, {
+          method: 'POST',
+          body: { winnerSide: winnerSideForApi },
+        });
+        if (payload.autoConfirmed && this.applyTournamentGamePayload(payload)) return;
+        this.setSeriesControlsBusy(false);
+        await this.refreshSeriesGameReport();
+        if (this.seriesControlStatus) {
+          this.seriesControlStatus.className = 'series-control-status';
+          this.seriesControlStatus.textContent = 'Game result reported. Waiting for the opposing Captain to confirm.';
+        }
+        return;
+      }
+
       if (this.sync && this.config.matchId) {
         const quickSharedRoom = this.config.quickDraft === true && this.sync instanceof DraftRoomSync;
         const endpoint = quickSharedRoom
@@ -2192,21 +2413,7 @@ if (this.engine.selectedHero === h.id) {
           // temporary Blue / Red placement selected after the coin toss.
           body: { winnerSide: winnerSideForApi, gameNumber: Number(this.config.gameNumber || 1), ...(quickSharedRoom ? { accessToken: this.sync.accessToken } : {}) },
         });
-        this.config.seriesScoreA = Number(payload.scoreA || 0);
-        this.config.seriesScoreB = Number(payload.scoreB || 0);
-        this.updateSeriesScoreDisplay();
-        if (payload.seriesComplete) {
-          this.showSeriesControl({ seriesComplete: true });
-          return;
-        }
-        if (this.seriesControlStatus) {
-          this.seriesControlStatus.className = 'series-control-status success';
-          this.seriesControlStatus.textContent = `Score saved. Loading Game ${payload.nextGameNumber} with ${String(this.config.seriesRule).replaceAll('_', ' ')} history…`;
-        }
-        setTimeout(() => {
-          if (payload.nextDraftUrl) window.location.assign(payload.nextDraftUrl);
-          else window.location.reload();
-        }, 900);
+        if (this.applyTournamentGamePayload(payload)) return;
         return;
       }
 

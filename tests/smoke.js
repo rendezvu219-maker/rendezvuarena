@@ -284,14 +284,15 @@ function accessFromFragment(url) {
     });
     assert(chat.message.sender_role === 'captain', 'Captain Match Chat should be authenticated by account.');
 
-    // A rejected per-game report opens the dispute before evidence can be uploaded.
+    // A rejected per-game report reopens the game so both Captains can report again.
     hostSocket.socket.emit('draft:state', {
       roomCode: draft.room.roomCode,
       state: { status: 'complete', gameNumber: 2, gameRollId: nextDraft.room.config.gameRollId, engine: { state: 'complete', gameNumber: 2, teamA: { picks: ['0003'], bans: [] }, teamB: { picks: ['0004'], bans: [] } }, chosenDivineRules: [] },
     });
     await new Promise(resolve => setTimeout(resolve, 150));
     await request(`/api/matches/${draftMatch.id}/games/current/report`, { token: draftTeamAToken, method: 'POST', body: { winnerSide: 'A' } });
-    await request(`/api/matches/${draftMatch.id}/games/current/confirm`, { token: draftTeamBToken, method: 'POST', body: { decision: 'reject', comment: 'The recorded Game 2 winner is incorrect.' } });
+    const rejected = await request(`/api/matches/${draftMatch.id}/games/current/confirm`, { token: draftTeamBToken, method: 'POST', body: { decision: 'reject', comment: 'The recorded Game 2 winner is incorrect.' } });
+    assert(rejected.reopened && rejected.game.result_status === 'none', 'Rejecting a game report should reopen it for a fresh vote.');
     const fileText = Buffer.from('evidence test', 'utf8');
     const upload = await request(`/api/matches/${draftMatch.id}/files`, {
       token: draftTeamAToken,

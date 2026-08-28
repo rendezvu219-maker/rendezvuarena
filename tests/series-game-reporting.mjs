@@ -262,6 +262,10 @@ try {
   assert.match(portalSource, /games\/current\/confirm/);
   assert.match(dashboardSource, /draft-room\/game-result/);
   assert.match(dashboardSource, /can\('result\.verify'\)/);
+  assert.match(dashboardSource, /ops-edit-game-winner/);
+  const appSource = fs.readFileSync(path.join(root, 'js', 'app.js'), 'utf8');
+  assert.match(appSource, /games\/current\/report/);
+  assert.doesNotMatch(appSource, /Tournament games are reported by Captains in Player Portal, not from Draft Room/);
   assert.match(css, /width:min\(1760px,calc\(100vw - 24px\)\)/);
   assert.match(css, /portal-settings-grid[\s\S]*grid-template-areas/);
 

@@ -10,7 +10,7 @@
 <link href="css/variables.css" rel="stylesheet"/>
 <link href="css/base.css" rel="stylesheet"/>
 <link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
-<link href="css/draft.css?v=0.6.38-coin-side-divine-1" rel="stylesheet"/>
+<link href="css/draft.css?v=0.6.40-fixed-controls-1" rel="stylesheet"/>
 <link href="css/animations.css" rel="stylesheet"/>
 <link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
 </head>
@@ -55,80 +55,96 @@
 <div class="side-choice-panel hidden" id="side-choice-panel"><strong data-i18n="winnerChoosesSide" id="side-choice-title">WINNER CHOOSES SIDE</strong><div class="side-choice-actions"><button class="btn btn-blue btn-lg" data-i18n="chooseBlue" data-side-choice="A" type="button">CHOOSE BLUE</button><button class="btn btn-red btn-lg" data-i18n="chooseRed" data-side-choice="B" type="button">CHOOSE RED</button></div></div>
 <div class="coin-result-text" id="coin-result-text"></div>
 </div>
-</div>
-<!-- Step 2: Divine Draw (Random Roulette OR Pick/Ban) -->
+</div><!-- Step 2: Divine Draw (Random Roulette OR Pick/Ban) -->
 <div class="pre-draft-modal pre-draft-modal-wide hidden" id="divine-draw-screen">
-<h2 class="pre-draft-title" data-i18n="divineDrawPhase">✦ DIVINE DRAW PHASE ✦</h2>
-<p class="pre-draft-desc" data-i18n="twoDivineRules" id="divine-draw-mode-desc">Two divine rules will be drawn for this match.</p>
-<!-- Roulette mode container -->
-<div class="divine-roulette-container hidden" id="divine-roulette-container">
-<div class="divine-reel" id="divine-reel"></div>
+  <h2 class="pre-draft-title" data-i18n="divineDrawPhase">✦ DIVINE DRAW PHASE ✦</h2>
+  <p class="pre-draft-desc" data-i18n="twoDivineRules" id="divine-draw-mode-desc">Two divine rules will be drawn for this match.</p>
+  <!-- Roulette mode container -->
+  <div class="divine-roulette-container hidden" id="divine-roulette-container">
+    <div class="divine-reel" id="divine-reel"></div>
+  </div>
+  <!-- Pick/Ban mode container -->
+  <div class="divine-cards-container" id="divine-cards-container"></div>
+  <div id="divine-draw-status" style="font-weight:bold; margin-top:16px; color:var(--interactive-primary); min-height:24px;"></div>
+  <div class="divine-actions hidden" id="divine-actions" style="margin-top:24px">
+    <button class="btn btn-primary btn-lg" data-i18n="proceedDraft" id="btn-start-pickban">PROCEED TO DRAFT</button>
+  </div>
 </div>
-<!-- Pick/Ban mode container -->
-<div class="divine-cards-container" id="divine-cards-container"></div>
-<div id="divine-draw-status" style="font-weight:bold; margin-top:16px; color:var(--interactive-primary); min-height:24px;"></div>
-<div class="divine-actions hidden" id="divine-actions" style="margin-top:24px">
-<button class="btn btn-primary btn-lg" data-i18n="proceedDraft" id="btn-start-pickban">PROCEED TO DRAFT</button>
 </div>
-</div>
-</div>
+
 <!-- Game / Series Control: shown after a ban-pick finishes -->
 <div class="series-control-overlay hidden" id="series-control-overlay">
-<section aria-labelledby="series-control-title" aria-modal="true" class="series-control-modal" role="dialog">
-<button aria-label="Minimize game result controls" class="series-control-close" data-i18n-aria-label="minimizeControls" id="series-control-close" type="button">—</button>
-<div class="series-control-kicker" data-i18n="game1DraftComplete" id="series-control-kicker">GAME 1 DRAFT COMPLETE</div>
-<h2 data-i18n="recordGameWinner" id="series-control-title">RECORD GAME WINNER</h2>
-<p class="series-control-rule" data-i18n="afterGameRule" id="series-control-rule">After the game finishes, select the winning team. The next Fearless draft will load automatically.</p>
-<div class="series-scoreboard">
-<button class="series-team series-team-a" id="series-winner-a" type="button">
-<span data-no-i18n="true" id="series-team-a-name">TEAM A</span>
-<strong id="series-team-a-score">0</strong>
-<em data-i18n="teamAWonStatic">TEAM A WON THIS GAME</em>
-</button>
-<div class="series-score-vs"><span data-i18n="boSeries">BO SERIES</span><b data-no-i18n="true">VS</b></div>
-<button class="series-team series-team-b" id="series-winner-b" type="button">
-<strong id="series-team-b-score">0</strong>
-<span data-no-i18n="true" id="series-team-b-name">TEAM B</span>
-<em data-i18n="teamBWonStatic">TEAM B WON THIS GAME</em>
-</button>
+  <section aria-labelledby="series-control-title" aria-modal="true" class="series-control-modal" role="dialog">
+    <button aria-label="Minimize game result controls" class="series-control-close" data-i18n-aria-label="minimizeControls" id="series-control-close" type="button">—</button>
+    <div class="series-control-kicker" data-i18n="game1DraftComplete" id="series-control-kicker">GAME 1 DRAFT COMPLETE</div>
+    <h2 data-i18n="recordGameWinner" id="series-control-title">RECORD GAME WINNER</h2>
+    <p class="series-control-rule" data-i18n="afterGameRule" id="series-control-rule">After the game finishes, select the winning team. The next Fearless draft will load automatically.</p>
+    <div class="series-scoreboard">
+      <button class="series-team series-team-a" id="series-winner-a" type="button">
+        <span data-no-i18n="true" id="series-team-a-name">TEAM A</span>
+        <strong id="series-team-a-score">0</strong>
+        <em data-i18n="teamAWonStatic">TEAM A WON THIS GAME</em>
+      </button>
+      <div class="series-score-vs"><span data-i18n="boSeries">BO SERIES</span><b data-no-i18n="true">VS</b></div>
+      <button class="series-team series-team-b" id="series-winner-b" type="button">
+        <strong id="series-team-b-score">0</strong>
+        <span data-no-i18n="true" id="series-team-b-name">TEAM B</span>
+        <em data-i18n="teamBWonStatic">TEAM B WON THIS GAME</em>
+      </button>
+    </div>
+    <div class="series-control-status" id="series-control-status">Waiting for the Host to record the game winner.</div>
+    <div class="series-control-actions">
+      <button class="btn btn-primary btn-sm hidden" id="series-confirm-result" type="button">CONFIRM RESULT</button>
+      <button class="btn btn-danger btn-sm hidden" id="series-reject-result" type="button">REJECT / DISPUTE</button>
+      <button class="btn btn-ghost btn-sm hidden" id="report-result-error" type="button">⚠️ REPORT ERROR TO HOST</button>
+      <a class="btn btn-primary btn-sm hidden" href="/portal.html" id="series-open-ops">RETURN TO PLAYER PORTAL</a>
+    </div>
+  </section>
 </div>
-<div class="series-control-status" data-i18n="waitingHostWinner" id="series-control-status">Waiting for the Host to record the game winner.</div>
-<div class="series-control-actions">
-<a class="btn btn-ghost btn-sm hidden" data-i18n="openTournamentOps" href="/dashboard.html" id="series-open-ops">OPEN TOURNAMENT OPS</a>
-</div>
-</section>
-</div>
+
 <!-- Draft Header -->
 <header class="draft-header">
-<div class="header-team team-a" id="header-team-a">
-<span class="header-team-logo" id="header-team-a-logo"><img alt=""/><span data-no-i18n="true">TB</span></span>
-<span class="team-name" data-no-i18n="true" id="team-a-name">TEAM BLUE</span>
-<span class="team-score" id="team-a-score">0</span>
-</div>
-<div class="match-center">
-<div class="match-stage" data-i18n="fourVFourDraft" id="match-stage-text">4v4 DRAFT</div>
-<div aria-live="polite" class="draft-watch-presence hidden" data-i18n="hostWatchingReadOnly" id="draft-watch-presence">HOST IS WATCHING · READ ONLY</div>
-<div class="timer" id="draft-timer">30</div>
-<div class="phase-indicator" data-i18n="banPhase" id="phase-indicator">BAN PHASE</div>
-</div>
-<div class="header-team team-b" id="header-team-b">
-<span class="team-score" id="team-b-score">0</span>
-<span class="team-name" data-no-i18n="true" id="team-b-name">TEAM RED</span>
-<span class="header-team-logo" id="header-team-b-logo"><img alt=""/><span data-no-i18n="true">TR</span></span>
-</div>
-<div class="draft-header-tools"><div class="draft-access-badge" id="draft-access-badge" aria-live="polite" data-no-i18n="true">CONNECTING…</div><div class="header-divine-rules" id="header-divine-rules"></div><div class="gs-language-slot" data-language-slot="true"></div></div></header>
+  <div class="header-team team-a" id="header-team-a">
+    <span class="header-team-logo" id="header-team-a-logo"><img alt=""/><span data-no-i18n="true">TB</span></span>
+    <span class="team-name" data-no-i18n="true" id="team-a-name">TEAM BLUE</span>
+    <span class="team-score" id="team-a-score">0</span>
+  </div>
+  <div class="match-center">
+    <div class="match-stage" data-i18n="fourVFourDraft" id="match-stage-text">4v4 DRAFT</div>
+    <div aria-live="polite" class="draft-watch-presence hidden" data-i18n="hostWatchingReadOnly" id="draft-watch-presence">HOST IS WATCHING · READ ONLY</div>
+    <div class="timer" id="draft-timer">30</div>
+    <div class="phase-indicator" data-i18n="banPhase" id="phase-indicator">BAN PHASE</div>
+  </div>
+  <div class="header-team team-b" id="header-team-b">
+    <span class="team-score" id="team-b-score">0</span>
+    <span class="team-name" data-no-i18n="true" id="team-b-name">TEAM RED</span>
+    <span class="header-team-logo" id="header-team-b-logo"><img alt=""/><span data-no-i18n="true">TR</span></span>
+  </div>
+  <div class="draft-header-tools">
+    <div class="draft-room-code-bar" id="draft-room-code-bar" style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.12); padding:4px 12px; border-radius:4px; font-size:0.75rem;">
+      <span style="color:var(--text-muted); font-family:var(--font-display); letter-spacing:1px;">ROOM CODE:</span>
+      <strong id="draft-header-room-code" style="color:var(--interactive-primary); font-family:monospace; font-size:0.9rem; letter-spacing:1px;">NOT SENT</strong>
+      <button type="button" class="btn btn-ghost btn-xs" id="btn-copy-header-room-code" style="padding:2px 6px; font-size:0.65rem;" title="Copy room code">📋 COPY</button>
+      <button type="button" class="btn btn-ghost btn-xs hidden" id="btn-set-header-room-code" style="padding:2px 6px; font-size:0.65rem;" title="Set room code">✏️ SET CODE</button>
+    </div>
+    <div class="draft-access-badge" id="draft-access-badge" aria-live="polite" data-no-i18n="true">CONNECTING…</div>
+    <div class="header-divine-rules" id="header-divine-rules"></div>
+    <div class="gs-language-slot" data-language-slot="true"></div>
+  </div>
+</header>
+
 <!-- Chat Sidebar toggle button -->
 <button id="btn-toggle-chat" style="position:absolute;top:70px;right:0;z-index:200;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:6px 10px;font-size:0.7rem;letter-spacing:1px;cursor:pointer;border-radius:4px 0 0 4px;">💬</button>
+
 <!-- Draft Body + Chat -->
 <div class="draft-workspace">
-<div class="draft-body" id="draft-body" style="flex:1;">
-<div class="team-column team-a">
-<h3 class="column-title text-blue" data-i18n="picks">PICKS</h3>
-<div class="slot-group picks" id="team-a-picks"></div>
-<h3 class="column-title text-muted" data-i18n="bans">BANS</h3>
-<div class="bans-row" id="team-a-bans"></div>
-</div>
-<div class="center-column">
+  <div class="draft-body" id="draft-body" style="flex:1;">
+    <div class="team-column team-a">
+      <h3 class="column-title text-blue" data-i18n="picks">PICKS</h3>
+      <div class="slot-group picks" id="team-a-picks"></div>
+      <h3 class="column-title text-muted" data-i18n="bans">BANS</h3>
+      <div class="bans-row" id="team-a-bans"></div>
+    </div>
 <div class="hero-preview" id="preview-container">
 <div aria-hidden="true" class="preview-video-container" id="preview-video-container"><video id="preview-hero-video" muted="" playsinline="" preload="metadata"></video><img alt="" class="preview-hero-poster" id="preview-hero-poster" src=""/></div>
 <img alt="" class="preview-img" id="preview-hero-img" onerror="this.style.display='none'" src="" style="display:none"/>
@@ -245,7 +261,7 @@
 </div>
 </main>
 <script src="/socket.io/socket.io.js"></script>
-<script src="js/app.js?v=0.6.45-long-team-names" type="module"></script>
+<script src="js/app.js?v=0.6.47-captain-return-1" type="module"></script>
 <script src="js/i18n.js?v=0.6.36-vi-skill-master-1" type="module"></script>
 </body>
 </html>
