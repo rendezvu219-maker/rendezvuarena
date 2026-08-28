@@ -192,33 +192,46 @@ app.use('/api', (req, res, next) => {
 
 const staticOptions = {
   setHeaders(res) {
-    // Local deployments are commonly updated in-place. Force revalidation so
-    // an old heroes-page.js cannot keep posting the legacy three-card payload.
-    res.setHeader('Cache-Control', 'no-cache');
+    // Force no-cache for all environments to ensure updates are applied immediately
+    // This is especially important for Railway deployment to avoid proxy cache issues
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
   },
 };
-for (const folder of ['css', 'js', 'divine', 'trailers', 'assets']) app.use(`/${folder}`, express.static(path.join(root, folder), staticOptions));
-app.get('/', (_req, res) => res.sendFile(path.join(root, 'index.html')));
-app.get('/index.html', (_req, res) => res.sendFile(path.join(root, 'index.html')));
-app.get('/quick-draft.html', (_req, res) => res.sendFile(path.join(root, 'quick-draft.html')));
-app.get('/heroes.html', (_req, res) => res.sendFile(path.join(root, 'heroes.html')));
-app.get('/hero.html', (_req, res) => res.sendFile(path.join(root, 'heroes.html')));
-app.get('/draft-room.html', (_req, res) => res.sendFile(path.join(root, 'draft-room.html')));
-app.get('/broadcast.html', (_req, res) => res.sendFile(path.join(root, 'broadcast.html')));
-app.get('/auth.html', (_req, res) => res.sendFile(path.join(root, 'auth.html')));
-app.get('/host-apply.html', (_req, res) => res.sendFile(path.join(root, 'host-apply.html')));
-app.get('/dashboard.html', (_req, res) => res.sendFile(path.join(root, 'dashboard.html')));
-app.get('/portal.html', (_req, res) => res.sendFile(path.join(root, 'portal.html')));
-app.get('/profile.html', (_req, res) => res.sendFile(path.join(root, 'profile.html')));
-app.get('/public.html', (_req, res) => res.sendFile(path.join(root, 'public.html')));
-app.get('/join-tournament.html', (_req, res) => res.sendFile(path.join(root, 'join-tournament.html')));
+for (const folder of ['css', 'js', 'divine', 'trailers', 'assets']) {
+  app.use(`/${folder}`, express.static(path.join(root, folder), staticOptions));
+}
+const htmlCacheHeaders = (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+};
+
+app.get('/', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'index.html')));
+app.get('/index.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'index.html')));
+app.get('/quick-draft.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'quick-draft.html')));
+app.get('/heroes.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'heroes.html')));
+app.get('/hero.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'heroes.html')));
+app.get('/draft-room.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'draft-room.html')));
+app.get('/broadcast.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'broadcast.html')));
+app.get('/auth.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'auth.html')));
+app.get('/host-apply.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'host-apply.html')));
+app.get('/dashboard.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'dashboard.html')));
+app.get('/portal.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'portal.html')));
+app.get('/profile.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'profile.html')));
+app.get('/public.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'public.html')));
+app.get('/join-tournament.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'join-tournament.html')));
 for (const [route, file] of [
   ['/copyright', 'copyright.html'], ['/copyright.html', 'copyright.html'],
   ['/privacy', 'privacy.html'], ['/privacy.html', 'privacy.html'],
   ['/terms', 'terms.html'], ['/terms.html', 'terms.html'],
   ['/support-development', 'support-development.html'], ['/support-development.html', 'support-development.html'],
-]) app.get(route, (_req, res) => res.sendFile(path.join(root, file)));
-app.get('/dev-access.html', (_req, res) => {
+]) app.get(route, htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, file)));
+app.get('/dev-access.html', htmlCacheHeaders, (_req, res) => {
   if (isProduction && process.env.ENABLE_DEV_TEST_CONSOLE !== 'true') return res.status(404).send('Not found.');
   return res.sendFile(path.join(root, 'dev-access.html'));
 });
