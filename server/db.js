@@ -1000,6 +1000,17 @@ UPDATE teams SET captain_user_id = (
   WHERE tm.team_id = teams.id AND tm.is_captain = 1 AND tm.user_id IS NOT NULL
   ORDER BY tm.id LIMIT 1
 ) WHERE captain_user_id IS NULL;
+-- Repair legacy Captain flags after the canonical team pointer has been set.
+-- Keep empty Captain slots (user_id IS NULL) intact for future assignment.
+UPDATE team_members SET is_captain=0,
+  member_role=CASE WHEN member_role='captain' THEN 'player' ELSE member_role END,
+  updated_at=CURRENT_TIMESTAMP
+WHERE user_id IS NOT NULL
+  AND EXISTS (SELECT 1 FROM teams t WHERE t.id=team_members.team_id AND t.captain_user_id IS NOT NULL AND t.captain_user_id!=team_members.user_id)
+  AND (is_captain=1 OR member_role='captain');
+UPDATE team_members SET is_captain=1,member_role='captain',membership_status='active',is_substitute=0,updated_at=CURRENT_TIMESTAMP
+WHERE user_id IS NOT NULL
+  AND EXISTS (SELECT 1 FROM teams t WHERE t.id=team_members.team_id AND t.captain_user_id=team_members.user_id);
 UPDATE teams SET team_status = CASE
   WHEN team_status IN ('withdrawn','disqualified') THEN team_status
   WHEN captain_user_id IS NOT NULL THEN 'ready'

@@ -359,18 +359,9 @@ function addSystemMessage(matchId,message) {
   return saved;
 }
 function teamForCaptain(userId,teamId) {
-  const team = db.prepare(`SELECT * FROM teams WHERE id=? AND captain_user_id=? AND team_status NOT IN ('withdrawn','disqualified')`).get(teamId,userId);
-  if (team) return team;
-  
-  // Also check if user has captain role in team_members (fallback for captain role consistency)
-  const captainMember = db.prepare(`
-    SELECT t.* FROM teams t
-    JOIN team_members tm ON tm.team_id = t.id
-    WHERE t.id = ? AND tm.user_id = ? AND tm.member_role = 'captain' 
-    AND tm.is_captain = 1 AND tm.membership_status = 'active'
-    AND t.team_status NOT IN ('withdrawn','disqualified')
-  `).get(teamId, userId);
-  return captainMember;
+  // teams.captain_user_id is the canonical authority for Captain-only actions.
+  // A stale roster flag must never let a former Captain check in or control a match.
+  return db.prepare(`SELECT * FROM teams WHERE id=? AND captain_user_id=? AND team_status NOT IN ('withdrawn','disqualified')`).get(teamId,userId);
 }
 function assertCaptainRosterAccess(userId,teamId) {
   const team=teamForCaptain(userId,Number(teamId));
@@ -462,12 +453,14 @@ function syncTeamCaptain(teamId,user,{gamerTag=''}={}){
     memberToUse=placeholder;
   }
   
-  // First, remove captain role from the current captain only (not all members)
-  const currentCaptainId=currentTeam.captain_user_id;
-  if(currentCaptainId && Number(currentCaptainId)!==userId){
-    db.prepare(`UPDATE team_members SET is_captain=0, member_role='player', updated_at=CURRENT_TIMESTAMP 
-      WHERE team_id=? AND user_id=? AND is_captain=1`).run(teamId, currentCaptainId);
-  }
+  // Clear every stale Captain flag before promoting the selected roster entry.
+  // This also repairs teams created by older versions that left more than one
+  // Captain-marked row after a transfer.
+  db.prepare(`UPDATE team_members SET is_captain=0,
+    member_role=CASE WHEN member_role='captain' THEN 'player' ELSE member_role END,
+    updated_at=CURRENT_TIMESTAMP
+    WHERE team_id=? AND user_id IS NOT NULL AND user_id!=?
+      AND (is_captain=1 OR member_role='captain')`).run(teamId,userId);
   
   // Handle duplicate entries for the new captain
   if(allUserEntries.length>1){
@@ -2113,13 +2106,13 @@ app.get('/api/files/:fileId',authRequired,(req,res)=>{const file=fileRecord(Numb
 app.get('/api/portal',authRequired,(req,res)=>{
   // Find teams where user is either a team member OR the captain
   const teams=db.prepare(`SELECT DISTINCT t.*,tr.name tournament_name,tr.slug tournament_slug,tr.roster_lock_at tournament_roster_lock_at,
-    COALESCE(tm.member_role, 'captain') my_member_role,
-    COALESCE(tm.is_captain, 1) my_is_captain
+    CASE WHEN t.captain_user_id=? THEN 'captain' ELSE COALESCE(tm.member_role, 'player') END my_member_role,
+    CASE WHEN t.captain_user_id=? THEN 1 ELSE 0 END my_is_captain
     FROM teams t 
     JOIN tournaments tr ON tr.id=t.tournament_id 
     LEFT JOIN team_members tm ON tm.team_id=t.id AND tm.user_id=? AND tm.membership_status='active'
     WHERE tm.user_id=? OR t.captain_user_id=?
-    ORDER BY tr.updated_at DESC`).all(req.user.id, req.user.id, req.user.id);
+    ORDER BY tr.updated_at DESC`).all(req.user.id, req.user.id, req.user.id, req.user.id, req.user.id);
   const teamIds=teams.map(team=>team.id);let matches=[];
   if(teamIds.length){
     const placeholders=teamIds.map(()=>'?').join(',');

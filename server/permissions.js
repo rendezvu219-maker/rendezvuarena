@@ -37,22 +37,10 @@ function tournamentRoles(userId, tournamentId) {
   const staff = db.prepare('SELECT role, permissions_json FROM tournament_staff WHERE tournament_id = ? AND user_id = ?').all(tournamentId, userId);
   staff.forEach(item => roles.push(item.role));
 
-  // Check captain role via team captain_user_id or via team_members member_role
+  // teams.captain_user_id is the canonical Captain authority. Roster flags are
+  // presentation data and may be stale in databases created by older releases.
   const captain = db.prepare(`SELECT id FROM teams WHERE tournament_id = ? AND captain_user_id = ? AND team_status NOT IN ('withdrawn','disqualified') LIMIT 1`).get(tournamentId, userId);
-  if (captain) {
-    roles.push('captain');
-  } else {
-    // Also check if user has captain role in team_members
-    const captainMember = db.prepare(`
-      SELECT tm.id FROM team_members tm
-      JOIN teams t ON t.id = tm.team_id
-      WHERE t.tournament_id = ? AND tm.user_id = ? AND tm.member_role = 'captain' 
-      AND tm.is_captain = 1 AND tm.membership_status = 'active'
-      AND t.team_status NOT IN ('withdrawn','disqualified')
-      LIMIT 1
-    `).get(tournamentId, userId);
-    if (captainMember) roles.push('captain');
-  }
+  if (captain) roles.push('captain');
 
   return { roles: [...new Set(roles)], staff };
 }

@@ -52,6 +52,28 @@ try{
   assert.equal(flags.find(member=>Number(member.user_id)===oldCaptainId).is_captain,0);
   assert.equal(flags.find(member=>Number(member.user_id)===oldCaptainId).member_role,'player','A transfer must demote the former Captain roster role too.');
 
+  // Check-in must use the canonical teams.captain_user_id pointer, even if an
+  // old deployment left a stale Captain flag on the former Captain's roster row.
+  const checkinMatch=db.prepare(`SELECT id FROM matches
+    WHERE (team_a_id=? OR team_b_id=?) AND match_status='checkin_open' ORDER BY id LIMIT 1`).get(transferTeam.id,transferTeam.id);
+  assert.ok(checkinMatch,'The transfer team needs an open check-in match.');
+  const oldCaptain=suite.users.find(user=>Number(user.id)===oldCaptainId);
+  assert.ok(oldCaptain,'The former Captain test account is required.');
+  const nextCaptainToken=await tokenFromAccessUrl(nextCaptain.accessUrl);
+  const oldCaptainToken=await tokenFromAccessUrl(oldCaptain.accessUrl);
+  const checkinResponse=async token=>{
+    const response=await fetch(`${base}/api/matches/${checkinMatch.id}/checkin`,{
+      method:'POST',headers:{Authorization:`Bearer ${token}`,'X-CSRF-Token':'1','Content-Type':'application/json'},body:'{}',
+    });
+    return {response,payload:await response.json()};
+  };
+  const newCaptainCheckin=await checkinResponse(nextCaptainToken);
+  assert.equal(newCaptainCheckin.response.status,200,'The newly assigned Captain must be able to check in immediately.');
+  db.prepare("UPDATE team_members SET is_captain=1,member_role='captain' WHERE team_id=? AND user_id=?").run(transferTeam.id,oldCaptainId);
+  const formerCaptainCheckin=await checkinResponse(oldCaptainToken);
+  assert.equal(formerCaptainCheckin.response.status,403,'A stale former-Captain roster flag must not authorize check-in.');
+  db.prepare("UPDATE team_members SET is_captain=0,member_role='player' WHERE team_id=? AND user_id=?").run(transferTeam.id,oldCaptainId);
+
   const registrationData=await request(`/api/tournaments/${registration.id}`,{token:host});
   const openTeam=registrationData.teams.find(team=>!team.captain_user_id&&team.members.some(member=>member.is_captain&&!member.user_id));
   const placeholderBefore=db.prepare('SELECT id FROM team_members WHERE team_id=? AND is_captain=1 AND user_id IS NULL').get(openTeam.id);
