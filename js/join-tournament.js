@@ -114,7 +114,15 @@ function renderStatus(payload) {
   }
   if (request?.status === 'approved') {
     panel.className = 'join-account-status approved';
-    panel.innerHTML = `<span>${escapeHtml(t('approvedSoloPool', { count: 1 }) || 'APPROVED FOR SOLO POOL')}</span><h2>${escapeHtml(request.team_name || request.requested_team_name || t('soloSignupOption') || 'Solo Pool Registration')}</h2><p>${escapeHtml(t('soloAssignmentPending') || 'Your account is approved for the solo assignment pool. You will be assigned to a team when the Host forms teams.')}</p><a class="btn btn-primary" href="/portal.html">OPEN PLAYER & CAPTAIN PORTAL</a>`;
+    // If request has team_id or selected_member_id, show team-specific message
+    if (request.team_id || request.selected_member_id) {
+      panel.innerHTML = `<span>${escapeHtml(t('approvedSoloPool', { count: 1 }) || 'APPROVED')}</span><h2>${escapeHtml(request.team_name || request.requested_team_name || 'Team Registration')}</h2><p>${escapeHtml(request.team_name || request.requested_team_name 
+        ? 'Your account is approved for this team. Try accessing your team through the Player Portal.' 
+        : 'Your account is approved. Try accessing your team through the Player Portal.')}</p><a class="btn btn-primary" href="/portal.html">OPEN PLAYER & CAPTAIN PORTAL</a>`;
+    } else {
+      // Solo pool approval
+      panel.innerHTML = `<span>${escapeHtml(t('approvedSoloPool', { count: 1 }) || 'APPROVED FOR SOLO POOL')}</span><h2>${escapeHtml(request.team_name || request.requested_team_name || t('soloSignupOption') || 'Solo Pool Registration')}</h2><p>${escapeHtml(t('soloAssignmentPending') || 'Your account is approved for the solo assignment pool. You will be assigned to a team when the Host forms teams.')}</p><a class="btn btn-primary" href="/portal.html">OPEN PLAYER & CAPTAIN PORTAL</a>`;
+    }
     panel.classList.remove('hidden');
     return true;
   }
