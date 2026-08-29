@@ -359,7 +359,18 @@ function addSystemMessage(matchId,message) {
   return saved;
 }
 function teamForCaptain(userId,teamId) {
-  return db.prepare(`SELECT * FROM teams WHERE id=? AND captain_user_id=? AND team_status NOT IN ('withdrawn','disqualified')`).get(teamId,userId);
+  const team = db.prepare(`SELECT * FROM teams WHERE id=? AND captain_user_id=? AND team_status NOT IN ('withdrawn','disqualified')`).get(teamId,userId);
+  if (team) return team;
+  
+  // Also check if user has captain role in team_members (fallback for captain role consistency)
+  const captainMember = db.prepare(`
+    SELECT t.* FROM teams t
+    JOIN team_members tm ON tm.team_id = t.id
+    WHERE t.id = ? AND tm.user_id = ? AND tm.member_role = 'captain' 
+    AND tm.is_captain = 1 AND tm.membership_status = 'active'
+    AND t.team_status NOT IN ('withdrawn','disqualified')
+  `).get(teamId, userId);
+  return captainMember;
 }
 function assertCaptainRosterAccess(userId,teamId) {
   const team=teamForCaptain(userId,Number(teamId));
@@ -430,19 +441,60 @@ function existingTournamentMembership(userId, tournamentId) {
 function syncTeamCaptain(teamId,user,{gamerTag=''}={}){
   const userId=Number(user?.id);
   if(!Number.isInteger(userId)||userId<=0)throw new Error('A valid Captain account is required.');
-  const linked=db.prepare(`SELECT * FROM team_members WHERE team_id=? AND user_id=? ORDER BY membership_status='active' DESC,id LIMIT 1`).get(teamId,userId);
-  const placeholder=linked?null:db.prepare(`SELECT * FROM team_members WHERE team_id=? AND user_id IS NULL AND is_captain=1 ORDER BY id LIMIT 1`).get(teamId);
-  const member=linked||placeholder;
-  db.prepare(`UPDATE team_members SET is_captain=0,
-    member_role=CASE WHEN is_captain=1 OR member_role='captain' THEN 'player' ELSE member_role END,
-    updated_at=CURRENT_TIMESTAMP WHERE team_id=?`).run(teamId);
-  if(member){
-    if(placeholder)db.prepare(`UPDATE team_members SET user_id=?,display_name=?,gamer_tag=?,member_role='captain',membership_status='active',is_captain=1,is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-      .run(userId,user.display_name,String(gamerTag||user.gamer_tag||user.username||''),member.id);
-    else db.prepare(`UPDATE team_members SET member_role='captain',membership_status='active',is_captain=1,is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(member.id);
-  }else db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,membership_status,is_captain,is_substitute) VALUES (?,?,?,?,'captain','active',1,0)`)
-    .run(teamId,userId,user.display_name,String(gamerTag||user.gamer_tag||user.username||''));
-  db.prepare(`UPDATE teams SET captain_user_id=?,team_status='ready',status='approved',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(userId,teamId);
+  
+  // Get current team status to preserve it
+  const currentTeam=db.prepare('SELECT team_status,status,captain_user_id FROM teams WHERE id=?').get(teamId);
+  if(!currentTeam)throw new Error('Team not found.');
+  
+  // Find all entries for this user in the team (including duplicates)
+  const allUserEntries=db.prepare(`SELECT * FROM team_members WHERE team_id=? AND user_id=? ORDER BY membership_status='active' DESC,id`).all(teamId,userId);
+  
+  // Find placeholder captain entry (user_id IS NULL)
+  const placeholder=db.prepare(`SELECT * FROM team_members WHERE team_id=? AND user_id IS NULL AND is_captain=1 ORDER BY id LIMIT 1`).get(teamId);
+  
+  // Determine which entry to use as the captain
+  let memberToUse=null;
+  if(allUserEntries.length>0){
+    // Use the most recent active entry for this user
+    memberToUse=allUserEntries[0];
+  }else if(placeholder){
+    // Use placeholder if no user entry exists
+    memberToUse=placeholder;
+  }
+  
+  // First, remove captain role from the current captain only (not all members)
+  const currentCaptainId=currentTeam.captain_user_id;
+  if(currentCaptainId && Number(currentCaptainId)!==userId){
+    db.prepare(`UPDATE team_members SET is_captain=0, member_role='player', updated_at=CURRENT_TIMESTAMP 
+      WHERE team_id=? AND user_id=? AND is_captain=1`).run(teamId, currentCaptainId);
+  }
+  
+  // Handle duplicate entries for the new captain
+  if(allUserEntries.length>1){
+    // Keep only the most recent entry, delete duplicates
+    const entriesToDelete=allUserEntries.slice(1);
+    entriesToDelete.forEach(entry=>{
+      db.prepare(`DELETE FROM team_members WHERE id=?`).run(entry.id);
+    });
+  }
+  
+  if(memberToUse){
+    if(placeholder && !allUserEntries.length){
+      // Link user to placeholder
+      db.prepare(`UPDATE team_members SET user_id=?,display_name=?,gamer_tag=?,member_role='captain',membership_status='active',is_captain=1,is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+        .run(userId,user.display_name,String(gamerTag||user.gamer_tag||user.username||''),memberToUse.id);
+    }else{
+      // Update existing entry to captain
+      db.prepare(`UPDATE team_members SET member_role='captain',membership_status='active',is_captain=1,is_substitute=0,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(memberToUse.id);
+    }
+  }else{
+    // Create new captain entry
+    db.prepare(`INSERT INTO team_members(team_id,user_id,display_name,gamer_tag,member_role,membership_status,is_captain,is_substitute) VALUES (?,?,?,?,'captain','active',1,0)`)
+      .run(teamId,userId,user.display_name,String(gamerTag||user.gamer_tag||user.username||''));
+  }
+  
+  // Update team captain reference while preserving team status
+  db.prepare(`UPDATE teams SET captain_user_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(userId,teamId);
 }
 
 function soloRandomizerPool(tournamentId) {
