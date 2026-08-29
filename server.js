@@ -2111,9 +2111,15 @@ app.get('/api/files/:fileId',authRequired,(req,res)=>{const file=fileRecord(Numb
 
 // Player & Captain portal
 app.get('/api/portal',authRequired,(req,res)=>{
-  const teams=db.prepare(`SELECT DISTINCT t.*,tr.name tournament_name,tr.slug tournament_slug,tr.roster_lock_at tournament_roster_lock_at,tm.member_role my_member_role,tm.is_captain my_is_captain
-    FROM teams t JOIN tournaments tr ON tr.id=t.tournament_id JOIN team_members tm ON tm.team_id=t.id AND tm.user_id=? AND tm.membership_status='active'
-    ORDER BY tr.updated_at DESC`).all(req.user.id);
+  // Find teams where user is either a team member OR the captain
+  const teams=db.prepare(`SELECT DISTINCT t.*,tr.name tournament_name,tr.slug tournament_slug,tr.roster_lock_at tournament_roster_lock_at,
+    COALESCE(tm.member_role, 'captain') my_member_role,
+    COALESCE(tm.is_captain, 1) my_is_captain
+    FROM teams t 
+    JOIN tournaments tr ON tr.id=t.tournament_id 
+    LEFT JOIN team_members tm ON tm.team_id=t.id AND tm.user_id=? AND tm.membership_status='active'
+    WHERE tm.user_id=? OR t.captain_user_id=?
+    ORDER BY tr.updated_at DESC`).all(req.user.id, req.user.id, req.user.id);
   const teamIds=teams.map(team=>team.id);let matches=[];
   if(teamIds.length){
     const placeholders=teamIds.map(()=>'?').join(',');
@@ -2129,7 +2135,27 @@ app.get('/api/portal',authRequired,(req,res)=>{
       FROM team_members WHERE team_id IN (${placeholders}) ORDER BY team_id,is_captain DESC,id`).all(...teamIds);
     teams.forEach(team=>{
       const rosterVisible=team.formation_source!=='solo_randomizer'||matchedTeamIds.has(Number(team.id));
-      team.members=rosterVisible?members.filter(member=>Number(member.team_id)===Number(team.id)):[];
+      const teamMembers=members.filter(member=>Number(member.team_id)===Number(team.id));
+      
+      // For captains without team_members entry, create a temporary entry
+      if(teamMembers.length===0 && Number(team.captain_user_id)===Number(req.user.id)){
+        const captainUser=db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
+        if(captainUser){
+          teamMembers.push({
+            id:0,
+            team_id:team.id,
+            user_id:captainUser.id,
+            display_name:captainUser.display_name,
+            gamer_tag:captainUser.gamer_tag||captainUser.username,
+            member_role:'captain',
+            membership_status:'active',
+            is_captain:1,
+            is_substitute:0
+          });
+        }
+      }
+      
+      team.members=rosterVisible?teamMembers:[];
       team.rosterPrivate=!rosterVisible;
     });
   }

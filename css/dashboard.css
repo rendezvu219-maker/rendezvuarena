@@ -447,7 +447,7 @@ textarea:focus { border-color:var(--interactive-primary); }
 .ops-inline-action { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
 .ops-inline-action input,.ops-add-member-form input,.ops-add-member-form select,.member-edit-form input,.member-edit-form select { min-width:0; width:100%; padding:8px; border:1px solid rgba(255,255,255,.11); border-radius:5px; background:rgba(0,0,0,.38); color:#fff; }
 .ops-roster-editor-list { display:flex; flex-direction:column; gap:7px; }
-.member-edit-form { display:grid; grid-template-columns:minmax(120px,1fr) minmax(100px,.8fr) minmax(100px,.8fr) 105px auto auto auto; gap:6px; align-items:center; padding:8px; border:1px solid rgba(255,255,255,.06); border-radius:7px; background:rgba(255,255,255,.025); }
+.member-edit-form { display:grid; grid-template-columns:minmax(120px,1fr) minmax(100px,.8fr) minmax(100px,.8fr) 105px minmax(70px,1fr) minmax(70px,1fr) minmax(90px,1fr); gap:6px; align-items:center; padding:8px; border:1px solid rgba(255,255,255,.06); border-radius:7px; background:rgba(255,255,255,.025); }
 .ops-member-flags { color:var(--interactive-primary); font-size:.5rem; font-weight:900; white-space:nowrap; }
 .ops-add-member-form { display:grid; grid-template-columns:1fr 1fr 1fr 120px auto; gap:7px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,.07); }
 .ops-danger-zone { display:flex; align-items:center; justify-content:flex-end; gap:9px; margin-top:15px; padding:12px; border:1px solid rgba(255,80,100,.18); border-radius:8px; background:rgba(255,50,75,.035); }
