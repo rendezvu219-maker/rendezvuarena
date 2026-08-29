@@ -440,7 +440,7 @@ textarea:focus { border-color:var(--interactive-primary); }
 .ops-seed-row input[type="hidden"],.ops-seed-row textarea.hidden { display:none !important; }
 
 .ops-team-modal-card { width:min(1120px,97vw); }
-.ops-team-modal-grid { display:grid; grid-template-columns:minmax(0,.9fr) minmax(440px,1.1fr); gap:16px; padding-top:15px; }
+.ops-team-modal-grid { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:16px; padding-top:15px; }
 .ops-team-editor,.ops-roster-panel { padding:15px; border:1px solid rgba(255,255,255,.07); border-radius:9px; background:rgba(0,0,0,.2); }
 .ops-captain-panel { display:grid; gap:10px; margin-top:15px; padding:13px; border-left:3px solid var(--interactive-primary); background:rgba(255,215,0,.035); }
 .ops-captain-panel > div > b,.ops-danger-zone b { font-family:var(--font-display); color:var(--interactive-primary); font-size:.62rem; letter-spacing:1px; }
@@ -1578,5 +1578,131 @@ body { color: var(--text-primary); background-color: var(--surface-canvas); back
     grid-template-areas:
       "profile"
       "password";
+  }
+}
+/* =========================================================
+   FIX: Team Details Modal horizontal overflow
+   ========================================================= */
+
+.ops-team-modal-card {
+  width: min(1120px, calc(100vw - 32px));
+  max-width: 1120px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.ops-team-modal-grid {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+}
+
+.ops-team-editor,
+.ops-roster-panel {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Roster member row */
+.member-edit-form {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  grid-template-columns:
+    minmax(0, 1.3fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    90px
+    minmax(0, .8fr)
+    minmax(0, .8fr)
+    auto;
+}
+
+.member-edit-form > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.member-edit-form input,
+.member-edit-form select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Prevent long usernames/tags from forcing the row wider */
+.member-edit-form input,
+.member-edit-form select,
+.ops-member-flags {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Add-member form */
+.ops-add-member-form {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ops-add-member-form > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   Medium width: make roster rows 2 rows instead of overflowing
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .ops-team-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .member-edit-form {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr)
+      minmax(0, 1fr)
+      100px;
+  }
+
+  .member-edit-form > * {
+    min-width: 0;
+  }
+
+  .ops-member-flags {
+    grid-column: 1 / -1;
+  }
+}
+
+/* =========================================================
+   Small screens
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .ops-team-modal-card {
+    width: calc(100vw - 16px);
+  }
+
+  .ops-team-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .member-edit-form {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-member-flags {
+    grid-column: auto;
+  }
+
+  .ops-add-member-form {
+    grid-template-columns: 1fr;
   }
 }
