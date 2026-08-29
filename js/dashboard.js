@@ -183,13 +183,21 @@ function renderTeamModal(team){const terminal=['withdrawn','disqualified'].inclu
   $$('.add-from-solo-pool').forEach(button=>button.addEventListener('click',()=>addMemberFromSoloPool(team,button.dataset.requestId,button.dataset.displayName,button.dataset.gamerTag,button.dataset.role)));
   $$('.team-terminal-modal').forEach(button=>button.addEventListener('click',()=>setTeamTerminalFromModal(team,button.dataset.status)));
 }
-function memberEditorRow(member,disabled){
+function memberEditorRow(member,disabled,teamCaptainUserId){
   const transferCaptainBtn = (!member.is_captain && member.user_id) 
     ? `<button type="button" class="btn btn-primary btn-xs transfer-captain" data-member-id="${member.id}" data-member-name="${escapeHtml(member.display_name)}">MAKE CAPTAIN</button>` 
     : '';
   
-  const removeDisabled = member.is_captain ? 'disabled' : '';
-  const removeTitle = member.is_captain ? 'title="Transfer Captain before removing"' : '';
+  // Host/admin can remove any captain, but captains can only remove themselves after transferring
+  const isCurrentUserCaptain = teamCaptainUserId === state.user?.id;
+  const isCurrentMemberCaptain = member.is_captain;
+  const hasHostAdminPermissions = can('team.edit') || can('tournament.manage');
+  
+  // Only disable REMOVE if the member is captain AND current user is removing themselves AND they don't have host/admin permissions
+  const removeDisabled = (isCurrentMemberCaptain && isCurrentUserCaptain && !hasHostAdminPermissions) ? 'disabled' : '';
+  const removeTitle = (isCurrentMemberCaptain && isCurrentUserCaptain && !hasHostAdminPermissions) 
+    ? 'title="Transfer Captain before removing yourself or use Host/Admin permissions"' 
+    : '';
   
   const actionButtons = !disabled 
     ? `<button class="btn btn-ghost btn-xs">SAVE</button><button type="button" class="btn btn-danger btn-xs delete-member" data-member-id="${member.id}" data-captain="${Boolean(member.is_captain)}" ${removeDisabled} ${removeTitle}>REMOVE</button>${transferCaptainBtn}` 
@@ -215,7 +223,25 @@ async function assignCaptainFromModal(event,team){event.preventDefault();try{awa
 async function inviteCaptainFromModal(event,team){event.preventDefault();try{const payload=await api(`/api/tournaments/${state.activeId}/teams/${team.id}/captain/invite`,{method:'POST',body:{identity:$('#invite-captain-identity').value.trim()}});copyText(payload.inviteLink,'Captain invitation link copied.');}catch(error){toast(error.message,true);}}
 async function addMemberFromModal(event,team){event.preventDefault();try{const role=$('#new-member-role').value;await api(`/api/tournaments/${state.activeId}/teams/${team.id}/members`,{method:'POST',body:{displayName:$('#new-member-name').value.trim(),gamerTag:$('#new-member-tag').value.trim(),gameId:$('#new-member-game-id').value.trim(),memberRole:role,isSubstitute:role==='substitute'}});await reloadAndReopenTeam(team.id,'Roster member added.');}catch(error){toast(error.message,true);}}
 async function saveMember(event,team){event.preventDefault();const form=event.currentTarget;try{const role=form.querySelector('.member-role').value;await api(`/api/tournaments/${state.activeId}/teams/${team.id}/members/${form.dataset.memberId}`,{method:'PATCH',body:{displayName:form.querySelector('.member-display-name').value.trim(),gamerTag:form.querySelector('.member-gamer-tag').value.trim(),gameId:form.querySelector('.member-game-id').value.trim(),memberRole:role,isSubstitute:role==='substitute'}});await reloadAndReopenTeam(team.id,'Member updated.');}catch(error){toast(error.message,true);}}
-async function deleteMember(team,memberId,isCaptain){if(isCaptain)return toast('Transfer the Captain role before removing this member.',true);if(!confirm('Remove this member from the roster?'))return;try{await api(`/api/tournaments/${state.activeId}/teams/${team.id}/members/${memberId}`,{method:'DELETE'});await reloadAndReopenTeam(team.id,'Member removed.');}catch(error){toast(error.message,true);}}
+async function deleteMember(team,memberId,isCaptain){
+  // Host/admin can remove any captain, but captains can only remove themselves after transferring
+  const isCurrentUserCaptain = state.active?.team?.captain_user_id === state.user?.id;
+  const isRemovingCurrentCaptain = isCaptain && isCurrentUserCaptain;
+  const hasHostAdminPermissions = can('team.edit') || can('tournament.manage');
+  
+  // Only block if removing current captain AND user doesn't have host/admin permissions
+  if(isRemovingCurrentCaptain && !hasHostAdminPermissions){
+    return toast('Transfer the Captain role before removing yourself or use Host/Admin permissions.',true);
+  }
+  
+  if(!confirm('Remove this member from the roster?'))return;
+  try{
+    await api(`/api/tournaments/${state.activeId}/teams/${team.id}/members/${memberId}`,{method:'DELETE'});
+    await reloadAndReopenTeam(team.id,'Member removed.');
+  }catch(error){
+    toast(error.message,true);
+  }
+}
 async function transferCaptainFromModal(team,memberId,memberName){if(!confirm(`Transfer Captain control to ${memberName}? The current Captain will become a regular roster member.`))return;try{await api(`/api/tournaments/${state.activeId}/teams/${team.id}/captain/transfer`,{method:'POST',body:{memberId}});await reloadAndReopenTeam(team.id,'Captain control transferred.');}catch(error){toast(error.message,true);}}
 async function addMemberFromSoloPool(team,requestId,displayName,gamerTag,role){if(!confirm(`Add ${displayName} from solo pool to this team as ${role}?`))return;try{await api(`/api/tournaments/${state.activeId}/solo-pool/${requestId}/assign`,{method:'POST',body:{teamId:team.id}});await reloadAndReopenTeam(team.id,'Player added from solo pool.');}catch(error){await loadActiveTournament({quiet:true});if(state.openTeamId===team.id)openTeamModal(team.id);toast(error.message,true);}}
 async function addTempMemberFromModal(event,team){event.preventDefault();try{const role=$('#temp-member-role').value;await api(`/api/tournaments/${state.activeId}/teams/${team.id}/members`,{method:'POST',body:{displayName:$('#temp-member-name').value.trim(),gamerTag:$('#temp-member-tag').value.trim(),gameId:$('#temp-member-game-id').value.trim(),memberRole:role,isSubstitute:role==='substitute',mockData:true}});await reloadAndReopenTeam(team.id,'Temporary member added with mock data.');}catch(error){toast(error.message,true);}}
