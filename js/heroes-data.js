@@ -1,5 +1,49 @@
 // Automatically scraped hero detail database with approved final-state patch-note corrections.
 export const HEROES_DATA = {
+  "0041": {
+    "id": "0041",
+    "difficulty": "20",
+    "description": "An unrivaled warrior who uses refined Skills to obstruct foes and create attack openings.\nOverwhelm enemies in close-range combat, and vanquish evil with illuminating Finishers!",
+    "statsPath": "M 100.0 30.0 L 139.1 68.8 L 133.1 107.6 L 121.7 145.0 L 82.6 136.0 L 31.8 115.6 L 45.3 56.4 L 100.0 30.0",
+    "skills": [
+      {
+        "id": "passive1",
+        "type": "passive",
+        "name": "Honed Senses",
+        "desc": "An ability that enhances Rush Attacks.\nEvading enemy attacks just before they land with Vanishing Step turns Rush Attacks into powered-up attacks."
+      },
+      {
+        "id": "rush_attack1",
+        "type": "rush_attack",
+        "name": "Rush Attack",
+        "desc": "A physical attack.\nWhile Honed Senses is active, changes to powered-up energy blasts with increased range and DMG, and applies a debuff (status effect) to enemies hit.\nThe debuff varies based on the type of attack or Skill you evade that triggers Honed Senses.\n・Strike Attack: Applies Strike Defense Down.\n・Energy Wave: Applies Energy Defense Down.\n・Guaranteed Attack: Applies All Defense Down."
+      },
+      {
+        "id": "skill1",
+        "type": "skill",
+        "name": "Soul Strike",
+        "desc": "Kick up to 3 times in a set direction.\nCan be reactivated upon hitting an enemy (up to 2 times).\nThe kick changes with each reactivation.\nThe first and second kick apply Strike Attack Down to enemies hit, while the third launches them upward."
+      },
+      {
+        "id": "skill2",
+        "type": "skill",
+        "name": "Punisher Drive",
+        "desc": "Fire shockwave punches in a set direction.\nTargets one of the enemies hit, then moves behind them, dealing additional DMG with consecutive guaranteed attacks.\nWhile moving, creates a surrounding forcefield that applies High Pressure to enemies inside.\nStaggers any dashing enemies who touch the forcefield."
+      },
+      {
+        "id": "skill3",
+        "type": "skill",
+        "name": "Spirit Flare",
+        "desc": "Continuously release energy all around.\nApplies Energy Attack Down to enemies hit by the release.\nApplies No Skills/Attacks to enemies hit by the powerful, final blast.\nCan be used while attacking."
+      },
+      {
+        "id": "super_attack1",
+        "type": "super_attack",
+        "name": "Soul Punisher",
+        "desc": "Throw photons at a set location, causing a shockwave.\nCreates a luminous zone on impact where his Rush Attacks and powered-up attacks deal additional DMG, and applies Punished at set intervals to enemy heroes inside it.\nPunished enemy heroes take DMG after a set period upon leaving the zone, and Finisher KOs against those enemy heroes will play a special cutscene.\nMore Punished stacks increase DMG dealt upon leaving the zone and the total HP threshold to land a Finisher."
+      }
+    ]
+  },
   "0040": {
     "id": "0040",
     "difficulty": "20",

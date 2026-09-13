@@ -4,7 +4,15 @@ import { HEROES_DATA } from '../js/heroes-data.js';
 
 const ids = HEROES.map(hero => hero.id);
 assert.equal(new Set(ids).size, ids.length, 'Hero IDs must be unique.');
-assert.equal(HEROES.length, 40, 'Current roster should contain 40 heroes.');
+assert.equal(HEROES.length, 41, 'Current roster should contain 41 heroes.');
+
+const superGogeta = HEROES.find(hero => hero.id === '0041');
+assert.deepEqual(superGogeta, { id: '0041', name: 'Super Gogeta', role: 'Technical', isNew: true });
+const superGogetaData = HEROES_DATA['0041'];
+assert.equal(superGogetaData.difficulty, '20');
+assert.equal(superGogetaData.skills.length, 6);
+assert.equal(superGogetaData.skills[0].name, 'Honed Senses');
+assert.equal(superGogetaData.skills[5].name, 'Soul Punisher');
 
 const jiren = HEROES.find(hero => hero.id === '0040');
 assert.deepEqual(jiren, { id: '0040', name: 'Jiren (Full Power)', role: 'Tank', isNew: true });

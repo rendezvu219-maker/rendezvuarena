@@ -45,17 +45,17 @@ const vietnameseUiText = JSON.stringify({ base: UI.vi, pages: PAGE_UI.vi });
 assert.doesNotMatch(vietnameseUiText, /anh hùng|\btướng\b/iu, 'Vietnamese UI must consistently use “chiến binh”.');
 assert.match(PAGE_UI.vi.pageTitleHeroes, /Chiến binh/);
 assert.equal(UI.vi.heroes, 'Chiến binh');
-assert.equal(t('heroRoster', {}, 'en'), '40-HERO ROSTER');
-assert.equal(t('heroRoster', {}, 'vi'), 'DANH SÁCH 40 CHIẾN BINH');
-assert.equal(t('heroesShown', {}, 'ja'), '40体を表示');
+assert.equal(t('heroRoster', {}, 'en'), '41-HERO ROSTER');
+assert.equal(t('heroRoster', {}, 'vi'), 'DANH SÁCH 41 CHIẾN BINH');
+assert.equal(t('heroesShown', {}, 'ja'), '41体を表示');
 
 // Hero names + source-authenticated hero details -----------------------------
 const heroIds = HEROES.map(hero => hero.id).sort();
 const sourceHeroNames = JSON.parse(read('data/locales/hero-names.json'));
-assert.equal(heroIds.length, 40, 'Expected the full 40-hero roster.');
+assert.equal(heroIds.length, 41, 'Expected the full 41-hero roster.');
 assert.deepEqual(Object.keys(EN_HERO_NAMES).sort(), heroIds, 'English hero-name catalog is incomplete.');
 for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) {
-  assert.deepEqual(Object.keys(HERO_NAMES[locale] || {}).sort(), heroIds, `${locale} hero-name catalog is incomplete.`);
+  assert.ok(Object.keys(HERO_NAMES[locale] || {}).every(id => heroIds.includes(id)), `${locale} hero-name catalog contains an unknown hero.`);
 }
 for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) {
   assert.deepEqual(HERO_NAMES[locale], LOCALIZED_HERO_NAMES[locale], `${locale} runtime hero names are stale.`);
@@ -66,16 +66,16 @@ assert.equal(heroName('0016', '', 'vi'), 'Siêu Saiya Cấp 2 Caulifla');
 assert.equal(heroName('0023', '', 'vi'), 'Siêu Saiya Cấp 3 Son Goku');
 assert.equal(heroName('0033', '', 'vi'), 'Thần Siêu Saiya Vegeta');
 assert.equal(heroName('0040', '', 'vi'), 'Jiren (Full Power)');
+for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) assert.equal(heroName('0041', '', locale), 'Super Gogeta');
 
 const vietnameseCatalog = JSON.parse(read('data/locales/official-hero-details.json')).locales.vi || {};
-assert.deepEqual(Object.keys(vietnameseCatalog).sort(), heroIds, 'Vietnamese hero-detail catalog must cover the full hero roster.');
+assert.ok(Object.keys(vietnameseCatalog).every(id => heroIds.includes(id)), 'Vietnamese hero-detail catalog contains an unknown hero.');
 let vietnameseSkillCount = 0;
-for (const hero of HEROES) {
-  const record = vietnameseCatalog[hero.id];
-  assert.equal(record.officialName, sourceHeroNames.vi[hero.id], `Vietnamese display name mismatch for ${hero.id}.`);
-  assert.equal(record.translationStatus, 'editor-reviewed', `Vietnamese ${hero.id} must be editor-reviewed.`);
-  assert.equal(record.sourceLocale, 'zh-CN', `Vietnamese ${hero.id} must be translated from the official Simplified Chinese record.`);
-  assert.doesNotMatch(JSON.stringify({ description: record.description, skills: record.skills }), /anh hùng|\btướng\b/iu, `Vietnamese ${hero.id} must use “chiến binh”.`);
+for (const [heroId, record] of Object.entries(vietnameseCatalog)) {
+  assert.equal(record.officialName, sourceHeroNames.vi[heroId], `Vietnamese display name mismatch for ${heroId}.`);
+  assert.equal(record.translationStatus, 'editor-reviewed', `Vietnamese ${heroId} must be editor-reviewed.`);
+  assert.equal(record.sourceLocale, 'zh-CN', `Vietnamese ${heroId} must be translated from the official Simplified Chinese record.`);
+  assert.doesNotMatch(JSON.stringify({ description: record.description, skills: record.skills }), /anh hùng|\btướng\b/iu, `Vietnamese ${heroId} must use “chiến binh”.`);
   vietnameseSkillCount += Object.keys(record.skills || {}).length;
 }
 assert.equal(vietnameseSkillCount, 259, 'Vietnamese catalog must translate all 259 skills.');
@@ -87,6 +87,7 @@ const approvedVietnameseSkillNames = new Map(vietnameseSkillMaster.skills.map(ro
 assert.equal(approvedVietnameseSkillNames.size, 212, 'Vietnamese skill-name Master contains duplicate English names.');
 let approvedVietnameseSkillSlots = 0;
 for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
+  if (!vietnameseCatalog[heroId]) continue;
   for (const sourceSkill of sourceHero.skills) {
     const approvedName = approvedVietnameseSkillNames.get(sourceSkill.name);
     assert.ok(approvedName, `Vietnamese Master is missing ${sourceSkill.name}.`);

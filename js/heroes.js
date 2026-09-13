@@ -181,9 +181,10 @@ export function getHeroSkillIconUrls(heroId, skillId) {
 
 // Full roster (scraped from the official site)
 export const HEROES = [
+  { id: '0041', name: 'Super Gogeta',                   role: 'Technical', isNew: true  },
   { id: '0040', name: 'Jiren (Full Power)',             role: 'Tank',      isNew: true  },
   { id: '0039', name: 'Goku Black',                     role: 'Technical', isNew: true  },
-  { id: '0038', name: 'Beerus',                        role: 'Damage',    isNew: true  },
+  { id: '0038', name: 'Beerus',                        role: 'Damage',    isNew: false },
   { id: '0001', name: 'Super Saiyan Son Goku',         role: 'Damage',    isNew: false },
   { id: '0002', name: 'Super Saiyan Vegeta',           role: 'Tank',      isNew: false },
   { id: '0003', name: 'Krillin',                       role: 'Technical', isNew: false },
