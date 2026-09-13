@@ -1,9 +1,9 @@
 const { db } = require('./db');
 
 function achievementForTeam(tournamentId, teamId, tournamentStatus) {
-  const final = db.prepare(`SELECT * FROM matches WHERE tournament_id=? AND stage!='group' AND result_status='final'
+  const final = db.prepare(`SELECT * FROM matches WHERE tournament_id=? AND stage!='group'
     ORDER BY round_no DESC,is_reset_match DESC,position DESC LIMIT 1`).get(tournamentId);
-  if (!final) {
+  if (!final || final.result_status !== 'final' || !final.winner_team_id) {
     if (['completed','finalized','archived'].includes(String(tournamentStatus))) return {label:'Participant',rank:null,tone:'neutral'};
     const checkedIn = db.prepare(`SELECT 1 FROM match_checkins mc JOIN matches m ON m.id=mc.match_id
       WHERE m.tournament_id=? AND mc.actor_type='team' AND mc.actor_id=? LIMIT 1`).get(tournamentId,String(teamId));

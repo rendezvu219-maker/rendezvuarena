@@ -3,6 +3,7 @@ import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHer
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js';
 import { LocalDraftSync } from './local-draft-sync.js';
+import { P2PDraftSync } from './p2p-sync.js';
 import { api, escapeHtml } from './api.js';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
 import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
@@ -10,6 +11,9 @@ import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawR
 export class DraftUI {
   constructor(config) {
     this.config = config;
+    if (Number(this.config?.gameNumber || 1) > 1) {
+      this.config.enableCoinFlip = false;
+    }
     this.engine = null;
     this.grid = document.getElementById('hero-grid');
     this.roleFilters = document.getElementById('role-filters');
@@ -39,10 +43,7 @@ export class DraftUI {
     this.sync = config._sync || null;
     this.roomRole = config._roomRole || (config._team === 'A' ? 'teamA' : config._team === 'B' ? 'teamB' : config._team || 'host');
     this.authorityRole = config._draftAuthorityRole || this.sync?.authorityRole || (this.roomRole === 'host' ? 'host' : null);
-    this.isAuthoritativeHost = !this.sync
-      || (this.sync instanceof LocalDraftSync
-        ? this.roomRole === 'host'
-        : Boolean(config._isDraftAuthority ?? this.sync?.isAuthority));
+    this.isAuthoritativeHost = (this.roomRole === 'host');
     this.isApplyingRemote = false;
     this.initialRoomState = config._roomState || null;
     this.gameRollId = String(
@@ -95,7 +96,7 @@ export class DraftUI {
   }
 
   missingDraftEntrants() {
-    if (!(this.sync instanceof DraftRoomSync)) return [];
+    if (!(this.sync instanceof DraftRoomSync || this.sync instanceof P2PDraftSync)) return [];
     if (this.config.mockAutoOpponent === true) return [];
     if (this.roomRole === 'teamA') return this.draftPresence.teamB > 0 ? [] : [this.entrant('teamB').name];
     if (this.roomRole === 'teamB') return this.draftPresence.teamA > 0 ? [] : [this.entrant('teamA').name];
@@ -109,6 +110,55 @@ export class DraftUI {
     const description = document.getElementById('pre-draft-waiting-description');
     if (title) title.textContent = missing.length ? t('waitingForTeamJoin', { team }) : t('preDraftInProgress');
     if (description) description.textContent = missing.length ? t('waitingForTeamJoinDesc') : t('preDraftDesc');
+
+    const linksContainer = document.getElementById('waiting-links-container');
+    if (linksContainer && this.isAuthoritativeHost && this.sync?.roomCode) {
+      linksContainer.style.display = 'flex';
+      const baseUrl = window.location.href.split(/[?#]/)[0];
+      const roomCode = this.sync.roomCode;
+      const hostPeerId = this.sync.hostPeerId || `rv-${roomCode.toLowerCase()}`;
+      
+      const linkA = document.getElementById('waiting-link-a');
+      const linkB = document.getElementById('waiting-link-b');
+      const linkSpec = document.getElementById('waiting-link-spec');
+      if (linkA) linkA.value = `${baseUrl}#room=${roomCode}&role=teamA&host=${hostPeerId}`;
+      if (linkB) linkB.value = `${baseUrl}#room=${roomCode}&role=teamB&host=${hostPeerId}`;
+      if (linkSpec) linkSpec.value = `${baseUrl.replace('draft-room.html', 'broadcast.html')}#room=${roomCode}&role=broadcaster&host=${hostPeerId}`;
+
+      if (!linksContainer.dataset.bound) {
+        linksContainer.dataset.bound = 'true';
+        linksContainer.querySelectorAll('[data-copy-waiting]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const input = document.getElementById(btn.dataset.copyWaiting);
+            if (!input?.value) return;
+            await navigator.clipboard.writeText(input.value);
+            const orig = btn.textContent;
+            btn.textContent = 'COPIED';
+            setTimeout(() => { btn.textContent = orig; }, 1200);
+          });
+        });
+      }
+    }
+
+    const forceBtn = document.getElementById('btn-force-start-draft');
+    if (forceBtn) {
+      forceBtn.style.display = this.isAuthoritativeHost ? 'inline-block' : 'none';
+      if (!forceBtn.dataset.bound) {
+        forceBtn.dataset.bound = 'true';
+        forceBtn.addEventListener('click', () => {
+          this.initialDraftFlowStarted = true;
+          this.setPreDraftStage(false);
+          if (this.config.enableCoinFlip || this.config.enableDivineDraw) {
+            this.startPreDraft();
+          } else if (this.config.draftStyle === 'all-random') {
+            this.setPreDraftStage(true);
+            setTimeout(() => this.startAllRandomBanPhase(), 600);
+          } else {
+            this.startDraftEngine();
+          }
+        });
+      }
+    }
   }
 
   beginInitialDraftFlow() {
@@ -286,8 +336,8 @@ export class DraftUI {
         teamA: `${this.config.teamA || 'TEAM A'} · ${sidesResolved ? `${teamASide === 'B' ? 'RED' : 'BLUE'} CONTROL` : pendingTeamALabel}`,
         teamB: `${this.config.teamB || 'TEAM B'} · ${sidesResolved ? `${teamBSide === 'A' ? 'BLUE' : 'RED'} CONTROL` : this.config.quickDraft ? 'COIN CALL AVAILABLE' : 'SIDE PENDING'}`,
         referee: 'REFEREE · VIEW / PAUSE',
-        broadcaster: 'BROADCAST · VIEW ONLY',
-        preview: 'VIEW ONLY',
+        broadcaster: 'SPECTATOR · VIEW ONLY',
+        preview: 'SPECTATOR · VIEW ONLY',
       };
       accessBadge.textContent = labels[this.roomRole] || String(this.roomRole || 'VIEW ONLY').toUpperCase();
       accessBadge.dataset.role = this.roomRole;
@@ -307,8 +357,12 @@ export class DraftUI {
     const indicator = document.getElementById('draft-watch-presence');
     if (!indicator) return;
     const watching = Number(this.draftPresence?.broadcaster || 0) > 0;
+    if (this.roomRole === 'broadcaster' || this.roomRole === 'preview') {
+      indicator.classList.add('hidden');
+      return;
+    }
     indicator.classList.toggle('hidden', !watching);
-    indicator.textContent = t('hostWatchingReadOnly');
+    indicator.textContent = 'SPECTATOR IS WATCHING · READ ONLY';
   }
 
   requestSelectHero(heroId) {
@@ -445,6 +499,11 @@ export class DraftUI {
 
       if (state.reloadRequired) {
         this.showRoomNotice(`Game ${state.gameNumber} is ready. Loading ${String(state.seriesRule || this.config.seriesRule).replaceAll('_', ' ')} rules…`);
+        if (state.nextConfig && this.sync instanceof P2PDraftSync) {
+          try {
+            localStorage.setItem(`rv_config_${this.sync.roomCode}`, JSON.stringify(state.nextConfig));
+          } catch {}
+        }
         setTimeout(() => {
           if (state.nextConfig && this.sync instanceof LocalDraftSync) {
             window.location.assign(localDraftUrl(state.nextConfig, this.roomRole));
@@ -2464,6 +2523,9 @@ if (this.engine.selectedHero === h.id) {
         this.config.previousPicksB = [...new Set([...(this.config.previousPicksB || []), ...entrantBPicks])];
       }
       this.config.gameNumber = nextGameNumber;
+      if (nextGameNumber > 1) {
+        this.config.enableCoinFlip = false;
+      }
 
       const nextConfig = serializableDraftConfig(this.config);
       this.sync?.publishState({
@@ -2475,7 +2537,18 @@ if (this.engine.selectedHero === h.id) {
         reloadRequired: true,
         nextConfig,
       });
-      window.location.assign(localDraftUrl(nextConfig, this.roomRole));
+      if (this.sync instanceof LocalDraftSync) {
+        window.location.assign(localDraftUrl(nextConfig, this.roomRole));
+      } else {
+        if (this.sync instanceof P2PDraftSync) {
+          try {
+            localStorage.setItem(`rv_config_${this.sync.roomCode}`, JSON.stringify(nextConfig));
+          } catch {}
+        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      }
     } catch (error) {
       this.setSeriesControlsBusy(false);
       if (this.seriesControlStatus) {
@@ -2590,14 +2663,37 @@ export async function loadDraftConfigFromUrl() {
   const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const roomCode = fragment.get('room') || params.get('room');
   const accessToken = fragment.get('access');
+  const hostParam = fragment.get('host') || params.get('host');
 
-  if (roomCode && accessToken) {
-    // The role capability stays in the URL fragment so a manual refresh can re-exchange a short-lived, single-use Socket ticket.
-    // Fragments are not sent in HTTP requests, Referer headers, reverse-proxy logs or Socket handshakes.
-    const sync = new DraftRoomSync({ roomCode, accessToken });
+  if (roomCode && accessToken && !hostParam) {
+    try {
+      const sync = new DraftRoomSync({ roomCode, accessToken });
+      await sync.connect();
+      return {
+        ...sync.config,
+        roomCode: sync.roomCode,
+        _sync: sync,
+        _roomRole: sync.role,
+        _roomState: sync.initialState,
+        _roomMessages: sync.initialMessages,
+        _draftAuthorityRole: sync.authorityRole,
+        _isDraftAuthority: sync.isAuthority,
+        _draftPresence: sync.presence,
+      };
+    } catch (err) {
+      if (!localStorage.getItem(`rv_config_${roomCode}`)) {
+        throw err;
+      }
+    }
+  }
+
+  if (roomCode) {
+    const role = fragment.get('role') || params.get('role') || 'host';
+    const hostPeerId = hostParam || `rv-${roomCode.toLowerCase()}`;
+    const sync = new P2PDraftSync({ roomCode, role, hostPeerId, accessToken: accessToken || '', config: null });
     await sync.connect();
     return {
-      ...sync.config,
+      ...(sync.config || {}),
       roomCode: sync.roomCode,
       _sync: sync,
       _roomRole: sync.role,

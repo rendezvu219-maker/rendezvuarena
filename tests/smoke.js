@@ -15,7 +15,7 @@ for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${dbPath}${suffix}`, { for
 
 const child = spawn(process.execPath, ['server.js'], {
   cwd: root,
-  env: { ...process.env, NODE_ENV:'test', PORT: String(port), DATABASE_PATH: dbPath, UPLOAD_PATH: uploadPath, AUTH_SECRET: 'smoke-secret-32-characters-long-enough', ALLOW_DIRECT_HOST_REGISTRATION: 'true', ALLOW_MANUAL_TOURNAMENT_CREATION: 'true' },
+  env: { ...process.env, NODE_ENV:'test', REGISTER_RATE_LIMIT_MAX: '10000', PORT: String(port), DATABASE_PATH: dbPath, UPLOAD_PATH: uploadPath, AUTH_SECRET: 'smoke-secret-32-characters-long-enough', ALLOW_DIRECT_HOST_REGISTRATION: 'true', ALLOW_MANUAL_TOURNAMENT_CREATION: 'true' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 child.stdout.on('data', chunk => process.stdout.write(chunk));

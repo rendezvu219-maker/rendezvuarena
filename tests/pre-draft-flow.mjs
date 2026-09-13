@@ -103,5 +103,7 @@ assert.match(html, /data-side-choice="B"/);
 assert.match(server, /pre-draft:coin-call/);
 assert.match(server, /preDraft/);
 assert.match(server, /draftEngineTeamsByEntrant/);
+assert.match(app, /Number\(this\.config\?\.gameNumber \|\| 1\) > 1[\s\S]*enableCoinFlip = false/, 'DraftUI must disable coin flip from game 2 onwards.');
+assert.match(server, /currentGameNumber > 1 \? false :/, 'Server refreshedDraftConfig must disable coin flip from game 2 onwards.');
 
 console.log('Coin call, side assignment, two-Draw Divine flow and series-rule UI checks passed.');

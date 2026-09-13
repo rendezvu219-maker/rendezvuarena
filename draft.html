@@ -1,1 +1,120 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Draft Room — RendezVu Arena</title><link rel="stylesheet" href="css/variables.css"><link rel="stylesheet" href="css/base.css"><link rel="stylesheet" href="css/static-arena.css"></head><body class="static-page"><header class="static-nav"><a class="static-brand" href="./"><i>RV</i><span><b>RENDEZVU</b><small>DRAFT ROOM</small></span></a><nav><a href="quick-match.html">Quick Match</a><a id="bracket-link" class="hidden">Bracket</a><a href="heroes.html">Heroes</a></nav></header><main class="static-shell"><div id="message" class="notice">Connecting to room…</div><div id="draft-app" class="hidden"><section class="draft-status"><span id="room-meta" class="eyebrow"></span><h1><span id="team-a-name"></span> <span class="text-muted">VS</span> <span id="team-b-name"></span></h1><div class="draft-score"><span id="score-a">0</span><span>—</span><span id="score-b">0</span></div><div id="series-rule-banner" class="series-rule-banner"></div><p id="turn-label"></p></section><section id="coin-stage" class="panel coin-stage hidden"><div class="coin-copy"><span class="eyebrow">PRE-DRAFT · SYNCHRONIZED</span><h2>COIN FLIP</h2><p id="coin-status">Waiting for the Organizer to flip the coin.</p><button id="coin-button" class="primary hidden">FLIP COIN</button></div><div id="coin" class="coin" aria-hidden="true"><div class="coin-face coin-heads">H</div><div class="coin-face coin-tails">T</div></div></section><div class="draft-layout"><aside class="panel team-panel"><h2 id="side-a-title">TEAM A</h2><h3>PICKS</h3><div id="picks-a" class="slot-list"></div><h3>BANS</h3><div id="bans-a" class="slot-list"></div></aside><section class="panel hero-pool"><div class="hero-toolbar"><input id="hero-search" type="search" placeholder="Search heroes…"><button class="secondary active" data-role="all">ALL</button><button class="secondary" data-role="Damage">DAMAGE</button><button class="secondary" data-role="Tank">TANK</button><button class="secondary" data-role="Technical">TECH</button></div><div id="hero-grid" class="hero-grid"></div><div class="actions"><button id="lock-button" class="primary" disabled>SELECT A HERO</button><button id="random-button" class="primary hidden">RUN SYNCHRONIZED RANDOM</button><button id="game-a" class="secondary hidden">TEAM A WON GAME</button><button id="game-b" class="secondary hidden">TEAM B WON GAME</button></div></section><aside class="panel team-panel side-b"><h2 id="side-b-title">TEAM B</h2><h3>PICKS</h3><div id="picks-b" class="slot-list"></div><h3>BANS</h3><div id="bans-b" class="slot-list"></div></aside></div></div></main><div id="hero-modal" class="modal hidden" role="dialog" aria-modal="true"><article class="modal-card"><div class="actions"><button id="close-modal" class="secondary">CLOSE</button><button id="modal-select" class="primary">SELECT</button><button id="trailer-button" class="secondary">PLAY TRAILER</button></div><div id="hero-detail"></div><video id="hero-trailer" class="hidden" controls playsinline></video></article></div><script type="module" src="js/static-draft.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Draft Room — RendezVu Arena</title>
+  <script src="js/preferences.js"></script>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/static-arena.css">
+</head>
+<body class="static-page">
+  <header class="static-nav">
+    <a class="static-brand" href="./"><i>RV</i><span><b>RENDEZVU</b><small>DRAFT ROOM</small></span></a>
+    <nav>
+      <a href="quick-match.html">Quick Match</a>
+      <a id="bracket-link" class="hidden">Bracket</a>
+      <a href="heroes.html">Heroes</a>
+    </nav>
+  </header>
+  <main class="static-shell">
+    <div id="message" class="notice">Connecting to room…</div>
+
+    <!-- Waiting Room Lobby -->
+    <div id="waiting-room" class="panel waiting-panel hidden">
+      <div class="waiting-head">
+        <span class="eyebrow">ROOM LOBBY · WAITING FOR TEAMS</span>
+        <h2>WAITING FOR TEAMS TO JOIN</h2>
+        <p id="waiting-desc">Share links with Team A and Team B. The draft will start once both teams are present.</p>
+      </div>
+      <div class="presence-grid">
+        <div class="presence-card" id="presence-a">
+          <div class="presence-dot" id="presence-dot-a"></div>
+          <div>
+            <b id="presence-name-a">TEAM A</b>
+            <span id="presence-status-a">Waiting to connect…</span>
+          </div>
+        </div>
+        <div class="presence-card" id="presence-b">
+          <div class="presence-dot" id="presence-dot-b"></div>
+          <div>
+            <b id="presence-name-b">TEAM B</b>
+            <span id="presence-status-b">Waiting to connect…</span>
+          </div>
+        </div>
+      </div>
+      <div class="waiting-actions">
+        <button id="btn-start-draft" class="primary hidden" type="button">START DRAFT ROOM</button>
+        <button id="btn-force-start" class="secondary hidden" type="button">FORCE START NOW</button>
+        <div id="waiting-hint" class="text-muted hidden">Connected! Waiting for Host to start the draft.</div>
+      </div>
+    </div>
+
+    <!-- Pre-Draft Coin Flip -->
+    <div id="coin-room" class="panel hidden" style="text-align:center;padding:24px;margin-bottom:20px;">
+      <span class="eyebrow">PRE-DRAFT COIN FLIP</span>
+      <h2 id="coin-title" style="margin:10px 0;">COIN FLIP TO DECIDE FIRST PICK</h2>
+      <p id="coin-desc" style="color:var(--text-secondary);margin-bottom:16px;">The Organizer flips the coin. All connected participants see the result synchronously.</p>
+      <div id="coin-display" style="font-size:3rem;margin:16px 0;">🪙</div>
+      <div id="coin-actions"><button id="btn-flip-coin" class="primary hidden" type="button">FLIP COIN</button></div>
+    </div>
+
+    <!-- Active Draft App -->
+    <div id="draft-app" class="hidden">
+      <section class="draft-status">
+        <div id="host-banner" class="hidden"><span class="host-badge">👑 ORGANIZER / HOST (FULL CONTROL)</span></div>
+        <span id="room-meta" class="eyebrow"></span>
+        <h1><span id="team-a-name"></span> <span class="text-muted">VS</span> <span id="team-b-name"></span></h1>
+        <div class="draft-score"><span id="score-a">0</span><span>—</span><span id="score-b">0</span></div>
+        <p id="turn-label"></p>
+      </section>
+      <div class="draft-layout">
+        <aside class="panel team-panel">
+          <h2 id="side-a-title">TEAM A</h2>
+          <h3>PICKS</h3>
+          <div id="picks-a" class="slot-list"></div>
+          <h3>BANS</h3>
+          <div id="bans-a" class="slot-list"></div>
+        </aside>
+        <section class="panel hero-pool">
+          <div class="hero-toolbar">
+            <input id="hero-search" type="search" placeholder="Search heroes…">
+            <button class="secondary active" data-role="all" type="button">ALL</button>
+            <button class="secondary" data-role="Damage" type="button">DAMAGE</button>
+            <button class="secondary" data-role="Tank" type="button">TANK</button>
+            <button class="secondary" data-role="Technical" type="button">TECH</button>
+          </div>
+          <div id="hero-grid" class="hero-grid"></div>
+          <div class="actions">
+            <button id="lock-button" class="primary" disabled type="button">SELECT A HERO</button>
+            <button id="random-button" class="primary hidden" type="button">RUN SYNCHRONIZED RANDOM</button>
+            <button id="game-a" class="secondary hidden" type="button">TEAM A WON GAME</button>
+            <button id="game-b" class="secondary hidden" type="button">TEAM B WON GAME</button>
+          </div>
+        </section>
+        <aside class="panel team-panel side-b">
+          <h2 id="side-b-title">TEAM B</h2>
+          <h3>PICKS</h3>
+          <div id="picks-b" class="slot-list"></div>
+          <h3>BANS</h3>
+          <div id="bans-b" class="slot-list"></div>
+        </aside>
+      </div>
+    </div>
+  </main>
+  <div id="hero-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <article class="modal-card">
+      <div class="actions">
+        <button id="close-modal" class="secondary" type="button">CLOSE</button>
+        <button id="modal-select" class="primary" type="button">SELECT</button>
+        <button id="trailer-button" class="secondary" type="button">PLAY TRAILER</button>
+      </div>
+      <div id="hero-detail"></div>
+      <video id="hero-trailer" class="hidden" controls playsinline></video>
+    </article>
+  </div>
+  <script src="js/vendor/peerjs.min.js"></script>
+  <script type="module" src="js/static-draft.js"></script>
+</body>
+</html>

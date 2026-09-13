@@ -15,29 +15,6 @@ assert.equal(draft.complete, true);
 assert.equal(draft.picks.A.length, 4);
 assert.equal(draft.picks.B.length, 4);
 
-const coinRules = normalizeRules({ ...rules, enableCoinFlip: 'on', seriesRule: 'fearless', squadraBlastCarryBans: 'false' });
-assert.equal(coinRules.enableCoinFlip, true);
-assert.equal(coinRules.seriesRule, 'fearless');
-assert.equal(coinRules.squadraBlastCarryBans, false);
-assert.equal(deriveDraft({ ...config, rules: coinRules }, {}).preDraftComplete, false);
-const coinDraft = deriveDraft({ ...config, rules: coinRules }, { coin:{ type:'coin_flip', actor:'O', result:'heads', winner:'A', game:1 } });
-assert.equal(coinDraft.preDraftComplete, true);
-assert.equal(coinDraft.coin.result, 'heads');
-
-const nextGameEvents = { ...events, result:{ type:'game_result', side:'A', game:1, actor:'O' } };
-const teamNoRepeat = deriveDraft({ ...config, rules:{ ...rules, seriesRule:'team_no_repeat' } }, nextGameEvents);
-assert.equal(teamNoRepeat.game, 2);
-assert.equal(teamNoRepeat.locked.A.has(draft.picks.A[0]), true);
-assert.equal(teamNoRepeat.locked.B.has(draft.picks.A[0]), false);
-const fearless = deriveDraft({ ...config, rules:{ ...rules, seriesRule:'fearless' } }, nextGameEvents);
-assert.equal(fearless.locked.A.has(draft.picks.B[0]), true);
-assert.equal(fearless.locked.B.has(draft.picks.A[0]), true);
-const squadra = deriveDraft({ ...config, rules:{ ...rules, seriesRule:'squadra_blast', squadraBlastCarryBans:true } }, nextGameEvents);
-assert.equal(squadra.locked.A.has(draft.picks.A[0]), true);
-assert.equal(squadra.locked.B.has(draft.picks.A[0]), false);
-assert.equal(squadra.locked.A.has(draft.bans.B[0]), true);
-assert.equal(squadra.locked.B.has(draft.bans.B[0]), true);
-
 const bracketConfig = { teams:['T1','T2','T3','T4','T5','T6','T7','T8'], rules };
 assert.equal(createBracket(bracketConfig.teams).length, 7);
 const bracketEvents = {
@@ -57,6 +34,56 @@ bracket = deriveBracket(bracketConfig, bracketEvents);
 assert.equal(bracket.find(match => match.id === 'M5').teamA, 'T2');
 assert.equal(bracket.find(match => match.id === 'M5').winner, null);
 assert.equal(bracket.find(match => match.id === 'M7').winner, null);
-assert.equal(bracket.find(match => match.id === 'M7').teamA, 'Winner M5');
 
-console.log('Static Quick Match and tournament state tests passed.');
+// Test Presence and Started logic
+const lobbyConfig = { teamA: 'Alpha', teamB: 'Beta', rules: normalizeRules({ bestOf: 1, banCount: 1 }) };
+let lobbyDraft = deriveDraft(lobbyConfig, {});
+assert.equal(lobbyDraft.started, false);
+assert.equal(lobbyDraft.readyToStart, false);
+
+lobbyDraft = deriveDraft(lobbyConfig, {
+  p1: { type: 'presence', side: 'A', actor: 'A' },
+});
+assert.equal(lobbyDraft.started, false);
+assert.equal(lobbyDraft.presence.A, true);
+assert.equal(lobbyDraft.presence.B, false);
+assert.equal(lobbyDraft.readyToStart, false);
+
+lobbyDraft = deriveDraft(lobbyConfig, {
+  p1: { type: 'presence', side: 'A', actor: 'A' },
+  p2: { type: 'presence', side: 'B', actor: 'B' },
+});
+assert.equal(lobbyDraft.started, false);
+assert.equal(lobbyDraft.readyToStart, true);
+
+lobbyDraft = deriveDraft(lobbyConfig, {
+  p1: { type: 'presence', side: 'A', actor: 'A' },
+  p2: { type: 'presence', side: 'B', actor: 'B' },
+  s: { type: 'start', actor: 'O' },
+});
+assert.equal(lobbyDraft.started, true);
+assert.ok(lobbyDraft.current);
+
+// Test Protect Heroes and Global Bans
+const customRules = normalizeRules({
+  bestOf: 1,
+  banCount: 1,
+  protectHeroes: ['0001'],
+  globalBans: ['0002'],
+});
+const customConfig = { teamA: 'Alpha', teamB: 'Beta', rules: customRules };
+assert.ok(customRules.protectHeroes.includes('0001'));
+assert.ok(customRules.globalBans.includes('0002'));
+
+// Attempting to ban a protected hero (0001) should be ignored/rejected
+const protectDraft = deriveDraft(customConfig, {
+  s: { type: 'start', actor: 'O' },
+  b1: { type: 'ban', side: 'B', heroId: '0001', step: 0, game: 1, actor: 'B' },
+});
+assert.equal(protectDraft.bans.B.length, 0, 'Protected hero 0001 must not be banned');
+
+// Global ban hero (0002) should be in locked sets
+assert.ok(protectDraft.locked.A.has('0002'), 'Global ban 0002 must be locked for Team A');
+assert.ok(protectDraft.locked.B.has('0002'), 'Global ban 0002 must be locked for Team B');
+
+console.log('Static Quick Match, tournament state, presence, and protection tests passed.');

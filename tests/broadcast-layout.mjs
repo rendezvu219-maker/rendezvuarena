@@ -40,8 +40,8 @@ assert.doesNotMatch(script, /configuredBanCount[^;]*divineBans/, 'Divine bans mu
 assert.doesNotMatch(script, /teamA\.bans, \.\.\.this\.engine\.teamA\.divineBans/, 'Divine bans must not render into the hero-ban rail.');
 
 assert.match(script, /getHeroTrailerUrls/);
-assert.match(heroes, /\/assets\/trailers\/\$\{heroId\}\.mp4/);
-assert.match(heroes, /\/assets\/trailers\/\$\{heroId\}\.png/);
+assert.match(heroes, /\/?assets\/trailers\/\$\{heroId\}\.mp4/);
+assert.match(heroes, /\/?assets\/trailers\/\$\{heroId\}\.png/);
 assert.match(script, /const BROADCAST_HERO_HOLD_MS = 3000;/);
 assert.match(script, /stage\.classList\.add\('media-switching'\)/);
 assert.ok(script.indexOf("image.classList.remove('visible')") < script.indexOf('image.src = candidate.src'), 'The old poster must be hidden before the next hero image source is assigned.');

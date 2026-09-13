@@ -206,6 +206,79 @@ try{
     assert.equal(Number(db.prepare('SELECT COUNT(*) count FROM team_members WHERE team_id=?').get(teamId).count),0);
   }
 
+  const unavailablePoolPlayer=await request(`/api/tournaments/${registration.id}/manual-randomizer/preview`,{
+    token:hostToken,method:'POST',body:{manualNames:['Manual One','Manual Two','Manual Three'],soloPoolRequestIds:[999999],teamSize:4},allowError:true,
+  });
+  assert.equal(unavailablePoolPlayer.response.status,400,'Unavailable selected pool players must not be silently dropped.');
+  assert.match(unavailablePoolPlayer.payload.error,/no longer available/i);
+
+  const soloPreviewForTypeCheck=await request(`/api/tournaments/${registration.id}/solo-randomizer/preview`,{
+    token:hostToken,method:'POST',body:{totalSlots:8,teamSize:4,captainMode:'random_assigned'},
+  });
+  const wrongConfirmEndpoint=await request(`/api/tournaments/${registration.id}/manual-randomizer/confirm`,{
+    token:hostToken,method:'POST',body:{previewId:soloPreviewForTypeCheck.payload.preview.id},allowError:true,
+  });
+  assert.equal(wrongConfirmEndpoint.response.status,409,'Manual confirmation must reject a Solo Pool preview.');
+
+  const manualNames=Array.from({length:8},(_,index)=>`Manual Player ${index+1}`);
+  const manualPreview=await request(`/api/tournaments/${registration.id}/manual-randomizer/preview`,{
+    token:hostToken,method:'POST',body:{manualNames,soloPoolRequestIds:[],teamSize:4},
+  });
+  assert.equal(manualPreview.payload.preview.assignments.length,2);
+  manualPreview.payload.preview.assignments.forEach(team=>{
+    assert.equal(team.members.length,4);
+    assert.equal(team.members.filter(member=>member.isCaptain).length,1);
+    assert.ok(team.members.every(member=>member.type==='manual'));
+  });
+  const wrongSoloConfirm=await request(`/api/tournaments/${registration.id}/solo-randomizer/confirm`,{
+    token:hostToken,method:'POST',body:{previewId:manualPreview.payload.preview.id},allowError:true,
+  });
+  assert.equal(wrongSoloConfirm.response.status,409,'Solo Pool confirmation must reject a manual preview.');
+  const manualConfirmed=await request(`/api/tournaments/${registration.id}/manual-randomizer/confirm`,{
+    token:hostToken,method:'POST',body:{previewId:manualPreview.payload.preview.id},
+  });
+  const manualTeamIds=manualConfirmed.payload.teams.map(team=>Number(team.teamId));
+  assert.equal(manualTeamIds.length,2);
+  manualTeamIds.forEach(teamId=>{
+    const team=db.prepare('SELECT * FROM teams WHERE id=?').get(teamId);
+    const members=db.prepare('SELECT * FROM team_members WHERE team_id=?').all(teamId);
+    assert.equal(team.formation_source,'solo_randomizer');
+    assert.equal(team.captain_user_id,null);
+    assert.equal(members.length,4);
+    assert.equal(members.filter(member=>member.is_captain).length,1);
+  });
+  const extraMemberId=Number(db.prepare(`INSERT INTO team_members(team_id,display_name,gamer_tag,member_role,membership_status) VALUES (?,?,?,'player','active')`)
+    .run(manualTeamIds[0],'Late Roster Edit','LATE-EDIT').lastInsertRowid);
+  const unsafeManualUndo=await request(`/api/tournaments/${registration.id}/manual-randomizer/undo`,{
+    token:hostToken,method:'POST',body:{},allowError:true,
+  });
+  assert.equal(unsafeManualUndo.response.status,409,'Manual undo must preserve a roster changed after confirmation.');
+  db.prepare('DELETE FROM team_members WHERE id=?').run(extraMemberId);
+  const manualUndone=await request(`/api/tournaments/${registration.id}/manual-randomizer/undo`,{
+    token:hostToken,method:'POST',body:{},
+  });
+  assert.deepEqual(manualUndone.payload.removedTeamIds.sort((a,b)=>a-b),manualTeamIds.sort((a,b)=>a-b));
+
+  const mixedPoolRequestIds=restored.slice(0,4).map(request=>Number(request.id));
+  const mixedPreview=await request(`/api/tournaments/${registration.id}/manual-randomizer/preview`,{
+    token:hostToken,method:'POST',body:{
+      manualNames:['Mixed Manual 1','Mixed Manual 2','Mixed Manual 3','Mixed Manual 4'],
+      soloPoolRequestIds:mixedPoolRequestIds,teamSize:4,
+    },
+  });
+  const mixedMembers=mixedPreview.payload.preview.assignments.flatMap(team=>team.members);
+  assert.equal(mixedMembers.filter(member=>member.type==='manual').length,4);
+  assert.equal(mixedMembers.filter(member=>member.type==='solo_pool').length,4);
+  const mixedConfirmed=await request(`/api/tournaments/${registration.id}/manual-randomizer/confirm`,{
+    token:hostToken,method:'POST',body:{previewId:mixedPreview.payload.preview.id},
+  });
+  assert.equal(mixedConfirmed.payload.teams.length,2);
+  const assignedMixedRequests=db.prepare(`SELECT id,team_id,selected_member_id FROM tournament_join_requests WHERE id IN (${mixedPoolRequestIds.map(()=>'?').join(',')})`).all(...mixedPoolRequestIds);
+  assert.ok(assignedMixedRequests.every(request=>request.team_id&&request.selected_member_id),'Selected Solo Pool accounts must be linked to their generated mixed teams.');
+  await request(`/api/tournaments/${registration.id}/manual-randomizer/undo`,{token:hostToken,method:'POST',body:{}});
+  const restoredMixedRequests=db.prepare(`SELECT id,team_id,selected_member_id FROM tournament_join_requests WHERE id IN (${mixedPoolRequestIds.map(()=>'?').join(',')})`).all(...mixedPoolRequestIds);
+  assert.ok(restoredMixedRequests.every(request=>!request.team_id&&!request.selected_member_id),'Mixed-team undo must return selected accounts to the Solo Pool.');
+
   const hostCaptainIds=[poolPersonas[1].id,poolPersonas[2].id];
   const handPicked=await request(`/api/tournaments/${registration.id}/solo-randomizer/preview`,{
     token:hostToken,method:'POST',body:{totalSlots:8,teamSize:4,captainMode:'host_selected',captainUserIds:hostCaptainIds},
@@ -229,6 +302,8 @@ try{
   assert.match(dashboard,/registrationMode/);
   assert.match(dashboard,/targetTeamIds/);
   assert.match(dashboard,/random_assigned/);
+  assert.match(dashboard,/manual-randomizer\/preview/);
+  assert.match(dashboard,/manual-pool-checkbox/);
   assert.match(joinPage,/soloSignup/);
   assert.match(joinPage,/soloPoolOnly/);
   console.log('Solo-only registration, preview/confirm, Captain-safe teams, privacy, match access and undo snapshot checks passed.');

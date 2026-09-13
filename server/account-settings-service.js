@@ -128,6 +128,10 @@ function publicUserProfile(username, viewer = null) {
     createdAt: user.created_at,
     externalProfiles: [],
   };
+  // A public profile must never disclose participation in an unpublished event.
+  const visibleIds = new Set(db.prepare('SELECT id FROM tournaments WHERE is_public=1').all().map(row => Number(row.id)));
+  const history = require('./profile-service').userTournamentHistory(user.id);
+  profile.tournamentHistory = history.participated.filter(item => visibleIds.has(Number(item.tournamentId)));
   if (user.show_external_profiles || owner || admin) {
     profile.externalProfiles = db.prepare(`SELECT provider,profile_url,display_name,gamer_tag,verification_status,verified_at
       FROM external_profiles WHERE user_id=? ORDER BY provider`).all(user.id).map(row => ({

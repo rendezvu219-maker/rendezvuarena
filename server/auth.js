@@ -177,6 +177,18 @@ function authenticateAccessToken(token) {
   };
 }
 
+function optionalAuth(req, _res, next) {
+  try {
+    const token = accessTokenFromRequest(req);
+    if (token) {
+      const auth = authenticateAccessToken(token);
+      req.user = auth.user;
+      req.authSessionId = auth.sessionId;
+    }
+  } catch {}
+  next();
+}
+
 function authRequired(req, res, next) {
   try {
     const auth = authenticateAccessToken(accessTokenFromRequest(req));
@@ -299,6 +311,7 @@ module.exports = {
   accessTokenFromRequest,
   allowRoles,
   authRequired,
+  optionalAuth,
   authenticateAccessToken,
   burnPasswordCost,
   canManageTournament,

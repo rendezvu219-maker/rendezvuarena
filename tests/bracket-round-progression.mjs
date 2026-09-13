@@ -11,7 +11,7 @@ const port=3130;
 const base=`http://127.0.0.1:${port}`;
 const child=spawn(process.execPath,['server.js'],{
   cwd:root,
-  env:{...process.env,NODE_ENV:'test',PORT:String(port),DATABASE_PATH:path.join(tempDir,'progress.sqlite'),AUTH_SECRET:'bracket-progress-secret-32-characters!!',ADMIN_EMAIL:'progress_admin@test.local',ADMIN_PASSWORD:'AdminPass123!',ADMIN_USERNAME:'progress_admin',ALLOW_MANUAL_TOURNAMENT_CREATION:'true'},
+  env:{...process.env,NODE_ENV:'test',REGISTER_RATE_LIMIT_MAX:'1000',PORT:String(port),DATABASE_PATH:path.join(tempDir,'progress.sqlite'),AUTH_SECRET:'bracket-progress-secret-32-characters!!',ADMIN_EMAIL:'progress_admin@test.local',ADMIN_PASSWORD:'AdminPass123!',ADMIN_USERNAME:'progress_admin',ALLOW_MANUAL_TOURNAMENT_CREATION:'true'},
   stdio:['ignore','pipe','pipe'],
 });
 let serverOutput='';
@@ -51,6 +51,9 @@ try{
   const final=detail.matches.find(match=>match.round_no===2);
   assert.ok(semis.every(match=>match.match_status==='checkin_open'),'Every playable first-round match must allow Captain check-in.');
   await playHostVerified(semis[0],admin);
+  const partialHistory = await request('/api/profile/history',{token:captainTokensByTeam.get(Number(semis[0].team_a_id))});
+  assert.ok(partialHistory.participated.length > 0, 'Captain participation must be visible.');
+  assert.equal(partialHistory.participated[0].achievement.rank,null,'A semifinal winner is not champion while the final is pending.');
   detail=await request(`/api/tournaments/${tournament.id}`,{token:admin});
   let waitingFinal=detail.matches.find(match=>match.id===final.id);
   assert.notEqual(waitingFinal.result_status,'final','Final must not auto-complete after only one semifinal finishes.');
@@ -69,6 +72,22 @@ try{
   assert.notEqual(playableFinal.result_status,'final');
   assert.equal(playableFinal.match_status,'checkin_open','A newly assigned later-round match must automatically open Captain check-in.');
   await play(playableFinal,captainTokensByTeam);
+  const championHistory = await request('/api/profile/history',{token:captainTokensByTeam.get(Number(playableFinal.team_a_id))});
+  assert.equal(championHistory.participated[0].achievement.rank,1,'Approved final winner is champion.');
+  const runnerHistory = await request('/api/profile/history',{token:captainTokensByTeam.get(Number(playableFinal.team_b_id))});
+  assert.equal(runnerHistory.participated[0].achievement.rank,2,'Approved final loser is runner-up.');
+  const hiddenProfile=await request('/api/profiles/progress_captain_1');
+  assert.equal(hiddenProfile.profile.tournamentHistory.length,0,'Unpublished tournament history must not leak through a public profile.');
+  await request(`/api/tournaments/${tournament.id}/publish`,{token:admin,method:'POST',body:{}});
+  const publicProfile=await request('/api/profiles/progress_captain_1');
+  assert.equal(publicProfile.profile.tournamentHistory.length,1,'Published participation appears on a public profile.');
+  const publicBracket=await request(`/api/public/tournaments/${tournament.slug}`);
+  assert.equal(publicBracket.matches.length,3);
+  assert.equal(publicBracket.matches.filter(m=>m.resultStatus==='final').length,3);
+  await request('/api/profile/settings',{token:captainTokensByUser.get('progress_captain_1'),method:'PATCH',body:{displayName:'Progress Captain 1',profileVisibility:'private'}});
+  const privateResponse=await fetch(`${base}/api/profiles/progress_captain_1`);
+  assert.equal(privateResponse.status,403,'Private profile must deny anonymous access.');
+  assert.equal((await privateResponse.json()).profile.tournamentHistory,undefined,'Private denial must not include history.');
   detail=await request(`/api/tournaments/${tournament.id}`,{token:admin});
   assert.equal(detail.matches.filter(match=>match.result_status==='final').length,3,'All three matches must be finalized through submit + confirm.');
   console.log('Bracket progression, dual verification, and undo advancement regression passed.');

@@ -308,18 +308,49 @@ export class HostSetup {
     });
   }
 
+  createClientSideRoom() {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const values = new Uint8Array(8);
+    crypto.getRandomValues(values);
+    const roomCode = Array.from(values, v => alphabet[v % alphabet.length]).join('');
+    const hostPeerId = `rv-${roomCode.toLowerCase()}`;
+    const randomHex = len => Array.from(crypto.getRandomValues(new Uint8Array(len)), b => b.toString(16).padStart(2, '0')).join('');
+    const access = {
+      host: randomHex(16),
+      teamA: randomHex(16),
+      teamB: randomHex(16),
+      broadcaster: randomHex(16),
+    };
+    const storedConfig = {
+      ...this.config,
+      roomCode,
+      hostPeerId,
+      quickDraft: true,
+      createdAt: Date.now(),
+    };
+    try {
+      localStorage.setItem(`rv_config_${roomCode}`, JSON.stringify(storedConfig));
+      localStorage.setItem(`rv_secrets_${roomCode}`, JSON.stringify(access));
+    } catch {}
+
+    const baseUrl = window.location.href.split(/[?#]/)[0].replace(/quick-draft(\.html)?$/, 'draft-room.html');
+    const links = {
+      host: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=host&access=${encodeURIComponent(access.host)}&host=${encodeURIComponent(hostPeerId)}`,
+      teamA: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=teamA&access=${encodeURIComponent(access.teamA)}&host=${encodeURIComponent(hostPeerId)}`,
+      teamB: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=teamB&access=${encodeURIComponent(access.teamB)}&host=${encodeURIComponent(hostPeerId)}`,
+      broadcaster: `${baseUrl.replace('draft-room.html', 'broadcast.html')}#room=${encodeURIComponent(roomCode)}&role=broadcaster&access=${encodeURIComponent(access.broadcaster)}&host=${encodeURIComponent(hostPeerId)}`,
+    };
+
+    return {
+      roomCode,
+      config: storedConfig,
+      links,
+    };
+  }
+
   async ensureServerRoom() {
-    if (this.liveRoomRequest) return this.liveRoomRequest;
-    this.liveRoomRequest = api('/api/quick-draft-rooms', {
-      method: 'POST',
-      body: { config: this.config },
-    }).then(payload => {
-      this.liveRoom = payload.room;
-      return payload.room;
-    }).finally(() => {
-      this.liveRoomRequest = null;
-    });
-    return this.liveRoomRequest;
+    this.liveRoom = this.createClientSideRoom();
+    return this.liveRoom;
   }
 
   setStartBusy(busy) {
@@ -463,9 +494,10 @@ export class HostSetup {
       const room = await this.ensureServerRoom();
       if (!document.body.contains(grid)) return;
       const rows = [
+        { key:'host', input:'link-host', tone:'gold', icon:'👑', title:'Host / Organizer Link', desc:'Authoritative control of the draft room. Keep this tab open.', full:true },
         { key:'teamA', input:'link-a', tone:'blue', icon:'🔵', title:t('teamALink'), desc:t('sendTo', { team:this.config.teamA }) },
         { key:'teamB', input:'link-b', tone:'red', icon:'🔴', title:t('teamBLink'), desc:t('sendTo', { team:this.config.teamB }) },
-        { key:'broadcaster', input:'link-spec', tone:'gold', icon:'📺', title:t('broadcastPreviewLink'), desc:t('broadcastPreviewDesc'), full:true },
+        { key:'broadcaster', input:'link-spec', tone:'gold', icon:'👁️', title:'Spectator / Broadcaster Link', desc:'View-only link for spectators, livestreamers, or OBS overlay.', full:true },
       ];
       grid.innerHTML = rows.map(row => `
         <div class="setting-card ${row.full ? 'full-width' : ''}">

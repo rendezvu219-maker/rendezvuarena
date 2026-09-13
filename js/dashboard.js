@@ -16,6 +16,7 @@ const state = {
   openMatchId: null,
   openTeamId: null,
   soloPreview: null,
+  manualPreview: null,
 };
 
 const $ = selector => document.querySelector(selector);
@@ -74,8 +75,9 @@ function renderOverview(){const {tournament,teams,matches,preflight}=state.activ
   $('#copy-public-link').addEventListener('click',()=>copyText(publicUrl,'Public bracket link copied.'));$('#run-preflight').addEventListener('click',async()=>{const check=await api(`/api/tournaments/${state.activeId}/preflight`);state.active.preflight=check;renderOverview();toast(check.ok?'Preflight passed.':`${check.blockers.length} blocker(s) found.`,!check.ok);});$('#start-tournament')?.addEventListener('click',async()=>{if(!confirm(t('startTournamentConfirm')))return;try{await api(`/api/tournaments/${state.activeId}/start`,{method:'POST',body:{}});toast('Tournament started. Captains can now check in from their highlighted match.');await loadActiveTournament();}catch(error){toast(error.message,true);}});$$('[data-open-tab]').forEach(button=>button.addEventListener('click',()=>{const tab=button.dataset.openTab;const target=$(`#ops-tabs [data-tab="${tab}"]`);if(target&&!target.classList.contains('hidden'))target.click();}));$('#verify-tournament-source')?.addEventListener('click',async()=>{const name=prompt('Confirm or correct the tournament name:',tournament.name);if(name===null)return;const description=prompt('Confirm or correct the tournament description:',tournament.description||'');if(description===null)return;try{await api(`/api/tournaments/${state.activeId}/verify-source`,{method:'POST',body:{name,description}});toast('External source details confirmed by Host.');await loadTournaments();}catch(error){toast(error.message,true);}});}
 function renderPreflight(check){return `<div class="ops-preflight ${check.ok?'ok':'has-errors'}"><div class="ops-preflight-title">${check.ok?'✓ Ready to generate':'⚠ Action required'}</div>${check.blockers.length?`<div class="ops-preflight-list"><b>Blockers</b>${check.blockers.map(item=>`<div>• ${escapeHtml(item)}</div>`).join('')}</div>`:''}${check.warnings.length?`<div class="ops-preflight-list warning"><b>Warnings</b>${check.warnings.map(item=>`<div>• ${escapeHtml(item)}</div>`).join('')}</div>`:''}</div>`;}
 
-function renderTeams(){const teams=state.active.teams;const allJoinRequests=state.active.joinRequests||[];const joinRequests=allJoinRequests.filter(item=>item.status==='pending');const soloPool=allJoinRequests.filter(item=>item.status==='approved'&&!item.team_id&&!item.selected_member_id&&['player','captain'].includes(item.requested_role));state.soloPreview=null;$('#tab-teams').innerHTML=`
+function renderTeams(){const teams=state.active.teams;const allJoinRequests=state.active.joinRequests||[];const joinRequests=allJoinRequests.filter(item=>item.status==='pending');const soloPool=allJoinRequests.filter(item=>item.status==='approved'&&!item.team_id&&!item.selected_member_id&&['player','captain'].includes(item.requested_role));state.soloPreview=null;state.manualPreview=null;$('#tab-teams').innerHTML=`
   ${renderJoinRequests(joinRequests,teams)}
+  ${can('team.randomize_solo')?renderManualRandomizer(soloPool,teams):''}
   ${can('team.randomize_solo')?renderSoloRandomizer(soloPool,teams):''}
   <div class="ops-section"><h3>Add Manual Team</h3><form id="add-team-form" class="ops-form-card"><label>Team name<input id="team-name" required></label><label>Tag <span class="ops-field-hint">optional</span><input id="team-tag" maxlength="8" placeholder="Auto-generated"></label><label>Region<input id="team-region" placeholder="Asia / Japan / SEA"></label><button class="btn btn-primary" type="submit">ADD TEAM</button></form></div>
   <div class="ops-section"><div class="ops-panel-header ops-section-header"><div><h3>Teams & Drag-and-Drop Seeding</h3><div class="ops-list-meta">Kéo bằng tay cầm ⋮⋮ hoặc dùng nút ↑ ↓. Click vào thẻ đội để mở cửa sổ chi tiết và chỉnh sửa.</div></div><div class="ops-toolbar"><button class="btn btn-ghost btn-sm" id="randomize-seeds">🎲 RANDOMIZE UNLOCKED</button><button class="btn btn-ghost btn-sm" id="undo-seeds">↶ UNDO</button><button class="btn btn-primary btn-sm" id="save-seeds">SAVE SEED ORDER</button></div></div>
@@ -83,6 +85,7 @@ function renderTeams(){const teams=state.active.teams;const allJoinRequests=stat
   $('#add-team-form').addEventListener('submit',async event=>{event.preventDefault();try{await api(`/api/tournaments/${state.activeId}/teams`,{method:'POST',body:{name:$('#team-name').value,tag:$('#team-tag').value,region:$('#team-region').value}});toast('Team created. Link a Captain account before generating the bracket.');await loadActiveTournament();}catch(error){toast(error.message,true);}});
   bindJoinRequestActions();
   bindSoloRandomizer();
+  bindManualRandomizer();
   bindSeedDrag();
   $$('.ops-seed-row').forEach(row=>{
     const openDetails=()=>openTeamModal(Number(row.dataset.teamId));
@@ -690,3 +693,289 @@ function bindGlobalErrorBoundary(){
 
 bindGlobalErrorBoundary();
 bootstrap();
+
+
+function renderManualRandomizer(pool, teams = []) {
+  const poolCount = pool.length;
+  return `
+    <div class="ops-section ops-manual-randomizer">
+      <div class="ops-section-header">
+        <div>
+          <h3>🎲 RANDOM POOL & TEAM GENERATOR (32 PLAYERS → 8 TEAMS)</h3>
+          <div class="ops-list-meta">Nhập danh sách người chơi (mỗi dòng 1 tên) HOẶC kết hợp với Solo Pool để random thành các đội 4v4.</div>
+        </div>
+        <span class="ops-status-pill status-ready" id="manual-mode-badge">MANUAL INPUT</span>
+      </div>
+
+      <div class="ops-manual-mode-tabs">
+        <button type="button" class="btn btn-primary btn-xs manual-mode-tab active" data-source-mode="manual">📝 CHỈ NHẬP TAY (MANUAL)</button>
+        <button type="button" class="btn btn-ghost btn-xs manual-mode-tab" data-source-mode="mixed">🔀 KẾT HỢP (SOLO POOL + NHẬP TAY)</button>
+      </div>
+
+      <div id="manual-mixed-pool-selector" class="ops-mixed-pool-box hidden">
+        <div class="ops-mixed-pool-header">
+          <strong>CHỌN NGƯỜI CHƠI TỪ SOLO POOL ĐÃ DUYỆT (${poolCount} người có sẵn):</strong>
+          <button type="button" class="btn btn-ghost btn-xs" id="btn-select-all-pool">Chọn tất cả</button>
+          <button type="button" class="btn btn-ghost btn-xs" id="btn-deselect-all-pool">Bỏ chọn</button>
+        </div>
+        <div class="ops-mixed-pool-grid">
+          ${poolCount ? pool.map(req => `
+            <label class="ops-mixed-pool-item">
+              <input type="checkbox" class="manual-pool-checkbox" value="${req.id}">
+              <span>${escapeHtml(req.display_name)} <small>@${escapeHtml(req.username)}</small></span>
+            </label>
+          `).join('') : '<div class="ops-list-meta">Chưa có ai trong Solo Pool. Bạn có thể nhập tay toàn bộ 32 tên bên dưới.</div>'}
+        </div>
+      </div>
+
+      <div class="ops-manual-controls">
+        <div class="ops-manual-input-col">
+          <div class="ops-input-header-row">
+            <label for="manual-players-input"><strong>DANH SÁCH NGƯỜI CHƠI (MỖI DÒNG 1 TÊN):</strong></label>
+            <div class="ops-manual-quick-actions">
+              <button type="button" class="btn btn-ghost btn-xs" id="btn-paste-mock-32">⚡ Điền mẫu 32 tên</button>
+              <button type="button" class="btn btn-ghost btn-xs" id="btn-clear-manual-input">Xóa trắng</button>
+            </div>
+          </div>
+          <textarea id="manual-players-input" class="ops-manual-textarea" rows="8" placeholder="Nhập hoặc dán danh sách 32 người chơi ở đây, mỗi người một dòng:&#10;Player 1&#10;Player 2&#10;Player 3&#10;..."></textarea>
+          <div class="ops-player-counter" id="manual-player-counter">
+            <span class="count-badge" id="manual-count-badge">0 người chơi</span>
+            <span class="count-hint" id="manual-count-hint">Cần 32 người chơi cho 8 đội 4v4</span>
+          </div>
+        </div>
+
+        <div class="ops-manual-settings-col">
+          <label>Số người mỗi đội (Team Size)
+            <input id="manual-team-size" type="number" min="2" max="16" value="4">
+          </label>
+          <div class="ops-manual-stats-card">
+            <div class="stat-item">
+              <span class="stat-label">Số đội dự kiến:</span>
+              <strong class="stat-value" id="manual-calc-teams">8 teams</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Cơ chế đội trưởng:</span>
+              <span class="stat-value">Ngẫu nhiên 1 người / đội (★)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ops-toolbar" style="margin-top:12px;">
+        <button class="btn btn-primary btn-sm" id="btn-preview-manual-teams">🎲 PREVIEW RANDOM TEAMS</button>
+        <button class="btn btn-ghost btn-sm" id="btn-undo-manual-teams">↶ UNDO TEAMS</button>
+      </div>
+
+      <div id="manual-randomizer-preview"></div>
+    </div>
+  `;
+}
+
+function getManualPlayersList() {
+  const text = $('#manual-players-input')?.value || '';
+  return text
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+}
+
+function updateManualPlayerCount() {
+  const manualList = getManualPlayersList();
+  const selectedPool = $$('.manual-pool-checkbox:checked').map(cb => Number(cb.value));
+  const total = manualList.length + selectedPool.length;
+  const teamSize = Number($('#manual-team-size')?.value || 4);
+  const teamCount = teamSize > 0 ? Math.floor(total / teamSize) : 0;
+  const remainder = teamSize > 0 ? total % teamSize : 0;
+
+  const countBadge = $('#manual-count-badge');
+  const countHint = $('#manual-count-hint');
+  const calcTeams = $('#manual-calc-teams');
+
+  if (countBadge) {
+    if (selectedPool.length > 0) {
+      countBadge.textContent = `${total} người (${manualList.length} nhập tay + ${selectedPool.length} từ pool)`;
+    } else {
+      countBadge.textContent = `${total} người chơi`;
+    }
+    countBadge.classList.toggle('is-ready', total === 32 || (total > 0 && remainder === 0));
+    countBadge.classList.toggle('is-warning', total > 0 && remainder !== 0);
+  }
+
+  if (countHint) {
+    if (total === 32 && teamSize === 4) {
+      countHint.textContent = '✓ Đủ 32 người — chuẩn 8 đội 4v4!';
+      countHint.style.color = 'var(--status-ready)';
+    } else if (total === 0) {
+      countHint.textContent = `Cần chia hết cho ${teamSize} (VD: 32 người cho 8 đội 4v4)`;
+      countHint.style.color = 'var(--text-muted)';
+    } else if (remainder === 0) {
+      countHint.textContent = `✓ Hợp lệ: chia đều thành ${teamCount} đội ${teamSize} người`;
+      countHint.style.color = 'var(--status-ready)';
+    } else {
+      const needed = teamSize - remainder;
+      countHint.textContent = `⚠ Cần thêm ${needed} người nữa để chia đều đội ${teamSize} người`;
+      countHint.style.color = 'var(--status-disputed)';
+    }
+  }
+
+  if (calcTeams) {
+    calcTeams.textContent = remainder === 0 && total > 0 ? `${teamCount} teams` : '—';
+  }
+}
+
+function renderManualPreview(preview) {
+  const target = $('#manual-randomizer-preview');
+  if (!target) return;
+  target.innerHTML = `
+    <section class="ops-solo-preview ops-manual-preview-section">
+      <div class="ops-section-header">
+        <div>
+          <h4>🎲 KẾT QUẢ RANDOM TEAMS (${preview.assignments.length} ĐỘI)</h4>
+          <div class="ops-list-meta">Xem trước kết quả xếp đội. Nhấn REROLL để random lại, hoặc CONFIRM để lưu vào giải đấu.</div>
+        </div>
+        <span class="ops-status-pill status-ready">${preview.totalSlots} NGƯỜI CHƠI</span>
+      </div>
+      <div class="ops-solo-preview-grid">
+        ${preview.assignments.map(team => `
+          <article>
+            <b>${escapeHtml(team.name)} <small>${escapeHtml(team.tag)}</small></b>
+            ${team.members.map(member => `
+              <span class="${member.isCaptain ? 'is-captain' : ''}">
+                ${member.isCaptain ? '★ ' : ''}${escapeHtml(member.display_name)}
+                ${member.type === 'solo_pool' ? '<small style="color:var(--interactive-primary);display:inline;"> [Pool]</small>' : ''}
+              </span>
+            `).join('')}
+          </article>
+        `).join('')}
+      </div>
+      <div class="ops-toolbar">
+        <button class="btn btn-ghost btn-sm" id="btn-reroll-manual-teams">🔄 REROLL (RANDOM LẠI)</button>
+        <button class="btn btn-primary btn-sm" id="btn-confirm-manual-teams">✅ CONFIRM TEAMS (LƯU ĐỘI)</button>
+      </div>
+    </section>
+  `;
+
+  $('#btn-reroll-manual-teams')?.addEventListener('click', previewManualTeams);
+  $('#btn-confirm-manual-teams')?.addEventListener('click', confirmManualTeams);
+}
+
+async function previewManualTeams() {
+  const manualNames = getManualPlayersList();
+  const soloPoolRequestIds = $$('.manual-pool-checkbox:checked').map(cb => Number(cb.value));
+  const teamSize = Number($('#manual-team-size')?.value || 4);
+  const total = manualNames.length + soloPoolRequestIds.length;
+
+  if (total < teamSize) {
+    return toast(`Cần ít nhất ${teamSize} người chơi. Hiện có ${total} người.`, true);
+  }
+  if (total % teamSize !== 0) {
+    return toast(`Tổng ${total} người không chia đều được cho ${teamSize} người/đội.`, true);
+  }
+
+  try {
+    const payload = await api(`/api/tournaments/${state.activeId}/manual-randomizer/preview`, {
+      method: 'POST',
+      body: { manualNames, soloPoolRequestIds, teamSize },
+    });
+    state.manualPreview = payload.preview;
+    renderManualPreview(payload.preview);
+    toast(`Đã random thành công ${payload.preview.assignments.length} đội!`);
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+async function confirmManualTeams() {
+  if (!state.manualPreview) return;
+  if (!confirm('Xác nhận lưu các đội này vào danh sách đội của giải đấu?')) return;
+  try {
+    await api(`/api/tournaments/${state.activeId}/manual-randomizer/confirm`, {
+      method: 'POST',
+      body: { previewId: state.manualPreview.id },
+    });
+    toast('Đã lưu các đội vào giải đấu!');
+    state.manualPreview = null;
+    await loadActiveTournament();
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+function bindManualRandomizer() {
+  const textarea = $('#manual-players-input');
+  if (textarea) {
+    textarea.addEventListener('input', updateManualPlayerCount);
+  }
+
+  const teamSizeInput = $('#manual-team-size');
+  if (teamSizeInput) {
+    teamSizeInput.addEventListener('input', updateManualPlayerCount);
+  }
+
+  $$('.manual-pool-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateManualPlayerCount);
+  });
+
+  $('#btn-select-all-pool')?.addEventListener('click', () => {
+    $$('.manual-pool-checkbox').forEach(cb => { cb.checked = true; });
+    updateManualPlayerCount();
+  });
+
+  $('#btn-deselect-all-pool')?.addEventListener('click', () => {
+    $$('.manual-pool-checkbox').forEach(cb => { cb.checked = false; });
+    updateManualPlayerCount();
+  });
+
+  $$('.manual-mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.manual-mode-tab').forEach(t => t.classList.remove('active', 'btn-primary'));
+      $$('.manual-mode-tab').forEach(t => t.classList.add('btn-ghost'));
+      tab.classList.add('active', 'btn-primary');
+      tab.classList.remove('btn-ghost');
+
+      const isMixed = tab.dataset.sourceMode === 'mixed';
+      $('#manual-mixed-pool-selector')?.classList.toggle('hidden', !isMixed);
+      if (!isMixed) {
+        $$('.manual-pool-checkbox').forEach(checkbox => { checkbox.checked = false; });
+      }
+      const badge = $('#manual-mode-badge');
+      if (badge) badge.textContent = isMixed ? 'MIXED POOL + MANUAL' : 'MANUAL INPUT';
+      updateManualPlayerCount();
+    });
+  });
+
+  $('#btn-paste-mock-32')?.addEventListener('click', () => {
+    const mock32 = Array.from({ length: 32 }, (_, i) => `Player ${i + 1}`).join('\n');
+    if (textarea) {
+      textarea.value = mock32;
+      updateManualPlayerCount();
+      toast('Đã điền danh sách mẫu 32 người chơi.');
+    }
+  });
+
+  $('#btn-clear-manual-input')?.addEventListener('click', () => {
+    if (textarea) {
+      textarea.value = '';
+      updateManualPlayerCount();
+    }
+  });
+
+  $('#btn-preview-manual-teams')?.addEventListener('click', previewManualTeams);
+
+  $('#btn-undo-manual-teams')?.addEventListener('click', async () => {
+    if (!confirm('Hoàn tác (xóa) các đội vừa được tạo bởi randomizer?')) return;
+    try {
+      await api(`/api/tournaments/${state.activeId}/manual-randomizer/undo`, {
+        method: 'POST',
+        body: {},
+      });
+      toast('Đã hoàn tác các đội vừa random.');
+      state.manualPreview = null;
+      await loadActiveTournament();
+    } catch (error) {
+      toast(error.message, true);
+    }
+  });
+
+  updateManualPlayerCount();
+}

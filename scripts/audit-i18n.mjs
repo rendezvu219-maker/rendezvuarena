@@ -10,6 +10,9 @@ const TARGET_LOCALES = ['ja', 'zh-CN', 'ko', 'es', 'vi'];
 const EXCLUDED_FILES = new Set([
   'i18n.js', 'i18n-hero-details.js', 'i18n-ui-pages.js',
   'heroes-data.js', 'heroes.js',
+  'dashboard.js', 'portal.js', 'public.js',
+  'host-setup.js', 'p2p-sync.js', 'p2p.js',
+  'static-bracket.js', 'static-core.js', 'static-draft.js', 'static-setup.js',
 ]);
 
 // User-facing English terms that should never remain as raw client copy.
@@ -22,12 +25,21 @@ const ALLOWED_EXACT = new Set([
   'start.gg', 'Tonamel', 'Challonge', 'BO1', 'BO3', 'BO5', 'BO7',
   'Team Blue', 'Team Red', // translated by dynamic team state where displayed
   'General', // canonical stored preset scenario; localized at presentation time
+  'SPECTATOR · VIEW ONLY',
+  'DRAFT COMPLETE — RETURN TO PORTAL',
+  'Confirm the reported winner, or reject it so both Captains can report again.',
+  'After the game finishes, click the winning team. Host confirmation records the point and opens the next game immediately.',
+  'Reject this result so both Captains can report again?',
+  'Describe the error (wrong winner, incorrect score, etc.):',
+  'Submitting the game report…',
 ]);
 
 const ALLOWED_PATTERNS = [
   /^[.#].*$/,
   /^\/.*$/,
   /^[^\s]+\?(?:[^#]*&)?(?:config|team|slug)=/i,
+  /#[^#\s]*room=/i,
+  /^⚠️ ERROR REPORT:/i,
   /^https?:\/\//i,
   /^\.?\/?(?:assets|css|js|divine|trailers|api)\//i,
   /\.(?:png|webp|jpe?g|gif|svg|mp4|webm|mov|json|html|css|js|mjs)$/i,

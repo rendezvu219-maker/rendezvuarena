@@ -6,6 +6,7 @@ import {
   getHeroDisplayDescription,
   getHeroDisplayImage,
   getHeroDisplayName,
+  getHeroFullImg,
   heroMatchesSearch,
   isNikitaEasterEggSearch,
 } from '../js/heroes.js';
@@ -35,7 +36,7 @@ assert.equal(heroMatchesSearch(gokuMini, 'daima'), true);
 assert.equal(isNikitaEasterEggSearch('daima'), false);
 assert.equal(heroMatchesSearch(vegeta, 'nik'), false);
 assert.equal(getHeroDisplayImage('0017', 'Nik', 'full'), NIKITA_EASTER_EGG.imagePath);
-assert.equal(getHeroDisplayImage('0017', '', 'full'), '/assets/heroes/0017/image_character.webp');
+assert.equal(getHeroDisplayImage('0017', '', 'full'), getHeroFullImg('0017'));
 assert.match(getHeroDisplayDescription('0017', 'fallback', 'Nikita', 'vi'), /Nikita/);
 assert.match(getHeroDisplayDescription('0017', 'fallback', 'Nikita', 'vi'), /bộ skin hồng đặc trưng—cũng chính là skin mà anh ấy luôn chơi hay nhất\./);
 assert.match(getHeroDisplayDescription('0017', 'fallback', 'Nikita', 'vi'), /Nghe đồn mì Indome chẳng khác nào vũ khí thứ hai của anh ấy\./);

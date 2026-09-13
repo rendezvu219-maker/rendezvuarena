@@ -11,7 +11,7 @@ const { version: appVersion } = require('./package.json');
 
 const { db, transaction, jsonParse, dbPath } = require('./server/db');
 const {
-  accessTokenFromRequest, authRequired, allowRoles, burnPasswordCost, clearSessionCookies,
+  accessTokenFromRequest, authRequired, optionalAuth, allowRoles, burnPasswordCost, clearSessionCookies,
   createSession, developmentTokenResponse, emailVerifiedRequired, hashPassword, needsPasswordRehash, refreshTokenFromRequest,
   revokeAllUserSessions, revokeSessionByRequest, revokeUserSession, rotateSession, setSessionCookies, verifyPassword,
   authenticateAccessToken, listUserSessions,
@@ -213,6 +213,10 @@ const htmlCacheHeaders = (req, res, next) => {
 
 app.get('/', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'index.html')));
 app.get('/index.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'index.html')));
+app.get('/quick-match.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'quick-match.html')));
+app.get('/tournament.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'tournament.html')));
+app.get('/bracket.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'bracket.html')));
+app.get('/draft.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'draft.html')));
 app.get('/quick-draft.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'quick-draft.html')));
 app.get('/heroes.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'heroes.html')));
 app.get('/hero.html', htmlCacheHeaders, (_req, res) => res.sendFile(path.join(root, 'heroes.html')));
@@ -486,8 +490,10 @@ function syncTeamCaptain(teamId,user,{gamerTag=''}={}){
       .run(teamId,userId,user.display_name,String(gamerTag||user.gamer_tag||user.username||''));
   }
   
-  // Update team captain reference while preserving team status
-  db.prepare(`UPDATE teams SET captain_user_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(userId,teamId);
+  // Update team captain reference while preserving team status (promoting captain_pending to ready)
+  const nextTeamStatus = currentTeam.team_status === 'captain_pending' ? 'ready' : currentTeam.team_status;
+  const nextStatus = currentTeam.status === 'pending' ? 'approved' : currentTeam.status;
+  db.prepare(`UPDATE teams SET captain_user_id=?,team_status=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(userId,nextTeamStatus,nextStatus,teamId);
 }
 
 function soloRandomizerPool(tournamentId) {
@@ -574,6 +580,97 @@ function soloPreviewPayload(row) {
   return {
     id:row.id,totalSlots:row.total_slots,teamSize:row.team_size,captainMode:row.captain_mode,
     expiresAt:row.expires_at,assignments:jsonParse(row.assignments_json,[]),
+  };
+}
+
+function buildManualTeamPreview(tournamentId, { manualNames = [], soloPoolRequestIds = [], teamSize = 4 } = {}) {
+  assertSoloFormationWindow(tournamentId);
+  const cleanManualNames = (Array.isArray(manualNames) ? manualNames : [])
+    .map(name => String(name || '').trim())
+    .filter(name => name.length > 0);
+
+  const rawSelectedReqIds=Array.isArray(soloPoolRequestIds)?soloPoolRequestIds:[];
+  const normalizedReqIds=rawSelectedReqIds.map(Number);
+  if(normalizedReqIds.some(id=>!Number.isInteger(id)||id<1))throw new Error('Solo pool request IDs must be positive whole numbers.');
+  const selectedReqIds = [...new Set(normalizedReqIds)];
+  const pool = soloRandomizerPool(tournamentId);
+  const poolByReq = new Map(pool.map(p => [Number(p.request_id), p]));
+  const selectedPoolPlayers = selectedReqIds.map(id => poolByReq.get(id)).filter(Boolean);
+  if (selectedPoolPlayers.length !== selectedReqIds.length) {
+    throw new Error('One or more selected solo pool players are no longer available. Refresh and preview again.');
+  }
+
+  const allPlayers = [
+    ...cleanManualNames.map((name, idx) => ({
+      type: 'manual',
+      manual_index: idx,
+      display_name: name,
+      gamer_tag: name,
+      username: '',
+      user_id: null,
+      request_id: null,
+      isCaptain: false,
+    })),
+    ...selectedPoolPlayers.map(p => ({
+      type: 'solo_pool',
+      display_name: p.display_name,
+      gamer_tag: p.gamer_tag || p.username,
+      username: p.username,
+      user_id: p.user_id,
+      request_id: p.request_id,
+      isCaptain: false,
+    })),
+  ];
+
+  const totalSlots = allPlayers.length;
+  const size = Number(teamSize || 4);
+  if (!Number.isInteger(size) || size < 2 || size > 16) {
+    throw new Error('Team size must be a whole number between 2 and 16.');
+  }
+  if (totalSlots < size) {
+    throw new Error(`At least ${size} players are required to form teams of ${size}. You provided ${totalSlots}.`);
+  }
+  if (totalSlots > 256) {
+    throw new Error('A maximum of 256 players can be randomized at once.');
+  }
+  if (totalSlots % size !== 0) {
+    throw new Error(`${totalSlots} players cannot be divided evenly into teams of ${size}.`);
+  }
+
+  const teamCount = totalSlots / size;
+  const shuffledPlayers = shuffledBySortKey(allPlayers);
+  const targets = uniqueSoloTeamNames(tournamentId, teamCount).map((name, index) => ({
+    id: null,
+    name,
+    tag: `T${String(index + 1).padStart(2, '0')}`,
+  }));
+
+  const assignments = Array.from({ length: teamCount }, (_, i) => ({
+    teamId: null,
+    name: targets[i].name,
+    tag: targets[i].tag,
+    members: [],
+  }));
+
+  shuffledPlayers.forEach((player, index) => {
+    const teamIndex = index % teamCount;
+    assignments[teamIndex].members.push({ ...player });
+  });
+
+  assignments.forEach(team => {
+    if (team.members.length > 0) {
+      team.members[0].isCaptain = true;
+    }
+  });
+
+  return {
+    totalSlots,
+    teamSize: size,
+    teamCount,
+    assignments,
+    poolRequestIds: selectedPoolPlayers.map(p => p.request_id),
+    manualCount: cleanManualNames.length,
+    poolCount: selectedPoolPlayers.length,
   };
 }
 
@@ -1628,6 +1725,9 @@ app.post('/api/tournaments/:id/solo-randomizer/confirm',authRequired,requireTour
       return res.status(409).json({error:'This solo team preview expired. Preview again before confirming.'});
     }
     const assignments=jsonParse(preview.assignments_json,[]);
+    if(assignments.flatMap(assignment=>Array.isArray(assignment.members)?assignment.members:[]).some(member=>Object.hasOwn(member,'type'))){
+      return res.status(409).json({error:'This preview was not created by the Solo Pool randomizer.'});
+    }
     const expectedRequestIds=jsonParse(preview.request_ids_json,[]).map(Number).sort((a,b)=>a-b);
     const currentPool=soloRandomizerPool(req.tournamentId);
     const currentRequestIds=currentPool.map(player=>Number(player.request_id)).sort((a,b)=>a-b);
@@ -1730,6 +1830,150 @@ app.post('/api/tournaments/:id/solo-randomizer/undo',authRequired,requireTournam
       logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'solo_randomizer.undone',details:{historyId:history.id,teamIds,requestIds:(snapshot.requests||[]).map(request=>request.id)}});
     });
     res.json({undone:true,removedTeamIds:createdTeamIds,clearedTeamIds:existingTeamIds,restoredRequestIds:(snapshot.requests||[]).map(request=>request.id)});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
+});
+
+app.post('/api/tournaments/:id/manual-randomizer/preview',authRequired,requireTournamentPermission('team.randomize_solo'),(req,res)=>{
+  try{
+    const built=buildManualTeamPreview(req.tournamentId,req.body||{});
+    const expiresAt=new Date(Date.now()+30*60*1000).toISOString();
+    const row=transaction(()=>{
+      db.prepare(`UPDATE solo_team_previews SET status='cancelled' WHERE tournament_id=? AND status='pending'`).run(req.tournamentId);
+      const result=db.prepare(`INSERT INTO solo_team_previews(
+        tournament_id,created_by,total_slots,team_size,captain_mode,assignments_json,request_ids_json,expires_at
+      ) VALUES (?,?,?,?,'random_assigned',?,?,?)`).run(
+        req.tournamentId,req.user.id,built.totalSlots,built.teamSize,
+        JSON.stringify(built.assignments),JSON.stringify(built.poolRequestIds),expiresAt
+      );
+      logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'manual_randomizer.previewed',details:{previewId:Number(result.lastInsertRowid),totalSlots:built.totalSlots,teamSize:built.teamSize,manualCount:built.manualCount,poolCount:built.poolCount}});
+      return db.prepare('SELECT * FROM solo_team_previews WHERE id=?').get(Number(result.lastInsertRowid));
+    });
+    res.status(201).json({preview:soloPreviewPayload(row),totalSlots:built.totalSlots,teamCount:built.teamCount});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
+});
+
+app.post('/api/tournaments/:id/manual-randomizer/confirm',authRequired,requireTournamentPermission('team.randomize_solo'),(req,res)=>{
+  try{
+    assertSoloFormationWindow(req.tournamentId);
+    const previewId=Number(req.body.previewId);
+    const preview=db.prepare(`SELECT * FROM solo_team_previews WHERE id=? AND tournament_id=?`).get(previewId,req.tournamentId);
+    if(!preview)return res.status(404).json({error:'Team preview not found.'});
+    if(preview.status!=='pending')return res.status(409).json({error:'This team preview is no longer pending.'});
+    if(Date.parse(preview.expires_at)<=Date.now()){
+      db.prepare("UPDATE solo_team_previews SET status='expired' WHERE id=?").run(preview.id);
+      return res.status(409).json({error:'This team preview expired. Preview again before confirming.'});
+    }
+    const assignments=jsonParse(preview.assignments_json,[]);
+    const previewMembers=assignments.flatMap(assignment=>Array.isArray(assignment.members)?assignment.members:[]);
+    if(!assignments.length||previewMembers.length!==Number(preview.total_slots)||previewMembers.some(member=>!['manual','solo_pool'].includes(member.type))){
+      return res.status(409).json({error:'This preview was not created by the manual team randomizer.'});
+    }
+    const expectedRequestIds=jsonParse(preview.request_ids_json,[]).map(Number).sort((a,b)=>a-b);
+    const currentPool=soloRandomizerPool(req.tournamentId);
+    const poolByRequest=new Map(currentPool.map(player=>[Number(player.request_id),player]));
+    for(const reqId of expectedRequestIds){
+      if(!poolByRequest.has(reqId)){
+        return res.status(409).json({error:'A selected solo pool player is no longer available. Please preview again.'});
+      }
+    }
+    const requestSnapshots=expectedRequestIds.length
+      ? db.prepare(`SELECT id,team_id,selected_member_id,status,review_note,reviewed_by,reviewed_at
+          FROM tournament_join_requests WHERE tournament_id=? AND id IN (${expectedRequestIds.map(()=>'?').join(',')}) ORDER BY id`).all(req.tournamentId,...expectedRequestIds)
+      : [];
+    const createdTeams=transaction(()=>{
+      let nextSeed=Number(db.prepare(`SELECT COALESCE(MAX(seed),0)+1 next_seed FROM teams WHERE tournament_id=? AND team_status NOT IN ('withdrawn','disqualified')`).get(req.tournamentId)?.next_seed||1);
+      const generated=[];
+      for(const assignment of assignments){
+        const members=Array.isArray(assignment.members)?assignment.members:[];
+        if(members.length!==Number(preview.team_size)||members.filter(member=>member.isCaptain===true).length!==1){
+          throw new Error('The preview no longer contains one Captain and the configured number of players per team.');
+        }
+        const captainMember=members.find(m=>m.isCaptain)||members[0]||null;
+        const captainUserId=captainMember?.user_id?Number(captainMember.user_id):null;
+        const inserted=db.prepare(`INSERT INTO teams(
+          tournament_id,name,tag,source,formation_source,seed,status,team_status,captain_user_id
+        ) VALUES (?,?,?,'manual','solo_randomizer',?,'approved',?,?)`).run(
+          req.tournamentId,String(assignment.name).slice(0,160),String(assignment.tag).slice(0,8),nextSeed++,captainUserId?'ready':'captain_pending',captainUserId
+        );
+        const teamId=Number(inserted.lastInsertRowid);
+        const userIds=[];const memberIds=[];
+        for(const m of members){
+          const isCaptain=Boolean(m.isCaptain);
+          if(m.user_id && m.request_id){
+            const poolRecord=poolByRequest.get(Number(m.request_id));
+            if(!poolRecord) throw new Error('Pool player no longer exists.');
+            const memberRes=db.prepare(`INSERT INTO team_members(
+              team_id,user_id,display_name,gamer_tag,member_role,membership_status,is_captain,is_substitute
+            ) VALUES (?,?,?,?,?,'active',?,0)`).run(
+              teamId,poolRecord.user_id,poolRecord.display_name,poolRecord.gamer_tag||poolRecord.username,isCaptain?'captain':'player',isCaptain?1:0
+            );
+            const memberId=Number(memberRes.lastInsertRowid);
+            memberIds.push(memberId);
+            userIds.push(Number(poolRecord.user_id));
+            db.prepare(`UPDATE tournament_join_requests SET team_id=?,selected_member_id=?,status='approved',reviewed_by=COALESCE(reviewed_by,?),reviewed_at=COALESCE(reviewed_at,CURRENT_TIMESTAMP),updated_at=CURRENT_TIMESTAMP WHERE id=? AND tournament_id=?`)
+              .run(teamId,memberId,req.user.id,poolRecord.request_id,req.tournamentId);
+          }else{
+            const memberRes=db.prepare(`INSERT INTO team_members(
+              team_id,user_id,display_name,gamer_tag,member_role,membership_status,is_captain,is_substitute
+            ) VALUES (?,NULL,?,?,?,'active',?,0)`).run(
+              teamId,String(m.display_name).slice(0,100),String(m.gamer_tag||m.display_name).slice(0,80),isCaptain?'captain':'player',isCaptain?1:0
+            );
+            memberIds.push(Number(memberRes.lastInsertRowid));
+          }
+        }
+        if(captainUserId){
+          const capRecord=poolByRequest.get(Number(captainMember.request_id));
+          if(capRecord){
+            syncTeamCaptain(teamId,{
+              id:capRecord.user_id,
+              display_name:capRecord.display_name,
+              username:capRecord.username,
+              gamer_tag:capRecord.gamer_tag,
+            },{gamerTag:capRecord.gamer_tag});
+          }
+        }
+        generated.push({teamId,name:assignment.name,tag:assignment.tag,captainUserId,userIds,memberIds,existingTeam:false,teamSnapshot:null});
+      }
+      const snapshot={previewId:preview.id,requests:requestSnapshots,generatedTeams:generated};
+      const history=db.prepare(`INSERT INTO solo_team_history(tournament_id,user_id,snapshot_json,reason) VALUES (?,?,?,'Before confirming manual randomizer teams')`)
+        .run(req.tournamentId,req.user.id,JSON.stringify(snapshot));
+      db.prepare(`UPDATE solo_team_previews SET status='confirmed',confirmed_at=CURRENT_TIMESTAMP WHERE id=?`).run(preview.id);
+      db.prepare(`UPDATE solo_team_previews SET status='cancelled' WHERE tournament_id=? AND status='pending' AND id!=?`).run(req.tournamentId,preview.id);
+      logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'manual_randomizer.confirmed',details:{previewId:preview.id,historyId:Number(history.lastInsertRowid),teamIds:generated.map(team=>team.teamId)}});
+      return generated;
+    });
+    res.status(201).json({confirmed:true,teams:createdTeams});
+  }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
+});
+
+app.post('/api/tournaments/:id/manual-randomizer/undo',authRequired,requireTournamentPermission('team.randomize_solo'),(req,res)=>{
+  try{
+    const history=db.prepare(`SELECT * FROM solo_team_history WHERE tournament_id=? AND undone_at IS NULL ORDER BY id DESC LIMIT 1`).get(req.tournamentId);
+    if(!history)return res.status(404).json({error:'No confirmed team randomizer snapshot is available to undo.'});
+    const snapshot=jsonParse(history.snapshot_json,{});const generated=Array.isArray(snapshot.generatedTeams)?snapshot.generatedTeams:[];
+    const teamIds=generated.map(team=>Number(team.teamId)).filter(Number.isInteger);
+    if(!teamIds.length)throw new Error('The snapshot does not contain generated teams.');
+    const matchCount=Number(db.prepare(`SELECT COUNT(*) count FROM matches WHERE tournament_id=? AND (team_a_id IN (${teamIds.map(()=>'?').join(',')}) OR team_b_id IN (${teamIds.map(()=>'?').join(',')}))`).get(req.tournamentId,...teamIds,...teamIds)?.count||0);
+    if(matchCount){const error=new Error('Teams cannot be undone after they are assigned to a match. Remove or regenerate the bracket first.');error.status=409;throw error;}
+    for(const team of generated){
+      const current=db.prepare(`SELECT id,user_id,is_captain FROM team_members WHERE team_id=? AND membership_status='active' ORDER BY id`).all(team.teamId);
+      const expectedMemberIds=(team.memberIds||[]).map(Number).sort((a,b)=>a-b);
+      const currentMemberIds=current.map(member=>Number(member.id)).sort((a,b)=>a-b);
+      if(expectedMemberIds.length&&JSON.stringify(currentMemberIds)!==JSON.stringify(expectedMemberIds)){
+        const error=new Error('A generated roster changed after confirmation. Restore it before using undo.');error.status=409;throw error;
+      }
+      if(current.filter(member=>member.is_captain===1).length!==1){
+        const error=new Error('A generated team Captain changed after confirmation. Restore the Captain before using undo.');error.status=409;throw error;
+      }
+    }
+    transaction(()=>{
+      teamIds.forEach(teamId=>db.prepare('DELETE FROM teams WHERE id=? AND tournament_id=? AND formation_source=\'solo_randomizer\'').run(teamId,req.tournamentId));
+      const restore=db.prepare(`UPDATE tournament_join_requests SET team_id=?,selected_member_id=?,status=?,review_note=?,reviewed_by=?,reviewed_at=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND tournament_id=?`);
+      (snapshot.requests||[]).forEach(request=>restore.run(request.team_id||null,request.selected_member_id||null,request.status,request.review_note||'',request.reviewed_by||null,request.reviewed_at||null,request.id,req.tournamentId));
+      db.prepare('UPDATE solo_team_history SET undone_at=CURRENT_TIMESTAMP WHERE id=?').run(history.id);
+      logAction({tournamentId:req.tournamentId,userId:req.user.id,action:'manual_randomizer.undone',details:{historyId:history.id,teamIds}});
+    });
+    res.json({undone:true,removedTeamIds:teamIds,restoredRequestIds:(snapshot.requests||[]).map(request=>request.id)});
   }catch(error){res.status(error.status||400).json({error:clientErrorMessage(error)});}
 });
 
@@ -2372,16 +2616,26 @@ function quickDraftConfig(input = {}) {
   };
 }
 
+function getOrCreateQuickDraftHostUserId(user) {
+  if (user && user.id) return user.id;
+  const existing = db.prepare("SELECT id FROM users WHERE username='quickdraft_guest' LIMIT 1").get();
+  if (existing) return existing.id;
+  const dummyHash = 'guest_no_login_allowed:' + randomCode(32);
+  const result = db.prepare("INSERT INTO users(username,email,display_name,password_hash,role,is_active,email_verified_at) VALUES ('quickdraft_guest','guest@quickdraft.local','Quick Draft Host',?,'player',1,CURRENT_TIMESTAMP)").run(dummyHash);
+  return Number(result.lastInsertRowid);
+}
+
 // Quick Draft uses the same server-authoritative Draft Room and role capability
 // system as tournament matches. The hidden backing event is deliberately
 // excluded from Tournament Operations and profile history.
-app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, res) => {
+app.post('/api/quick-draft-rooms', optionalAuth, (req, res) => {
   try {
+    const hostUserId = getOrCreateQuickDraftHostUserId(req.user);
     let config = quickDraftConfig(req.body?.config || req.body || {});
-    let externalId = `quick:${req.user.id}:${config.sessionId}`;
+    let externalId = `quick:${hostUserId}:${config.sessionId}`;
     let tournament = db.prepare(`SELECT * FROM tournaments
       WHERE source_platform='quick_draft' AND source_external_id=? AND host_user_id=? LIMIT 1`)
-      .get(externalId, req.user.id);
+      .get(externalId, hostUserId);
     let room;
     let access;
 
@@ -2414,19 +2668,19 @@ app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, re
           previousBansA: [],
           previousBansB: [],
         };
-        externalId = `quick:${req.user.id}:${config.sessionId}`;
+        externalId = `quick:${hostUserId}:${config.sessionId}`;
         tournament = null;
       }
     }
 
     transaction(() => {
       if (!tournament) {
-        let slug = `quick-${req.user.id}-${randomCode(10).toLowerCase()}`;
-        while (db.prepare('SELECT 1 FROM tournaments WHERE slug=?').get(slug)) slug = `quick-${req.user.id}-${randomCode(10).toLowerCase()}`;
+        let slug = `quick-${hostUserId}-${randomCode(10).toLowerCase()}`;
+        while (db.prepare('SELECT 1 FROM tournaments WHERE slug=?').get(slug)) slug = `quick-${hostUserId}-${randomCode(10).toLowerCase()}`;
         const tournamentId = Number(db.prepare(`INSERT INTO tournaments(
           host_user_id,name,slug,description,source_platform,source_external_id,source_sync_status,status,timezone,default_server,is_public,rules_json
         ) VALUES (?,?,?,?,?,?,?,'running','Asia/Ho_Chi_Minh','Asia',0,?)`)
-          .run(req.user.id, `Quick Draft: ${config.teamA} vs ${config.teamB}`, slug,
+          .run(hostUserId, `Quick Draft: ${config.teamA} vs ${config.teamB}`, slug,
             'Private server-backed Quick Draft room.', 'quick_draft', externalId, 'internal', JSON.stringify(config)).lastInsertRowid);
         const teamAId = Number(db.prepare(`INSERT INTO teams(tournament_id,name,tag,logo_url,source,status,team_status,seed)
           VALUES (?,?,?,?, 'manual','approved','ready',1)`)
@@ -2448,7 +2702,7 @@ app.post('/api/quick-draft-rooms', authRequired, emailVerifiedRequired, (req, re
         const storedConfig = { ...config, matchId, tournamentId, roundName: 'Quick Draft', gameRollId };
         const roomId = Number(db.prepare(`INSERT INTO draft_rooms(match_id,room_code,config_json,state_json,access_json,created_by)
           VALUES (?,?,?,?,?,?)`).run(matchId, roomCode, JSON.stringify(storedConfig),
-            JSON.stringify({ status:'waiting', gameNumber:1, gameRollId, seriesScoreA:0, seriesScoreB:0 }), JSON.stringify(access), req.user.id).lastInsertRowid);
+            JSON.stringify({ status:'waiting', gameNumber:1, gameRollId, seriesScoreA:0, seriesScoreB:0 }), JSON.stringify(access), hostUserId).lastInsertRowid);
         tournament = db.prepare('SELECT * FROM tournaments WHERE id=?').get(tournamentId);
         room = db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(roomId);
       } else {
@@ -3130,6 +3384,9 @@ app.post('/api/matches/:matchId/games/current/confirm', authRequired, emailVerif
       db.prepare(`UPDATE match_games SET result_status='none',reported_winner_team_id=NULL,reported_by_user_id=NULL,reported_by_team_id=NULL,reported_at=NULL,confirmed_by_user_id=NULL,confirmed_by_team_id=NULL,confirmed_at=NULL,dispute_reason=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
         .run(comment, game.id);
       db.prepare(`UPDATE matches SET result_status='none',updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(match.id);
+      const existing = db.prepare(`SELECT id FROM disputes WHERE match_id=? AND status IN ('open','under_review','recommended') ORDER BY id DESC LIMIT 1`).get(match.id);
+      if (!existing) db.prepare(`INSERT INTO disputes(match_id,opened_by_user_id,opened_by_team_id,status,reason) VALUES (?,?,?,'open',?)`)
+        .run(match.id, req.user.id, confirmingTeamId, `Game ${game.game_number}: ${comment}`);
       addSystemMessage(match.id, `Game ${game.game_number} result was rejected. Both Captains may report the winner again.`);
       emitBracketUpdated(match.tournament_id);
       emitMatchUpdated(draftMatchContext(match.id));
@@ -3201,7 +3458,7 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
       divineBans: Number(effectiveRules.divineBans ?? 0),
       draftStyle: effectiveRules.draftStyle === 'all-random' ? 'all-random' : 'standard',
       mirrorPickMode: normalizeMirrorPickMode(effectiveRules),
-      enableCoinFlip: effectiveRules.enableCoinFlip !== false,
+      enableCoinFlip: Number(game.game_number || 1) > 1 ? false : effectiveRules.enableCoinFlip !== false,
       enableDivineDraw: effectiveRules.enableDivineDraw !== false,
       divineDrawMode: effectiveRules.divineDrawMode || 'random',
       enableProtect: effectiveRules.enableProtect === true,
@@ -3641,7 +3898,10 @@ io.on('connection',socket=>{
     if(socket.data.ticket){
       if(Number(socket.data.ticket.draft_room_id)!==Number(room.id))return ack({ok:false,error:'Socket ticket is for another room.'});
       role=socket.data.ticket.role;
-    }else if(socket.user){role=resolveDraftRoleForUser(room,socket.user.id);}
+    }else if(socket.user){
+      role=resolveDraftRoleForUser(room,socket.user.id);
+      if(!role)return ack({ok:false,error:'Draft room access denied.'});
+    }
     if(!role) role='spectator';
     socket.data.draftRoomId=room.id;
     socket.data.draftRoomCode=room.room_code;

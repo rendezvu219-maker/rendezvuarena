@@ -23,17 +23,38 @@ export function parseOrder(value, fallback) {
   return sides.length ? sides : [...fallback];
 }
 
+export function generateBanOrder(count) {
+  const n = Math.max(0, Math.min(6, Number(count ?? 2)));
+  if (n === 0) return [];
+  if (n === 1) return ['B', 'A'];
+  if (n === 2) return ['B', 'A', 'A', 'B'];
+  if (n === 3) return ['B', 'A', 'B', 'A', 'A', 'B'];
+  const order = [];
+  for (let i = 0; i < n; i++) {
+    order.push(i % 2 === 0 ? 'B' : 'A');
+  }
+  for (let i = 0; i < n; i++) {
+    order.push(i % 2 === 0 ? 'A' : 'B');
+  }
+  return order;
+}
+
 export function normalizeRules(input = {}) {
   const bestOf = BEST_OF.includes(Number(input.bestOf)) ? Number(input.bestOf) : 3;
   const seriesRule = SERIES_RULES.includes(input.seriesRule) ? input.seriesRule : 'normal';
+  const banCount = input.banCount !== undefined && input.banCount !== '' ? Math.max(0, Math.min(6, Number(input.banCount))) : null;
+  const banOrderFallback = banCount !== null ? generateBanOrder(banCount) : DEFAULT_BAN_ORDER;
+  const parseList = val => Array.isArray(val) ? val.map(String) : String(val || '').split(',').map(s => s.trim()).filter(Boolean);
   return {
     bestOf,
     mode: input.mode === 'random' ? 'random' : 'draft',
     seriesRule,
     enableCoinFlip: input.enableCoinFlip === true || input.enableCoinFlip === 'on' || input.enableCoinFlip === 'true',
     squadraBlastCarryBans: input.squadraBlastCarryBans !== false && input.squadraBlastCarryBans !== 'false',
-    banOrder: parseOrder(input.banOrder, DEFAULT_BAN_ORDER),
+    banOrder: input.banOrder ? parseOrder(input.banOrder, banOrderFallback) : banOrderFallback,
     pickOrder: parseOrder(input.pickOrder, DEFAULT_PICK_ORDER),
+    protectHeroes: parseList(input.protectHeroes),
+    globalBans: parseList(input.globalBans),
   };
 }
 
@@ -86,6 +107,8 @@ export function deriveDraft(config, events) {
     for (const id of bucket.bans) previousBans.add(id);
   }
   const locked = { A: new Set(), B: new Set() };
+  for (const id of (rules.globalBans || [])) { locked.A.add(id); locked.B.add(id); }
+  const protectedHeroes = new Set(rules.protectHeroes || []);
   if (rules.seriesRule === 'team_no_repeat') {
     for (const side of ['A', 'B']) for (const id of previousPicks[side]) locked[side].add(id);
   } else if (rules.seriesRule === 'fearless') {
@@ -95,15 +118,21 @@ export function deriveDraft(config, events) {
     for (const side of ['A', 'B']) for (const id of prior[side]) locked[side].add(id);
     if (rules.squadraBlastCarryBans) for (const id of prior.bans) { locked.A.add(id); locked.B.add(id); }
   }
-  const coin = rules.enableCoinFlip
+  const presence = { A: false, B: false };
+  let started = false;
+  for (const event of ordered) {
+    if (event.type === 'presence' && ['A', 'B'].includes(event.side)) presence[event.side] = true;
+    if (event.type === 'start' || ['ban', 'pick', 'random', 'coin_flip'].includes(event.type)) started = true;
+  }
+  const coin = (rules.enableCoinFlip && game <= 1)
     ? ordered.find(event => event.type === 'coin_flip' && Number(event.game || 1) === game && ['heads', 'tails'].includes(event.result) && ['A', 'B'].includes(event.winner)) || null
     : null;
-  const preDraftComplete = !rules.enableCoinFlip || Boolean(coin);
+  const preDraftComplete = started && (!rules.enableCoinFlip || game > 1 || Boolean(coin));
   let step = 0;
   let random = null;
   for (const event of ordered) {
     if (Number(event.game || 1) !== game) continue;
-    if (event.type === 'random' && rules.mode === 'random' && preDraftComplete && !random && event.side === 'A') {
+    if (event.type === 'random' && rules.mode === 'random' && preDraftComplete && !random && (event.side === 'A' || event.actor === 'O')) {
       const all = [...(event.teamA || []), ...(event.teamB || [])];
       const respectsLocks = (event.teamA || []).every(id => !locked.A.has(id)) && (event.teamB || []).every(id => !locked.B.has(id));
       if (all.length === 8 && new Set(all).size === 8 && respectsLocks && all.every(id => HEROES.some(hero => hero.id === id))) random = { A: event.teamA, B: event.teamB };
@@ -113,6 +142,7 @@ export function deriveDraft(config, events) {
     if (!expected || event.type !== expected.type || event.side !== expected.side || Number(event.step) !== step) continue;
     const hero = HEROES.find(item => item.id === String(event.heroId));
     if (!preDraftComplete || !hero || used.has(hero.id) || locked[event.side].has(hero.id)) continue;
+    if (event.type === 'ban' && protectedHeroes.has(hero.id)) continue;
     if (event.type === 'pick' && picks[event.side].filter(id => HEROES.find(item => item.id === id)?.role === hero.role).length >= ({ Damage: 2, Tank: 1, Technical: 1 }[hero.role] || 0)) continue;
     used.add(hero.id);
     (event.type === 'ban' ? bans : picks)[event.side].push(hero.id);
@@ -126,7 +156,8 @@ export function deriveDraft(config, events) {
     game, score, sequence, step,
     current: preDraftComplete ? sequence[step] || null : null,
     bans, picks, used, locked, unavailableFor, previousPicks, previousBans,
-    random, coin, preDraftComplete, rules,
+    random, coin, preDraftComplete, rules, presence, started, readyToStart: presence.A && presence.B,
+    protectedHeroes, globalBans: rules.globalBans,
     complete: preDraftComplete && (Boolean(random) || step >= sequence.length),
   };
 }
@@ -173,8 +204,6 @@ export function deriveBracket(config, events) {
   const byId = Object.fromEntries(matches.map(match => [match.id, match]));
   const clearAfter = matchId => {
     for (const match of matches) if (match.sourceA === matchId || match.sourceB === matchId) {
-      if (match.sourceA === matchId) match.teamA = `Winner ${matchId}`;
-      if (match.sourceB === matchId) match.teamB = `Winner ${matchId}`;
       match.winner = null; match.scoreA = null; match.scoreB = null; clearAfter(match.id);
     }
   };

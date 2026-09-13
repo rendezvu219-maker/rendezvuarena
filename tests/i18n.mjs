@@ -75,7 +75,7 @@ for (const [heroId, record] of Object.entries(vietnameseCatalog)) {
   assert.equal(record.officialName, sourceHeroNames.vi[heroId], `Vietnamese display name mismatch for ${heroId}.`);
   assert.equal(record.translationStatus, 'editor-reviewed', `Vietnamese ${heroId} must be editor-reviewed.`);
   assert.equal(record.sourceLocale, 'zh-CN', `Vietnamese ${heroId} must be translated from the official Simplified Chinese record.`);
-  assert.doesNotMatch(JSON.stringify({ description: record.description, skills: record.skills }), /anh hùng|\btướng\b/iu, `Vietnamese ${heroId} must use “chiến binh”.`);
+  assert.doesNotMatch(JSON.stringify({ description: record.description, skills: record.skills }), /anh hùng|\btướng\b/iu, `Vietnamese ${heroId} must use "chiến binh".`);
   vietnameseSkillCount += Object.keys(record.skills || {}).length;
 }
 assert.equal(vietnameseSkillCount, 259, 'Vietnamese catalog must translate all 259 skills.');
