@@ -349,8 +349,32 @@ export class HostSetup {
   }
 
   async ensureServerRoom() {
-    this.liveRoom = this.createClientSideRoom();
-    return this.liveRoom;
+    if (this.liveRoomRequest) return this.liveRoomRequest;
+
+    // Try the server-backed API first. When a Node.js backend is running
+    // (Render, Railway, local server) this creates a real socket-synced room
+    // that works for players on different machines and networks.
+    // Fall back to a fully-client-side P2P room only when the server API is
+    // unavailable (e.g., GitHub Pages static hosting with no backend).
+    this.liveRoomRequest = (async () => {
+      try {
+        const payload = await api('/api/quick-draft-rooms', {
+          method: 'POST',
+          body: { config: this.config },
+        });
+        this.liveRoom = payload.room;
+        return payload.room;
+      } catch (serverErr) {
+        // Server not available — use fully-client-side P2P room instead.
+        console.info('[HostSetup] Server API unavailable, switching to P2P mode:', serverErr?.message || serverErr);
+        this.liveRoom = this.createClientSideRoom();
+        return this.liveRoom;
+      } finally {
+        this.liveRoomRequest = null;
+      }
+    })();
+
+    return this.liveRoomRequest;
   }
 
   setStartBusy(busy) {
