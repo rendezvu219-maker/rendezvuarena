@@ -3,6 +3,7 @@ import { HEROES } from './heroes.js';
 export const DEFAULT_BAN_ORDER = ['B', 'A', 'A', 'B'];
 export const DEFAULT_PICK_ORDER = ['A', 'B', 'B', 'A', 'B', 'A', 'A', 'B'];
 export const BEST_OF = [1, 3, 5, 7];
+export const SERIES_RULES = Object.freeze(['normal', 'team_no_repeat', 'fearless', 'squadra_blast']);
 
 export function randomSecret(bytes = 24) {
   const values = new Uint8Array(bytes);
@@ -24,9 +25,13 @@ export function parseOrder(value, fallback) {
 
 export function normalizeRules(input = {}) {
   const bestOf = BEST_OF.includes(Number(input.bestOf)) ? Number(input.bestOf) : 3;
+  const seriesRule = SERIES_RULES.includes(input.seriesRule) ? input.seriesRule : 'normal';
   return {
     bestOf,
     mode: input.mode === 'random' ? 'random' : 'draft',
+    seriesRule,
+    enableCoinFlip: input.enableCoinFlip === true || input.enableCoinFlip === 'on' || input.enableCoinFlip === 'true',
+    squadraBlastCarryBans: input.squadraBlastCarryBans !== false && input.squadraBlastCarryBans !== 'false',
     banOrder: parseOrder(input.banOrder, DEFAULT_BAN_ORDER),
     pickOrder: parseOrder(input.pickOrder, DEFAULT_PICK_ORDER),
   };
@@ -57,31 +62,73 @@ export function seriesScore(config, events) {
 }
 
 export function deriveDraft(config, events) {
+  const rules = normalizeRules(config.rules);
+  const ordered = orderedEvents(events);
   const score = seriesScore(config, events);
-  const game = Math.min(score.game, normalizeRules(config.rules).bestOf);
-  const sequence = draftSequence(config.rules);
+  const game = Math.min(score.game, rules.bestOf);
+  const sequence = draftSequence(rules);
   const bans = { A: [], B: [] };
   const picks = { A: [], B: [] };
   const used = new Set();
+  const previousPicks = { A: new Set(), B: new Set() };
+  const previousBans = new Set();
+  const previousGames = new Map();
+  for (const event of ordered) {
+    const eventGame = Number(event.game || 1);
+    if (eventGame >= game || !['ban', 'pick'].includes(event.type) || !['A', 'B'].includes(event.side)) continue;
+    const bucket = previousGames.get(eventGame) || { A: new Set(), B: new Set(), bans: new Set() };
+    if (event.type === 'pick') bucket[event.side].add(String(event.heroId));
+    else bucket.bans.add(String(event.heroId));
+    previousGames.set(eventGame, bucket);
+  }
+  for (const bucket of previousGames.values()) {
+    for (const side of ['A', 'B']) for (const id of bucket[side]) previousPicks[side].add(id);
+    for (const id of bucket.bans) previousBans.add(id);
+  }
+  const locked = { A: new Set(), B: new Set() };
+  if (rules.seriesRule === 'team_no_repeat') {
+    for (const side of ['A', 'B']) for (const id of previousPicks[side]) locked[side].add(id);
+  } else if (rules.seriesRule === 'fearless') {
+    for (const id of [...previousPicks.A, ...previousPicks.B]) { locked.A.add(id); locked.B.add(id); }
+  } else if (rules.seriesRule === 'squadra_blast' && ((game - 1) % 3) + 1 === 2) {
+    const prior = previousGames.get(game - 1) || { A: new Set(), B: new Set(), bans: new Set() };
+    for (const side of ['A', 'B']) for (const id of prior[side]) locked[side].add(id);
+    if (rules.squadraBlastCarryBans) for (const id of prior.bans) { locked.A.add(id); locked.B.add(id); }
+  }
+  const coin = rules.enableCoinFlip
+    ? ordered.find(event => event.type === 'coin_flip' && Number(event.game || 1) === game && ['heads', 'tails'].includes(event.result) && ['A', 'B'].includes(event.winner)) || null
+    : null;
+  const preDraftComplete = !rules.enableCoinFlip || Boolean(coin);
   let step = 0;
   let random = null;
-  for (const event of orderedEvents(events)) {
+  for (const event of ordered) {
     if (Number(event.game || 1) !== game) continue;
-    if (event.type === 'random' && config.rules.mode === 'random' && !random && event.side === 'A') {
+    if (event.type === 'random' && rules.mode === 'random' && preDraftComplete && !random && event.side === 'A') {
       const all = [...(event.teamA || []), ...(event.teamB || [])];
-      if (all.length === 8 && new Set(all).size === 8 && all.every(id => HEROES.some(hero => hero.id === id))) random = { A: event.teamA, B: event.teamB };
+      const respectsLocks = (event.teamA || []).every(id => !locked.A.has(id)) && (event.teamB || []).every(id => !locked.B.has(id));
+      if (all.length === 8 && new Set(all).size === 8 && respectsLocks && all.every(id => HEROES.some(hero => hero.id === id))) random = { A: event.teamA, B: event.teamB };
       continue;
     }
     const expected = sequence[step];
     if (!expected || event.type !== expected.type || event.side !== expected.side || Number(event.step) !== step) continue;
     const hero = HEROES.find(item => item.id === String(event.heroId));
-    if (!hero || used.has(hero.id)) continue;
+    if (!preDraftComplete || !hero || used.has(hero.id) || locked[event.side].has(hero.id)) continue;
     if (event.type === 'pick' && picks[event.side].filter(id => HEROES.find(item => item.id === id)?.role === hero.role).length >= ({ Damage: 2, Tank: 1, Technical: 1 }[hero.role] || 0)) continue;
     used.add(hero.id);
     (event.type === 'ban' ? bans : picks)[event.side].push(hero.id);
     step += 1;
   }
-  return { game, score, sequence, step, current: sequence[step] || null, bans, picks, used, random, complete: Boolean(random) || step >= sequence.length };
+  const unavailableFor = {
+    A: new Set([...used, ...locked.A]),
+    B: new Set([...used, ...locked.B]),
+  };
+  return {
+    game, score, sequence, step,
+    current: preDraftComplete ? sequence[step] || null : null,
+    bans, picks, used, locked, unavailableFor, previousPicks, previousBans,
+    random, coin, preDraftComplete, rules,
+    complete: preDraftComplete && (Boolean(random) || step >= sequence.length),
+  };
 }
 
 function shuffle(items) {
@@ -94,10 +141,18 @@ function shuffle(items) {
   return result;
 }
 
-export function randomLineups() {
-  const byRole = role => shuffle(HEROES.filter(hero => hero.role === role)).map(hero => hero.id);
-  const damage = byRole('Damage'); const tank = byRole('Tank'); const technical = byRole('Technical');
-  return { A: [damage[0], damage[1], tank[0], technical[0]], B: [damage[2], damage[3], tank[1], technical[1]] };
+export function randomLineups(unavailableFor = { A: new Set(), B: new Set() }) {
+  const result = { A: [], B: [] };
+  const chosen = new Set();
+  for (const side of ['A', 'B']) {
+    for (const [role, count] of [['Damage', 2], ['Tank', 1], ['Technical', 1]]) {
+      const blocked = unavailableFor[side] || new Set();
+      const pool = shuffle(HEROES.filter(hero => hero.role === role && !blocked.has(hero.id) && !chosen.has(hero.id)));
+      if (pool.length < count) throw new Error(`Not enough ${role} heroes remain for ${side}.`);
+      for (const hero of pool.slice(0, count)) { result[side].push(hero.id); chosen.add(hero.id); }
+    }
+  }
+  return result;
 }
 
 export function createBracket(teams, bestOf = 3) {

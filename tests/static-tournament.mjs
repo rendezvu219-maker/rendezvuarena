@@ -15,6 +15,29 @@ assert.equal(draft.complete, true);
 assert.equal(draft.picks.A.length, 4);
 assert.equal(draft.picks.B.length, 4);
 
+const coinRules = normalizeRules({ ...rules, enableCoinFlip: 'on', seriesRule: 'fearless', squadraBlastCarryBans: 'false' });
+assert.equal(coinRules.enableCoinFlip, true);
+assert.equal(coinRules.seriesRule, 'fearless');
+assert.equal(coinRules.squadraBlastCarryBans, false);
+assert.equal(deriveDraft({ ...config, rules: coinRules }, {}).preDraftComplete, false);
+const coinDraft = deriveDraft({ ...config, rules: coinRules }, { coin:{ type:'coin_flip', actor:'O', result:'heads', winner:'A', game:1 } });
+assert.equal(coinDraft.preDraftComplete, true);
+assert.equal(coinDraft.coin.result, 'heads');
+
+const nextGameEvents = { ...events, result:{ type:'game_result', side:'A', game:1, actor:'O' } };
+const teamNoRepeat = deriveDraft({ ...config, rules:{ ...rules, seriesRule:'team_no_repeat' } }, nextGameEvents);
+assert.equal(teamNoRepeat.game, 2);
+assert.equal(teamNoRepeat.locked.A.has(draft.picks.A[0]), true);
+assert.equal(teamNoRepeat.locked.B.has(draft.picks.A[0]), false);
+const fearless = deriveDraft({ ...config, rules:{ ...rules, seriesRule:'fearless' } }, nextGameEvents);
+assert.equal(fearless.locked.A.has(draft.picks.B[0]), true);
+assert.equal(fearless.locked.B.has(draft.picks.A[0]), true);
+const squadra = deriveDraft({ ...config, rules:{ ...rules, seriesRule:'squadra_blast', squadraBlastCarryBans:true } }, nextGameEvents);
+assert.equal(squadra.locked.A.has(draft.picks.A[0]), true);
+assert.equal(squadra.locked.B.has(draft.picks.A[0]), false);
+assert.equal(squadra.locked.A.has(draft.bans.B[0]), true);
+assert.equal(squadra.locked.B.has(draft.bans.B[0]), true);
+
 const bracketConfig = { teams:['T1','T2','T3','T4','T5','T6','T7','T8'], rules };
 assert.equal(createBracket(bracketConfig.teams).length, 7);
 const bracketEvents = {

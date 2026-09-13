@@ -7,6 +7,13 @@ const params = new URLSearchParams(location.search); const roomId = params.get('
 const tournamentId = params.get('tournament'); const matchId = params.get('match');
 const $ = selector => document.querySelector(selector); const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
 let config; let events = {}; let tournamentEvents = {}; let selected = null; let role = 'all'; let search = '';
+let renderedCoinKey = '';
+const RULE_COPY = {
+  normal: ['NORMAL', 'Every game starts with the full hero pool.'],
+  team_no_repeat: ['TEAM NO REPEAT', 'Each team cannot reuse its own picks from earlier games.'],
+  fearless: ['FEARLESS DRAFT', 'Every previous pick is locked for both teams.'],
+  squadra_blast: ['SQUADRA BLAST', 'Game 1 affects Game 2; Game 3 resets the hero pool.'],
+};
 function show(message, error = false) { $('#message').textContent = message; $('#message').className = `notice${error ? ' error' : ''}`; $('#message').classList.remove('hidden'); }
 function hero(id) { return HEROES.find(item => item.id === id); }
 function matchNames() {
@@ -22,14 +29,32 @@ function render() {
   $('#team-a-name').textContent = names.A; $('#team-b-name').textContent = names.B; $('#side-a-title').textContent = names.A; $('#side-b-title').textContent = names.B;
   $('#score-a').textContent = state.score.A; $('#score-b').textContent = state.score.B; $('#room-meta').textContent = `${config.type === 'tournament' ? `TOURNAMENT · ${matchId}` : 'QUICK MATCH'} · GAME ${Math.min(state.game, config.rules.bestOf)} · BO${config.rules.bestOf}`;
   const picks = state.random || state.picks; renderSlots($('#picks-a'), picks.A, 4); renderSlots($('#picks-b'), picks.B, 4); renderSlots($('#bans-a'), state.bans.A, config.rules.banOrder.length / 2); renderSlots($('#bans-b'), state.bans.B, config.rules.banOrder.length / 2);
+  const [ruleName, ruleDescription] = RULE_COPY[state.rules.seriesRule] || RULE_COPY.normal;
+  $('#series-rule-banner').innerHTML = `<b>${ruleName}</b><span>${ruleDescription}${state.rules.seriesRule === 'squadra_blast' ? ` Bans from Game 1 ${state.rules.squadraBlastCarryBans ? 'stay locked' : 'return'} in Game 2.` : ''}</span>`;
+  const coinStage = $('#coin-stage'); const coinButton = $('#coin-button'); const coin = $('#coin');
+  coinStage.classList.toggle('hidden', !state.rules.enableCoinFlip);
+  coinButton.classList.toggle('hidden', side !== 'O' || Boolean(state.coin));
+  coinButton.disabled = Boolean(state.coin);
+  if (state.rules.enableCoinFlip) {
+    if (state.coin) {
+      $('#coin-status').textContent = `${state.coin.result.toUpperCase()} · ${names[state.coin.winner]} wins the coin toss.`;
+      const key = `${state.game}:${state.coin.id || state.coin.createdAt || state.coin.result}`;
+      if (renderedCoinKey !== key) {
+        renderedCoinKey = key; coin.classList.remove('result-heads', 'result-tails', 'flipping');
+        requestAnimationFrame(() => { coin.classList.add('flipping', `result-${state.coin.result}`); });
+      }
+    } else $('#coin-status').textContent = side === 'O' ? 'Flip once to reveal the same result to Team A, Team B, and Spectators.' : 'Waiting for the Organizer to flip the synchronized coin.';
+  }
+  document.querySelector('.draft-layout')?.classList.toggle('pre-draft-locked', !state.preDraftComplete);
   const currentName = state.current ? names[state.current.side] : '';
-  $('#turn-label').textContent = state.score.complete ? `${names[state.score.winner]} wins the series.` : state.complete ? 'Draft complete. Organizer can report the game result.' : mode === 'random' ? (state.random ? 'Random lineups locked.' : side === 'A' || side === 'O' ? 'Ready to generate both lineups once.' : `Waiting for ${names.A} to randomize…`) : state.current ? `${currentName} · ${state.current.type.toUpperCase()} TURN` : 'Draft complete.';
+  $('#turn-label').textContent = state.score.complete ? `${names[state.score.winner]} wins the series.` : !state.preDraftComplete ? 'PRE-DRAFT · COIN FLIP REQUIRED' : state.complete ? 'Draft complete. Organizer can report the game result.' : mode === 'random' ? (state.random ? 'Random lineups locked.' : side === 'A' || side === 'O' ? 'Ready to generate both lineups once.' : `Waiting for ${names.A} to randomize…`) : state.current ? `${currentName} · ${state.current.type.toUpperCase()} TURN` : 'Draft complete.';
   const availableToAct = mode === 'draft' && canAct(state) && !state.complete && !state.score.complete;
   $('#lock-button').classList.toggle('hidden', mode !== 'draft'); $('#lock-button').disabled = !availableToAct || !selected; $('#lock-button').textContent = selected ? `${state.current?.type === 'ban' ? 'BAN' : 'PICK'} ${hero(selected)?.name || ''}` : 'SELECT A HERO';
-  $('#random-button').classList.toggle('hidden', mode !== 'random' || Boolean(state.random) || state.score.complete || !token || !['A','O'].includes(side));
+  $('#random-button').classList.toggle('hidden', mode !== 'random' || !state.preDraftComplete || Boolean(state.random) || state.score.complete || !token || !['A','O'].includes(side));
   const report = side === 'O' && state.complete && !state.score.complete; $('#game-a').classList.toggle('hidden', !report); $('#game-b').classList.toggle('hidden', !report);
   const eligible = HEROES.filter(item => (role === 'all' || item.role === role) && item.name.toLowerCase().includes(search.toLowerCase()));
-  $('#hero-grid').innerHTML = eligible.map(item => `<button class="hero-card ${selected === item.id ? 'selected' : ''}" data-hero="${item.id}" ${state.used.has(item.id) || mode === 'random' ? 'disabled' : ''}><img src="${getHeroImgSp(item.id)}" alt=""><span>${esc(item.name)}</span></button>`).join('');
+  const viewerSide = ['A', 'B'].includes(side) ? side : state.current?.side || 'A';
+  $('#hero-grid').innerHTML = eligible.map(item => `<button class="hero-card ${selected === item.id ? 'selected' : ''}" data-hero="${item.id}" ${state.unavailableFor[viewerSide].has(item.id) || mode === 'random' || !state.preDraftComplete ? 'disabled' : ''}><img src="${getHeroImgSp(item.id)}" alt=""><span>${esc(item.name)}</span></button>`).join('');
   $('#hero-grid').querySelectorAll('[data-hero]').forEach(button => button.addEventListener('click', () => openHero(button.dataset.hero)));
 }
 function openHero(id) {
@@ -41,7 +66,15 @@ async function act(event) { try { await appendProtectedEvent('rooms', roomId, to
 $('#lock-button').addEventListener('click', () => { const state = deriveDraft(config, events); if (selected && canAct(state) && state.current) act({ type:state.current.type, side:state.current.side, heroId:selected, step:state.step, game:state.game, actor:side }); });
 $('#modal-select').addEventListener('click', () => $('#lock-button').click()); $('#close-modal').addEventListener('click', () => $('#hero-modal').classList.add('hidden'));
 $('#trailer-button').addEventListener('click', () => { const video = $('#hero-trailer'); video.src = getHeroTrailerUrls(selected)[0]; video.classList.remove('hidden'); video.play().catch(() => {}); });
-$('#random-button').addEventListener('click', () => { const state = deriveDraft(config, events); const result = randomLineups(); act({ type:'random', side:'A', teamA:result.A, teamB:result.B, game:state.game, actor:side }); });
+$('#random-button').addEventListener('click', () => { const state = deriveDraft(config, events); const result = randomLineups(state.unavailableFor); act({ type:'random', side:'A', teamA:result.A, teamB:result.B, game:state.game, actor:side }); });
+$('#coin-button').addEventListener('click', async event => {
+  const state = deriveDraft(config, events); if (side !== 'O' || state.coin || !state.rules.enableCoinFlip) return;
+  event.currentTarget.disabled = true; $('#coin').classList.add('flipping');
+  const values = new Uint32Array(2); crypto.getRandomValues(values);
+  const result = values[0] % 2 ? 'heads' : 'tails'; const winner = values[1] % 2 ? 'A' : 'B';
+  await new Promise(resolve => setTimeout(resolve, 900));
+  await act({ type:'coin_flip', result, winner, game:state.game, actor:'O' });
+});
 for (const target of ['A','B']) $(`#game-${target.toLowerCase()}`).addEventListener('click', () => { const state = deriveDraft(config, events); act({ type:'game_result', side:target, game:state.game, actor:'O' }); });
 $('#hero-search').addEventListener('input', event => { search = event.target.value; render(); }); document.querySelectorAll('[data-role]').forEach(button => button.addEventListener('click', () => { role = button.dataset.role; render(); }));
 
