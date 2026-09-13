@@ -1,0 +1,76 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "roomConfigs": {
+      "$roomId": {
+        ".read": true,
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['id','type','rules','createdAt']) && newData.child('id').val() === $roomId && (newData.child('type').val() === 'quick_match' || newData.child('type').val() === 'tournament')"
+      }
+    },
+    "roomSecrets": {
+      "$roomId": {
+        ".read": false,
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['A','B','O']) && newData.child('A').isString() && newData.child('A').val().length >= 32 && newData.child('B').isString() && newData.child('B').val().length >= 32 && newData.child('O').isString() && newData.child('O').val().length >= 32"
+      }
+    },
+    "roomAccess": {
+      "$roomId": {
+        "$token": {
+          ".read": true,
+          ".write": "!data.exists() && $token.length >= 32 && (newData.val() === 'A' || newData.val() === 'B' || newData.val() === 'O')",
+          ".validate": "!root.child('roomSecrets').child($roomId).exists() || root.child('roomSecrets').child($roomId).child(newData.val()).val() === $token"
+        }
+      }
+    },
+    "rooms": {
+      "$roomId": {
+        ".write": "newData.child('proof/eventId').isString() && newData.child('proof/eventId').val() !== data.child('proof/eventId').val() && newData.child('proof/token').val() === root.child('roomSecrets').child($roomId).child(newData.child('events').child(newData.child('proof/eventId').val()).child('actor').val()).val()",
+        "proof": { ".read": false, ".validate": "newData.hasChildren(['eventId','token'])" },
+        "events": {
+          ".read": true,
+          "$eventId": {
+            ".validate": "!data.exists() && newData.hasChildren(['type','actor','createdAt']) && $eventId === newData.parent().parent().child('proof/eventId').val() && (newData.child('actor').val() === 'A' || newData.child('actor').val() === 'B' || newData.child('actor').val() === 'O') && ((newData.child('type').val() === 'game_result' && newData.child('actor').val() === 'O') || (newData.child('type').val() === 'random' && (newData.child('actor').val() === 'A' || newData.child('actor').val() === 'O')) || ((newData.child('type').val() === 'ban' || newData.child('type').val() === 'pick') && (newData.child('actor').val() === newData.child('side').val() || newData.child('actor').val() === 'O')))"
+          }
+        },
+        "$other": { ".validate": "$other === 'proof' || $other === 'events'" }
+      }
+    },
+    "tournamentConfigs": {
+      "$tournamentId": {
+        ".read": true,
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['id','name','teams','rules','roomIds','createdAt']) && newData.child('id').val() === $tournamentId && newData.child('teams').numChildren() === 8 && newData.child('roomIds').numChildren() === 7"
+      }
+    },
+    "tournamentSecrets": {
+      "$tournamentId": {
+        ".read": false,
+        ".write": "!data.exists()",
+        ".validate": "newData.hasChildren(['O','matches']) && newData.child('O').isString() && newData.child('O').val().length >= 32"
+      }
+    },
+    "tournamentLinks": {
+      "$tournamentId": {
+        "$token": {
+          ".read": true,
+          ".write": "!data.exists() && (!root.child('tournamentSecrets').child($tournamentId).exists() || $token === root.child('tournamentSecrets').child($tournamentId).child('O').val())",
+          ".validate": "newData.numChildren() === 7"
+        }
+      }
+    },
+    "tournaments": {
+      "$tournamentId": {
+        ".write": "newData.child('proof/eventId').isString() && newData.child('proof/eventId').val() !== data.child('proof/eventId').val() && newData.child('proof/token').val() === root.child('tournamentSecrets').child($tournamentId).child('O').val()",
+        "proof": { ".read": false, ".validate": "newData.hasChildren(['eventId','token'])" },
+        "events": {
+          ".read": true,
+          "$eventId": { ".validate": "!data.exists() && $eventId === newData.parent().parent().child('proof/eventId').val() && newData.hasChildren(['type','matchId','side','actor','createdAt']) && newData.child('type').val() === 'winner' && newData.child('actor').val() === 'O' && (newData.child('side').val() === 'A' || newData.child('side').val() === 'B') && newData.child('matchId').val().matches(/^M[1-7]$/)" }
+        },
+        "$other": { ".validate": "$other === 'proof' || $other === 'events'" }
+      }
+    }
+  }
+}

@@ -46,13 +46,13 @@ export function normalizeAuraId(themeId) {
 }
 
 export function getHeroImg(id) {
-  return `/assets/heroes/${id}/btn_character.webp`;
+  return `assets/heroes/${id}/btn_character.webp`;
 }
 export function getHeroImgSp(id) {
-  return `/assets/heroes/${id}/btn_character_sp.webp`;
+  return `assets/heroes/${id}/btn_character_sp.webp`;
 }
 export function getHeroImgHover(id) {
-  return `/assets/heroes/${id}/btn_character_hover.webp`;
+  return `assets/heroes/${id}/btn_character_hover.webp`;
 }
 const HERO_FULL_IMAGE_VERSIONS = {
   '0039': '2',
@@ -61,7 +61,7 @@ const HERO_FULL_IMAGE_VERSIONS = {
 export function getHeroFullImg(id) {
   const version = HERO_FULL_IMAGE_VERSIONS[id];
   const query = version ? `?v=${version}` : '';
-  return `/assets/heroes/${id}/image_character.webp${query}`;
+  return `assets/heroes/${id}/image_character.webp${query}`;
 }
 
 export function imageWithFallback(primary, fallback, alt, className = '') {
@@ -77,7 +77,7 @@ export const NIKITA_EASTER_EGG = Object.freeze({
   trigger: 'nikita',
   minimumTriggerLength: 3,
   searchAliases: Object.freeze(['nikita', 'daima']),
-  imagePath: '/assets/easter-eggs/goku-mini-nikita.png',
+  imagePath: 'assets/easter-eggs/goku-mini-nikita.png',
   descriptions: Object.freeze({
     en: "A hero who... wait, why is he pink? ...Anyway—\nA hero who skillfully keeps enemies at mid-range! Rush in with a flurry of Power Pole attacks and maneuver alongside Panzy and Glorio!\nNikita's Daima Goku wears his signature pink skin—the one he always plays best in. Word has it Indomie noodles might as well be his second weapon.",
     vi: 'Một chiến binh... khoan, sao cậu ấy lại mặc đồ hồng? ...Dù sao thì—\nMột chiến binh khéo léo giữ kẻ địch ở tầm trung! Hãy lao vào bằng chuỗi đòn Gậy Như Ý dồn dập và phối hợp cùng Panzy và Glorio!\nGoku Daima của Nikita sử dụng bộ skin hồng đặc trưng—cũng chính là skin mà anh ấy luôn chơi hay nhất. Nghe đồn mì Indome chẳng khác nào vũ khí thứ hai của anh ấy.',
@@ -158,9 +158,9 @@ export function getHeroTrailerUrls(id, configuredUrl = '') {
   const heroId = String(id || '').padStart(4, '0');
   return [...new Set([
     configuredUrl,
-    `/assets/trailers/${heroId}.mp4`,
-    `/assets/trailers/${heroId}.webm`,
-    `/assets/trailers/${heroId}.mov`,
+    `assets/trailers/${heroId}.mp4`,
+    `assets/trailers/${heroId}.webm`,
+    `assets/trailers/${heroId}.mov`,
   ].filter(Boolean))];
 }
 
@@ -168,14 +168,14 @@ export function getHeroTrailerPosterUrls(id, configuredUrl = '') {
   const heroId = String(id || '').padStart(4, '0');
   return [...new Set([
     configuredUrl,
-    `/assets/trailers/${heroId}.png`,
-    `/assets/trailers/${heroId}.webp`,
-    `/assets/trailers/${heroId}.jpg`,
-    `/assets/trailers/${heroId}.jpeg`,
+    `assets/trailers/${heroId}.png`,
+    `assets/trailers/${heroId}.webp`,
+    `assets/trailers/${heroId}.jpg`,
+    `assets/trailers/${heroId}.jpeg`,
   ].filter(Boolean))];
 }
 export function getHeroSkillIconUrls(heroId, skillId) {
-  const base = `/assets/heroes/${heroId}/skill/icon_${skillId}`;
+  const base = `assets/heroes/${heroId}/skill/icon_${skillId}`;
   return { primary: `${base}.png`, fallback: `${base}.webp` };
 }
 

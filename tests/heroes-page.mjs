@@ -17,7 +17,8 @@ assert.equal(new Set(catalogFilenames).size, 18, 'Divine Card catalog filenames 
 assert.ok(catalogFilenames.every(name => /^[a-z0-9]+(?:-[a-z0-9]+)*\.png$/.test(name)), 'Catalog filenames must be human-readable slugs.');
 assert.ok(catalogFilenames.every(name => assetFiles.has(name)), 'Every catalog image must exist in assets/divine-cards.');
 assert.ok(!catalogFilenames.some(name => /^000\d/.test(name)), 'The public catalog must not expose legacy ID filenames.');
-assert.match(page, /HEROES (?:&|&amp;) DIVINE CARD BUILDS/);
+assert.match(page, /HERO GUIDE/, 'The static-first page must foreground hero information.');
+assert.match(page, /divine-library-section hidden/, 'Deferred Divine Card content must remain isolated rather than deleted.');
 assert.match(page, /data-admin-pane="catalog"/);
 assert.match(page, /data-admin-pane="presets"/);
 assert.match(page, /data-admin-pane="assign"/);

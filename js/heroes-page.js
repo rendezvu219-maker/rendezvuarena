@@ -574,7 +574,7 @@ function renderHeroDetail() {
           <div class="hero-skills-grid">${skills.map((skill, index) => `<button type="button" class="hero-skill-card ${index === state.activeSkillIndex ? 'active' : ''}" data-skill-index="${index}" style="${roleStyle(hero)}"><span class="hero-skill-card-icon">${skillIconMarkup(hero, skill)}</span><span class="hero-skill-card-copy"><span class="hero-skill-type">${escapeHtml(skillTypeLabel(skill))}</span><b>${escapeHtml(skill.name)}</b><small>${escapeHtml(skill.desc)}</small></span></button>`).join('')}</div>
         </div>` : `<div class="empty-state"><p>${escapeHtml(t('noSkillData'))}</p></div>`}
       </section>
-      <section>
+      <section class="hidden" aria-hidden="true">
         <div class="hero-detail-section-head"><div><span class="content-kicker">${escapeHtml(t('recommendedLoadout'))}</span><h3>${escapeHtml(t('divineCardBuilds'))}</h3></div><p>${escapeHtml(t('loadoutHint'))}</p></div>
         ${presets.length ? `<div class="hero-build-tabs">${presets.map(preset => `<button type="button" class="${preset.id === activePreset?.id ? 'active' : ''}" data-build-id="${preset.id}"><span>${escapeHtml(preset.scenario || 'General')}</span>${escapeHtml(preset.name)}${preset.heroAssignments.find(item => item.heroId === hero.id)?.isDefault ? ' · DEFAULT' : ''}</button>`).join('')}</div>
           <div class="hero-build-summary"><div class="hero-build-meta"><div><span class="build-scenario">${escapeHtml(activePreset.scenario || 'GENERAL BUILD')}</span><h4>${escapeHtml(activePreset.name)}</h4><p>${escapeHtml(activePreset.description || 'No preset description.')}</p></div><div class="energy-rule"><span>Full gauge ${activePreset.energyThreshold}</span><span>Gain ×${activePreset.energyRate}</span></div></div>
@@ -1093,7 +1093,6 @@ function bindAdminEvents() {
 }
 
 async function bootstrap() {
-  bindCardTooltips();
   $('#hero-search').addEventListener('input', event => {
     state.search = event.target.value;
     if (isNikitaEasterEggSearch(state.search) && state.heroId !== '0017') {
@@ -1110,14 +1109,6 @@ async function bootstrap() {
   }));
   renderRoster();
   renderHeroDetail();
-  renderPublicLibrary();
-  bindAdminEvents();
-  if (getToken()) {
-    try { state.user = (await api('/api/auth/me')).user; } catch { setToken(''); }
-  }
-  renderAccount();
-  if (state.user?.canManageDivineCards) $('#open-build-admin').classList.remove('hidden');
-  await loadPublicBuilds();
 }
 
 bootstrap().catch(error => {

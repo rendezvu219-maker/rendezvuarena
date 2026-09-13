@@ -21,9 +21,9 @@ for (const hero of HEROES) {
 for (const runtime of [heroes, app, page, broadcast, rules]) {
   assert.doesNotMatch(runtime, /dbg-squadra\.bn-ent\.net\/assets\/images\/hero/);
 }
-assert.match(heroes, /\/assets\/heroes\/\$\{id\}\/btn_character\.webp/);
-assert.match(heroes, /\/assets\/heroes\/\$\{id\}\/btn_character_sp\.webp/);
-assert.match(heroes, /\/assets\/heroes\/\$\{heroId\}\/skill\/icon_\$\{skillId\}/);
+assert.match(heroes, /assets\/heroes\/\$\{id\}\/btn_character\.webp/);
+assert.match(heroes, /assets\/heroes\/\$\{id\}\/btn_character_sp\.webp/);
+assert.match(heroes, /assets\/heroes\/\$\{heroId\}\/skill\/icon_\$\{skillId\}/);
 assert.match(app, /getHeroImg\(h\.id\).*getHeroImgHover\(h\.id\)/s, 'Character Pool must keep default + hover artwork.');
 assert.match(app, /getHeroImgSp\(hero\.id\)/, 'Draft result slots must use SP portraits.');
 assert.match(app, /getHeroFullImg\(hero\.id\)/, 'Full-art preview/cinematic must remain unchanged.');
@@ -38,7 +38,7 @@ for (const query of ['d', 'da', 'dai', 'daim', 'daima']) {
   assert.equal(heroMatchesSearch({ id:'0017', name:'Son Goku (Mini)', role:'Damage' }, query, 'Son Goku (Mini)', 'Damage'), true);
 }
 const fallbackMarkup = imageWithFallback(NIKITA_EASTER_EGG.imagePath, getHeroImg('0017'), 'Son Goku (Mini) <Nikita>', 'hero-detail-image');
-assert.equal(fallbackMarkup, '<img class="hero-detail-image" src="/assets/easter-eggs/goku-mini-nikita.png" alt="Son Goku (Mini) &lt;Nikita&gt;" loading="lazy" data-fallback-src="/assets/heroes/0017/btn_character.webp">');
+assert.equal(fallbackMarkup, '<img class="hero-detail-image" src="assets/easter-eggs/goku-mini-nikita.png" alt="Son Goku (Mini) &lt;Nikita&gt;" loading="lazy" data-fallback-src="assets/heroes/0017/btn_character.webp">');
 assert.match(broadcast, /getHeroImgSp\(hero\.id\)/, 'Broadcast result cards must use SP portraits.');
 assert.match(broadcast, /image\.src = getHeroFullImg\(hero\.id\)/, 'Broadcast reveal must keep full art.');
 assert.match(rules, /src=\"\$\{getHeroImgSp\(hero\.id\)\}/, 'Protection and Global Ban cards must use SP portraits.');
@@ -52,5 +52,5 @@ console.log('Local-only hero asset URL and validated downloader checks passed.')
 
 assert.match(heroes, /getHeroTrailerUrls/);
 assert.match(heroes, /getHeroTrailerPosterUrls/);
-assert.match(heroes, /\/assets\/trailers\/\$\{heroId\}\.png/);
+assert.match(heroes, /assets\/trailers\/\$\{heroId\}\.png/);
 assert.match(app, /preview-hero-video/);

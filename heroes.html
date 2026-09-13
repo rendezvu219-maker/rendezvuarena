@@ -4,9 +4,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title data-i18n="pageTitleHeroes">RendezVu Arena — Heroes &amp; Divine Card Builds</title>
-<meta content="Browse community reference data, draft roles, skill details, and card-build presets in RendezVu Arena." name="description"/>
-<script src="js/preferences.js?v=0.6.48-account-dropdown"></script>
+<title>RendezVu Arena — Hero Guide</title>
+<meta content="Browse hero artwork, roles, descriptions, skills, and trailers in RendezVu Arena." name="description"/>
 <link href="css/variables.css" rel="stylesheet"/>
 <link href="css/base.css" rel="stylesheet"/>
 <link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
@@ -15,13 +14,13 @@
 </head>
 <body class="heroes-page">
 <header class="content-nav">
-<a class="content-brand" href="/"><span class="content-brand-mark" data-no-i18n="true">RV</span><span><b data-no-i18n="true">RENDEZVU</b><small data-i18n="heroDatabase">HERO DATABASE</small></span></a>
-<nav><a data-i18n="home" href="/">Home</a><a class="active" data-i18n="heroes" href="/heroes.html">Heroes</a><a data-i18n="quickDraft" href="/quick-draft.html">Quick Draft</a><a data-i18n="tournamentOps" href="/dashboard.html">Tournament Ops</a></nav>
-<div class="content-account" id="heroes-account"><a class="btn btn-ghost btn-sm" data-i18n="login" href="/auth.html">LOG IN</a><div class="gs-language-slot" data-language-slot="true"></div></div>
+<a class="content-brand" href="./"><span class="content-brand-mark" data-no-i18n="true">RV</span><span><b data-no-i18n="true">RENDEZVU</b><small data-i18n="heroDatabase">HERO DATABASE</small></span></a>
+<nav><a data-i18n="home" href="./">Home</a><a class="active" data-i18n="heroes" href="heroes.html">Heroes</a><a href="quick-match.html">Quick Match</a><a href="tournament.html">Tournament</a></nav>
+<div class="content-account" id="heroes-account"><a class="btn btn-primary btn-sm" href="quick-match.html">CREATE MATCH</a><div class="gs-language-slot" data-language-slot="true"></div></div>
 </header>
 <main class="heroes-shell">
 <section class="heroes-intro">
-<div><span class="content-kicker" data-i18n="heroRoster">40-HERO ROSTER</span><h1 data-i18n="heroBuilds">HEROES &amp; DIVINE CARD BUILDS</h1><p data-i18n="heroesIntro">Browse official hero data, compare skills, and view reusable three-card build presets. Only the platform Admin can catalog cards or change builds.</p></div>
+<div><span class="content-kicker" data-i18n="heroRoster">40-HERO ROSTER</span><h1>HERO GUIDE</h1><p>Browse the existing hero artwork, roles, descriptions, skills, and combat information. Hero assets remain local and GitHub Pages friendly.</p></div>
 <button class="btn btn-primary hidden" data-i18n="manageDivine" id="open-build-admin" type="button">MANAGE DIVINE CARDS</button>
 </section>
 <section class="heroes-browser">
@@ -41,7 +40,7 @@
 <div class="loading-state"><span class="loading-spinner"></span><p data-i18n="loadingHero">Loading hero data…</p></div>
 </article>
 </section>
-<section class="divine-library-section">
+<section class="divine-library-section hidden" aria-hidden="true">
 <div class="section-heading"><div><span class="content-kicker" data-i18n="cardLibrary">CARD LIBRARY</span><h2 data-i18n="divineCards">DIVINE CARDS</h2><p data-i18n="libraryHelp">Hover or focus a card to view its full effect and activation conditions. Cards can be reused across presets and heroes.</p></div></div>
 <div class="divine-public-library" id="divine-public-library"><div class="empty-state"><p data-i18n="cardsNotCataloged">Card names and Slot pools have not been cataloged yet.</p></div></div>
 </section>
