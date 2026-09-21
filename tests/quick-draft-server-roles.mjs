@@ -104,6 +104,14 @@ try {
   assert.match(room.links.teamB, /\/draft-room\.html#room=/);
   assert.match(room.links.broadcaster, /\/broadcast\.html#room=/);
   assert.ok(!room.links.teamA.includes('?config='), 'Quick Team links must use a server room, not local query-string state.');
+  const hostLinkAccess = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    method:'POST', body:{ accessToken:fragmentValue(room.links.host, 'access') },
+  });
+  assert.deepEqual(hostLinkAccess.payload.room.links, room.links, 'Waiting-room COPY must retain server-issued links, including each access token.');
+  const teamAccess = await request(`/api/public/draft-rooms/${room.roomCode}/access`, {
+    method:'POST', body:{ accessToken:fragmentValue(room.links.teamA, 'access') },
+  });
+  assert.equal(teamAccess.payload.room.links, undefined, 'Team access must not expose Host or opposing-team links.');
 
   const listed = await request('/api/tournaments', { token });
   assert.equal(listed.payload.tournaments.length, 0, 'Hidden Quick Draft backing events must not appear in Tournament Operations.');

@@ -3618,7 +3618,8 @@ app.post('/api/public/draft-rooms/:roomCode/access',(req,res)=>{
     socketTicket:ticket.token,
     socketTicketExpiresAt:ticket.expiresAt,
     room:{roomCode:room.room_code,role,matchId:room.match_id,tournamentId:room.tournament_id,status:room.status,
-      config:jsonParse(room.config_json),state:jsonParse(room.state_json),messages},
+      config:jsonParse(room.config_json),state:jsonParse(room.state_json),messages,
+      ...(role === 'host' ? { links:draftRoomPayload(req, room, jsonParse(room.access_json)).links } : {})},
   });
 });
 app.post('/api/public/draft-rooms/:roomCode/game-result',(req,res)=>{

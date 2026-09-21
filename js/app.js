@@ -1,9 +1,9 @@
 import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js';
 import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js';
 import { HEROES_DATA } from './heroes-data.js';
-import { DraftRoomSync } from './realtime.js';
+import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.3-cross-browser';
 import { api, escapeHtml } from './api.js';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
 import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
@@ -114,16 +114,17 @@ export class DraftUI {
     const linksContainer = document.getElementById('waiting-links-container');
     if (linksContainer && this.isAuthoritativeHost && this.sync?.roomCode) {
       linksContainer.style.display = 'flex';
-      const baseUrl = window.location.href.split(/[?#]/)[0];
-      const roomCode = this.sync.roomCode;
-      const hostPeerId = this.sync.hostPeerId || `rv-${roomCode.toLowerCase()}`;
+      const links = this.sync.shareLinks || {};
       
       const linkA = document.getElementById('waiting-link-a');
       const linkB = document.getElementById('waiting-link-b');
       const linkSpec = document.getElementById('waiting-link-spec');
-      if (linkA) linkA.value = `${baseUrl}#room=${roomCode}&role=teamA&host=${hostPeerId}`;
-      if (linkB) linkB.value = `${baseUrl}#room=${roomCode}&role=teamB&host=${hostPeerId}`;
-      if (linkSpec) linkSpec.value = `${baseUrl.replace('draft-room.html', 'broadcast.html')}#room=${roomCode}&role=broadcaster&host=${hostPeerId}`;
+      if (linkA) linkA.value = links.teamA || '';
+      if (linkB) linkB.value = links.teamB || '';
+      if (linkSpec) linkSpec.value = links.broadcaster || '';
+      linksContainer.querySelectorAll('[data-copy-waiting]').forEach(button => {
+        button.disabled = !document.getElementById(button.dataset.copyWaiting)?.value;
+      });
 
       if (!linksContainer.dataset.bound) {
         linksContainer.dataset.bound = 'true';
@@ -442,7 +443,7 @@ export class DraftUI {
     this.sync.on('connection', ({ status, attempt = 0 }) => {
       document.body.dataset.realtimeStatus = status || 'unknown';
       if (status === 'reconnecting') this.showRoomNotice(`Connection lost. Resynchronizing… (attempt ${attempt})`);
-      else if (status === 'resynced') this.showRoomNotice('Draft Room reconnected and synchronized with the server.');
+      else if (status === 'resynced') this.showRoomNotice('Draft Room reconnected and synchronized.');
       else if (status === 'disconnected') this.showRoomNotice('Realtime connection interrupted. Changes are temporarily disabled.');
     });
 
@@ -2742,8 +2743,9 @@ function showBootstrapError(error) {
       <h1>DRAFT ROOM ERROR</h1>
       <p>${escapeHtml(error?.message || error)}</p>
       <div class="route-error-actions">
-        <a class="btn btn-primary" href="/quick-draft.html">OPEN QUICK DRAFT</a>
-        <a class="btn btn-ghost" href="/dashboard.html">TOURNAMENT OPERATIONS</a>
+        <button class="btn btn-primary" id="retry-draft-connection">RETRY CONNECTION</button>
+        <a class="btn btn-ghost" href="quick-draft.html">OPEN QUICK DRAFT</a>
+        <a class="btn btn-ghost" href="dashboard.html">TOURNAMENT OPERATIONS</a>
       </div>
     </div>
   </div>`;
@@ -2759,6 +2761,7 @@ if (document.getElementById('draft-view')) {
     } catch (error) {
       console.error(error);
       showBootstrapError(error);
+      document.getElementById('retry-draft-connection')?.addEventListener('click', () => window.location.reload());
     }
   });
 }

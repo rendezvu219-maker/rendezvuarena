@@ -333,7 +333,7 @@ export class HostSetup {
       localStorage.setItem(`rv_secrets_${roomCode}`, JSON.stringify(access));
     } catch {}
 
-    const baseUrl = window.location.href.split(/[?#]/)[0].replace(/quick-draft(\.html)?$/, 'draft-room.html');
+    const baseUrl = new URL('draft-room.html', window.location.href).href;
     const links = {
       host: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=host&access=${encodeURIComponent(access.host)}&host=${encodeURIComponent(hostPeerId)}`,
       teamA: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=teamA&access=${encodeURIComponent(access.teamA)}&host=${encodeURIComponent(hostPeerId)}`,

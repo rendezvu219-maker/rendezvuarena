@@ -6,6 +6,7 @@ export class DraftRoomSync {
     this.socket = null;
     this.role = null;
     this.config = null;
+    this.shareLinks = {};
     this.initialState = null;
     this.initialMessages = [];
     this.authorityRole = null;
@@ -47,6 +48,7 @@ export class DraftRoomSync {
     this.config = room.config || {};
     this.initialState = room.state || {};
     this.initialMessages = room.messages || [];
+    this.shareLinks = room.links || {};
     return payload.socketTicket;
   }
 
