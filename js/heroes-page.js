@@ -1,7 +1,8 @@
-import { api, getToken, setToken } from './api.js';
+import { api, setToken } from './api.js';
 import { HEROES, ROLES, getHeroImg, getHeroImgSp, getHeroFullImg, getHeroSkillIconUrls, roleIconMarkup, heroMatchesSearch, isNikitaEasterEggSearch, getHeroDisplayImage, getHeroDisplayName, getHeroDisplayDescription, imageWithFallback } from './heroes.js';
 import { HEROES_DATA } from './heroes-data.js';
 import { getLocale, heroName, roleLabel, localizeHeroDetail, t } from './i18n.js';
+import { loadStaticBuilds, buildsForHero } from './character-builds.js';
 
 const $ = selector => document.querySelector(selector);
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
@@ -12,6 +13,7 @@ const state = {
   role: 'all',
   publicCards: [],
   publicPresets: [],
+  buildLoadError: false,
   adminCards: [],
   adminPresets: [],
   activeBuildId: null,
@@ -491,9 +493,7 @@ function radarChartMarkup(detail, hero, localizedName = heroName(hero.id, hero.n
 }
 
 function heroPresets(heroId) {
-  return state.publicPresets
-    .filter(preset => preset.heroAssignments.some(item => item.heroId === heroId))
-    .sort((a, b) => Number(b.heroAssignments.find(item => item.heroId === heroId)?.isDefault) - Number(a.heroAssignments.find(item => item.heroId === heroId)?.isDefault) || a.name.localeCompare(b.name));
+  return buildsForHero(state.publicPresets, heroId);
 }
 
 function renderBuildCards(preset) {
@@ -509,14 +509,14 @@ function renderBuildCards(preset) {
       const alternate = alternates.find(entry => Number(entry.priority) === priority);
       const cardNumber = optionNumbers[priority - 1];
       return alternate
-        ? `<figure class="divine-build-pair-card is-situation priority-${priority}" tabindex="0" ${cardTooltipAttributes(alternate.card)} aria-label="${escapeHtml(cardTooltipLabel(alternate.card))}"><span>SITUATION CARD ${cardNumber}</span><img src="${escapeHtml(alternate.card.imagePath)}" alt="${escapeHtml(alternate.card.name)}"></figure>`
+        ? `<figure class="divine-build-pair-card is-situation priority-${priority}" tabindex="0" ${cardTooltipAttributes(alternate.card)} aria-label="${escapeHtml(cardTooltipLabel(alternate.card))}"><span>SITUATION CARD ${cardNumber}</span><img src="${escapeHtml(alternate.card.imagePath)}" alt="${escapeHtml(alternate.card.name)}"><figcaption>${escapeHtml(alternate.card.name)}</figcaption>${alternate.note ? `<small class="build-card-note">${escapeHtml(alternate.note)}</small>` : ''}</figure>`
         : `<div class="divine-build-pair-card is-empty"><span>SITUATION CARD ${cardNumber}</span><b>OPTIONAL</b><small>No card selected</small></div>`;
     }).join('');
 
     return `<article class="divine-build-lane card-type-${escapeHtml(item.card.cardType || 'unassigned')}">
       <header><span class="divine-slot-label">SLOT ${slot}</span><small>Core Card ${slot} · optional Cards ${slot + 3} and ${slot + 6}</small></header>
       <div class="divine-build-pair divine-build-triple">
-        <figure class="divine-build-pair-card is-core" tabindex="0" ${cardTooltipAttributes(item.card)} aria-label="${escapeHtml(cardTooltipLabel(item.card))}"><span>CORE · CARD ${slot}</span><img src="${escapeHtml(item.card.imagePath)}" alt="${escapeHtml(item.card.name)}"></figure>
+        <figure class="divine-build-pair-card is-core" tabindex="0" ${cardTooltipAttributes(item.card)} aria-label="${escapeHtml(cardTooltipLabel(item.card))}"><span>CORE · CARD ${slot}</span><img src="${escapeHtml(item.card.imagePath)}" alt="${escapeHtml(item.card.name)}"><figcaption>${escapeHtml(item.card.name)}</figcaption></figure>
         <div class="divine-build-pair-arrow" aria-hidden="true">→</div>
         ${optionMarkup}
       </div>
@@ -575,12 +575,12 @@ function renderHeroDetail() {
           <div class="hero-skills-grid">${skills.map((skill, index) => `<button type="button" class="hero-skill-card ${index === state.activeSkillIndex ? 'active' : ''}" data-skill-index="${index}" style="${roleStyle(hero)}"><span class="hero-skill-card-icon">${skillIconMarkup(hero, skill)}</span><span class="hero-skill-card-copy"><span class="hero-skill-type">${escapeHtml(skillTypeLabel(skill))}</span><b>${escapeHtml(skill.name)}</b><small>${escapeHtml(skill.desc)}</small></span></button>`).join('')}</div>
         </div>` : `<div class="empty-state"><p>${escapeHtml(t('noSkillData'))}</p></div>`}
       </section>
-      <section class="hidden" aria-hidden="true">
-        <div class="hero-detail-section-head"><div><span class="content-kicker">${escapeHtml(t('recommendedLoadout'))}</span><h3>${escapeHtml(t('divineCardBuilds'))}</h3></div><p>${escapeHtml(t('loadoutHint'))}</p></div>
+      <section class="hero-build-guide" id="hero-build-guide" data-hero-id="${escapeHtml(hero.id)}">
+        <div class="hero-detail-section-head"><div><span class="content-kicker">${escapeHtml(t('divineCardBuilds'))}</span><h3>${escapeHtml(t('buildGuideTitle'))}</h3></div><p>${escapeHtml(t('loadoutHint'))}</p></div>
         ${presets.length ? `<div class="hero-build-tabs">${presets.map(preset => `<button type="button" class="${preset.id === activePreset?.id ? 'active' : ''}" data-build-id="${preset.id}"><span>${escapeHtml(preset.scenario || 'General')}</span>${escapeHtml(preset.name)}${preset.heroAssignments.find(item => item.heroId === hero.id)?.isDefault ? ' · DEFAULT' : ''}</button>`).join('')}</div>
           <div class="hero-build-summary"><div class="hero-build-meta"><div><span class="build-scenario">${escapeHtml(activePreset.scenario || 'GENERAL BUILD')}</span><h4>${escapeHtml(activePreset.name)}</h4><p>${escapeHtml(activePreset.description || 'No preset description.')}</p></div><div class="energy-rule"><span>Full gauge ${activePreset.energyThreshold}</span><span>Gain ×${activePreset.energyRate}</span></div></div>
           <div class="card-swap-rule"><b>CARD CHANGE RULE</b><span>Equip Cards 1–3 first.</span><span>At a full gauge, change exactly 1 Slot to an assigned Card 4–9 option from the same Slot.</span><span>After the change, the gauge resets to 0 and must fill again.</span></div>
-          <div class="hero-build-cards">${renderBuildCards(activePreset)}</div></div>` : '<div class="empty-state"><h4>No recommended build yet</h4><p>The Admin has not assigned a Divine Card preset to this hero.</p></div>'}
+          <div class="hero-build-cards">${renderBuildCards(activePreset)}</div></div>` : `<div class="empty-state"><p>${escapeHtml(t(state.buildLoadError ? 'buildLoadFailed' : 'noBuildGuide'))}</p></div>`}
       </section>
     </div>`;
   $('#hero-detail-panel').querySelectorAll('[data-build-id]').forEach(button => button.addEventListener('click', () => { state.activeBuildId = Number(button.dataset.buildId); renderHeroDetail(); }));
@@ -623,13 +623,13 @@ function selectHero(heroId) {
 
 async function loadPublicBuilds() {
   try {
-    const payload = await api(`/api/public/divine-card-builds?locale=${encodeURIComponent(getLocale())}`);
+    const payload = await loadStaticBuilds(getLocale());
     state.publicCards = payload.cards || [];
     state.publicPresets = payload.presets || [];
+    state.buildLoadError = false;
   } catch (error) {
     console.error(error);
-    state.publicCards = [];
-    state.publicPresets = [];
+    state.buildLoadError = true;
   }
   renderHeroDetail();
   renderPublicLibrary();
@@ -1045,7 +1045,6 @@ function bindAdminEvents() {
       const savedPreset = payload.preset;
       if (!savedPreset?.id) throw new Error('The server did not return the saved preset.');
 
-      const expectedPositions = Object.entries(body.situationalSlots).filter(([, cardId]) => Boolean(cardId));
       // Verify every Card 4–9 position, including empty positions. This prevents
       // any situational choice from being compacted, cleared, or moved to a
       // different card number when an older preset is updated.
@@ -1054,7 +1053,7 @@ function bindAdminEvents() {
       state.builderPresetId = savedPreset.id;
       mergeSavedPreset(savedPreset);
       resetBuilder(savedPreset);
-      adminMessage(message, `Preset saved with ${expectedPositions.length} situational card${expectedPositions.length === 1 ? '' : 's'}.`, 'success');
+      adminMessage(message, t('buildSavedFile'), 'success');
 
       // Re-fetch after showing the authoritative PUT response. GET requests are
       // no-store, so an older three-card response can no longer overwrite it.
@@ -1094,6 +1093,8 @@ function bindAdminEvents() {
 }
 
 async function bootstrap() {
+  bindAdminEvents();
+  bindCardTooltips();
   $('#hero-search').addEventListener('input', event => {
     state.search = event.target.value;
     if (isNikitaEasterEggSearch(state.search) && state.heroId !== '0017') {
@@ -1110,6 +1111,27 @@ async function bootstrap() {
   }));
   renderRoster();
   renderHeroDetail();
+
+  await loadPublicBuilds();
+  const librarySection = $('.divine-library-section');
+  if (librarySection && state.publicCards.length) {
+    librarySection.classList.remove('hidden');
+    librarySection.setAttribute('aria-hidden', 'false');
+  }
+
+  const localAdmin = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  if (localAdmin) {
+    try {
+      state.user = (await api('/api/auth/me')).user || null;
+      if (state.user) setToken('cookie-session');
+    } catch { state.user = null; }
+    $('#build-admin-login')?.classList.toggle('hidden', Boolean(state.user));
+
+    if (state.user?.canManageDivineCards) {
+      $('#open-build-admin').classList.remove('hidden');
+      if (new URLSearchParams(location.search).get('manage') === 'divine') openAdmin();
+    }
+  }
 }
 
 bootstrap().catch(error => {

@@ -9,7 +9,7 @@ const catalogPath = path.join(cardAssetDir, 'catalog.json');
 const bundledTranslationsPath = path.join(root, 'data', 'locales', 'divine-cards.json');
 const PUBLIC_CARD_PREFIX = '/assets/divine-cards/';
 const CARD_TYPES = new Set(['attack', 'defense', 'technical']);
-const BUNDLED_TRANSLATION_STATUSES = new Set(['user-provided-source', 'translated-from-zh-CN']);
+const BUNDLED_TRANSLATION_STATUSES = new Set(['user-provided-source', 'translated-from-zh-CN', 'translated-from-en']);
 // Card 4–9 are independent optional positions. `priority` remains only as
 // the legacy storage coordinate (1/2) inside each Slot, not a gameplay order.
 const SITUATIONAL_POSITIONS = Object.freeze([
@@ -127,7 +127,7 @@ function seedBundledCardTranslations() {
       upsert.run(
         cardId,
         locale,
-        cleanText(card.name, 120),
+        cleanText(item?.name || card.name, 120),
         description,
         effect,
         note,
@@ -231,6 +231,9 @@ function seedDivineCardAssets() {
     if (!/^[a-zA-Z0-9_-]{4,120}$/.test(id) || !/^[a-z0-9][a-z0-9-]*\.png$/.test(filename)) continue;
 
     const legacyFilename = `${id}.png`;
+    const replacedFilenames = Array.isArray(item.legacyFilenames)
+      ? item.legacyFilenames.map(name => path.basename(cleanText(name, 160))).filter(name => /^[a-z0-9][a-z0-9-]*\.png$/.test(name))
+      : [];
     const legacyPath = path.join(cardAssetDir, legacyFilename);
     const canonicalPath = path.join(cardAssetDir, filename);
     if (!fs.existsSync(canonicalPath) && fs.existsSync(legacyPath)) fs.renameSync(legacyPath, canonicalPath);
@@ -250,17 +253,23 @@ function seedDivineCardAssets() {
     const current = db.prepare('SELECT * FROM divine_cards WHERE id=?').get(id);
     if (!current) continue;
     const legacyPublicPath = `${PUBLIC_CARD_PREFIX}${legacyFilename}`;
-    const imagePath = current.image_path === legacyPublicPath && fs.existsSync(canonicalPath)
+    const replacedPublicPaths = new Set(replacedFilenames.map(name => `${PUBLIC_CARD_PREFIX}${name}`));
+    const catalogReplacement = current.image_path === legacyPublicPath || replacedPublicPaths.has(current.image_path);
+    const imagePath = catalogReplacement && fs.existsSync(canonicalPath)
       ? `${PUBLIC_CARD_PREFIX}${filename}`
       : current.image_path;
     const needsCatalogMigration = !current.effect && !current.note && !current.card_type && !Number(current.display_order || 0);
-    db.prepare(`UPDATE divine_cards SET image_path=?,effect=?,note=?,card_type=?,display_order=? WHERE id=?`)
+    const useCatalogData = catalogReplacement || needsCatalogMigration;
+    db.prepare(`UPDATE divine_cards SET image_path=?,name=?,description=?,effect=?,note=?,card_type=?,display_order=?,slot_pool=? WHERE id=?`)
       .run(
         imagePath,
-        needsCatalogMigration ? cleanText(item.effect, 3000) : current.effect,
-        needsCatalogMigration ? cleanText(item.note, 3000) : current.note,
-        needsCatalogMigration ? normalizeCardType(item.cardType, true) : current.card_type,
-        needsCatalogMigration ? normalizeDisplayOrder(item.displayOrder) : current.display_order,
+        useCatalogData ? cleanText(item.name, 120) : current.name,
+        useCatalogData ? cleanText(item.effect, 3000) : current.description,
+        useCatalogData ? cleanText(item.effect, 3000) : current.effect,
+        useCatalogData ? cleanText(item.note, 3000) : current.note,
+        useCatalogData ? normalizeCardType(item.cardType, true) : current.card_type,
+        useCatalogData ? normalizeDisplayOrder(item.displayOrder) : current.display_order,
+        useCatalogData ? normalizeSlot(item.slotPool, true) : current.slot_pool,
         id,
       );
   }

@@ -499,12 +499,20 @@ assert.equal(divinePairs.size, 90, 'Divine Card translation seed has duplicate/m
 const vietnameseVanishingStepCards = divineData.translations.filter(row =>
   row.locale === 'vi' && /Vanishing Step/.test(`${row.description || ''} ${row.effect || ''} ${row.note || ''}`)
 );
-assert.equal(vietnameseVanishingStepCards.length, 4, 'Exactly four Vietnamese Divine Cards should reference Vanishing Step.');
+assert.equal(vietnameseVanishingStepCards.length, 3, 'The three unchanged Vietnamese Divine Cards should retain the approved Vanishing Step term.');
 for (const row of vietnameseVanishingStepCards) {
   const text = `${row.description || ''} ${row.effect || ''} ${row.note || ''}`;
   assert.match(text, /Bộ Pháp Biến Mất \(Vanishing Step\)/, `${row.name} must use the approved Vietnamese Vanishing Step term.`);
   assert.doesNotMatch(text, /Bước Biến Ảnh/, `${row.name} still uses the rejected Vanishing Step translation.`);
 }
+const vi2026Cards = divineData.translations.filter(row => row.locale === 'vi' && [
+  '00019809_00000000C4D7EC7C', '00019813_0000000002B03815', '00019820_0000000075B70883',
+  '00019828_00000000E2B5DCDB', '00019832_000000005DDEBDC6', '00019836_000000002AD98D50',
+  '00019856_00000000ECBE5939', '00019860_000000009BB969AF', '00019864_000000007CD14978',
+  '00019868_000000000BD679EE', '00019873_00000000B4BD18F3', '00019883_0000000005DDFC0C',
+].includes(row.cardId));
+assert.equal(vi2026Cards.length, 12, 'All 12 new 2026 cards need Vietnamese copy.');
+assert.equal(vi2026Cards.find(row => row.cardId === '00019832_000000005DDEBDC6')?.name, 'Ta Tuyệt Đối Không Tha Thứ Các Ngươi');
 
 const dbSource = read('server/db.js');
 const serviceSource = read('server/divine-card-service.js');
@@ -553,6 +561,10 @@ try {
   assert.equal(koLocalized.translationStatus, 'user-provided-source');
   const viBuildUp = service.adminBundle('vi').cards.find(card => card.name === 'Build Up');
   assert.match(viBuildUp.effect, /phòng ngự/i, 'Bundled Vietnamese Divine Card text was not imported.');
+  const jaFullThrottle = service.adminBundle('ja').cards.find(card => card.id === '00019883_0000000005DDFC0C');
+  assert.equal(jaFullThrottle.name, 'フルスロットル', 'Localized 2026 Divine Card names must come from the supplied screenshots.');
+  const viDeepGrudge = service.adminBundle('vi').cards.find(card => card.id === '00019832_000000005DDEBDC6');
+  assert.equal(viDeepGrudge.name, 'Ta Tuyệt Đối Không Tha Thứ Các Ngươi');
 
   const core = [1,2,3].map(slot => sourceCards.find(card => card.slotPool === slot));
   const preset = service.savePreset(null, {

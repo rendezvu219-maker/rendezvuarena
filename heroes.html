@@ -10,7 +10,7 @@
 <link href="css/variables.css" rel="stylesheet"/>
 <link href="css/base.css" rel="stylesheet"/>
 <link href="css/components.css?v=0.6.48-account-dropdown" rel="stylesheet"/>
-<link href="css/content.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
+<link href="css/content.css?v=0.6.50-static-builds" rel="stylesheet"/>
 <link href="css/i18n.css?v=0.6.33-vi-zh-editorial-1" rel="stylesheet"/>
 </head>
 <body class="heroes-page">
@@ -23,6 +23,7 @@
 <section class="heroes-intro">
 <div><span class="content-kicker" data-i18n="heroRoster">41-HERO ROSTER</span><h1 data-no-i18n="true">HERO GUIDE</h1><p data-no-i18n="true">Browse the existing hero artwork, roles, descriptions, skills, and combat information. Hero assets remain local and GitHub Pages friendly.</p></div>
 <button class="btn btn-primary hidden" data-i18n="manageDivine" id="open-build-admin" type="button">MANAGE DIVINE CARDS</button>
+<a class="btn btn-ghost hidden" data-i18n="login" id="build-admin-login" href="auth.html?return=heroes.html%3Fmanage%3Ddivine">LOG IN</a>
 </section>
 <section class="heroes-browser">
 <aside class="hero-roster-panel">
@@ -55,6 +56,7 @@
 <button data-admin-tab="assign" data-i18n="assignHeroes" type="button">Assign to Heroes</button>
 </div>
 <div class="build-admin-content">
+<p class="build-save-hint" data-i18n="buildSaveHint">Save updates the local build file. Commit and push it with any new card images to publish on GitHub Pages. Assign a new preset to heroes in the Assign to Heroes tab.</p>
 <section class="admin-pane active" data-admin-pane="catalog">
 <div class="admin-pane-head"><div><h3 data-i18n="catalog18">Catalog the 18 card images</h3><p data-i18n="catalogDesc">Each card keeps a clean display name, Effect, Note, type, and fixed Slot pool. Raw image filenames are never shown in the interface.</p></div><button class="btn btn-ghost btn-sm" data-i18n="addCardImage" id="toggle-card-upload" type="button">ADD CARD IMAGE</button></div>
 <form class="card-upload-form hidden" id="card-upload-form">
@@ -113,6 +115,6 @@
 </section>
 </div>
 </aside>
-<script src="js/heroes-page.js?v=0.6.48-account-dropdown" type="module"></script>
+<script src="js/heroes-page.js?v=0.6.50-static-builds" type="module"></script>
 </body>
 </html>

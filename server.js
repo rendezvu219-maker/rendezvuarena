@@ -32,12 +32,10 @@ const {
 const { saveFile, fileRecord, filePath, refreshTournamentRetention, cleanupExpiredFiles } = require('./server/file-service');
 const { importTournament, extractTournamentSlug } = require('./server/startgg');
 const { previewExternalTournament } = require('./server/external-tournaments');
-const {
-  seedDivineCardAssets, publicBundle: publicDivineCardBundle, adminBundle: adminDivineCardBundle,
-  updateCard: updateDivineCard, createCard: createDivineCard, savePreset: saveDivineCardPreset,
-  deletePreset: deleteDivineCardPreset, assignPreset: assignDivineCardPreset,
-} = require('./server/divine-card-service');
-const { seedRecommendedHeroBuilds } = require('./server/divine-card-recommendations');
+// Bound to the JSON store before listening. Legacy SQLite services are retained
+// for explicit migration only; startup must never re-seed saved build content.
+let publicDivineCardBundle, adminDivineCardBundle, updateDivineCard, createDivineCard,
+  saveDivineCardPreset, deleteDivineCardPreset, assignDivineCardPreset, characterBuildDataPath;
 const {
   consumeDevAccessCode, createTestSuite, listTestSuites, cleanupTestSuite,
   seedMock32Players, autoCheckinOtherTeams, cleanupMockData, create32PlayerTournament,
@@ -203,6 +201,11 @@ const staticOptions = {
 for (const folder of ['css', 'js', 'divine', 'trailers', 'assets']) {
   app.use(`/${folder}`, express.static(path.join(root, folder), staticOptions));
 }
+// Expose only the public build JSON, never the data directory or its database.
+app.get('/data/character-builds.json', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.sendFile(characterBuildDataPath);
+});
 const htmlCacheHeaders = (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
@@ -4117,13 +4120,14 @@ process.on('unhandledRejection',(reason)=>{
 });
 
 async function startApplication(){
+  const { store, buildDataPath } = await import('./server/character-build-store.mjs');
+  store.read();
+  characterBuildDataPath = buildDataPath;
+  ({ publicBundle:publicDivineCardBundle, adminBundle:adminDivineCardBundle,
+    updateCard:updateDivineCard, createCard:createDivineCard, savePreset:saveDivineCardPreset,
+    deletePreset:deleteDivineCardPreset, assignPreset:assignDivineCardPreset } = store);
   await ensureBootstrapAdmin();
   ensureDivineCardContentOwner();
-  seedDivineCardAssets();
-  const recommendationSeed=seedRecommendedHeroBuilds();
-  if(recommendationSeed.createdPresets){
-    console.log(`Imported ${recommendationSeed.createdPresets} recommended Divine Card builds for ${recommendationSeed.assignedHeroes} heroes.`);
-  }
   server.listen(port, '0.0.0.0', ()=>{
     console.log(`RendezVu Arena v${appVersion} listening on 0.0.0.0:${port}`);
     if (securityConfig.canonicalOrigin) console.log(`Public origin: ${securityConfig.canonicalOrigin}`);

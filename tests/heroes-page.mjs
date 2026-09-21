@@ -34,6 +34,8 @@ assert.match(script, /Attack · Defense · Technical/);
 assert.match(script, /t\('noteConditions'\)/);
 assert.doesNotMatch(script, /catalog-card-id/);
 assert.match(script, /heroAssignments/);
+assert.match(script, /librarySection\.classList\.remove\('hidden'\)/, 'The shared Divine Card library must become visible after loading server data.');
+assert.match(script, /state\.user\?\.canManageDivineCards/, 'The server-authorized content owner must receive the shared setup controls.');
 assert.match(script, /data-unassign-hero/);
 assert.match(script, /updatePresetAssignments/);
 assert.match(script, /builderSwaps/);

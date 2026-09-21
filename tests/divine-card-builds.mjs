@@ -16,11 +16,19 @@ try {
   const cards = service.adminBundle().cards;
   if (cards.length !== 18) throw new Error(`Expected 18 seeded cards, got ${cards.length}.`);
   const expectedOrder = [
-    'Lightning Swift','Super Snowball','Build Up','Too Easy!','Strategic Escape','GEKISHIN High',
-    'Giant Slayer','Prepare to Die!','Steel Skin','Solid Barrier','Art of Decoy','Epic Hunter',
-    'Wicked Warrior','Pursuer','Guardian Angel','Defense Step','Backstab','Limit-Breaking Jump',
+    'Lightning Swift','Super Snowball','Build Up','Angelic Blessing','Rocket Booster','High Intensity',
+    'Giant Slayer','Gutsy','Deep Grudge','Adrenaline Power','Ninja Concealment Arts','Heal Block',
+    'Super Charge','Stealth Attack','Defense Step','Turtle Shell','Limit-Breaking Jump','Full Throttle',
   ];
   if (cards.map(card => card.name).join('|') !== expectedOrder.join('|')) throw new Error('Canonical in-game card order was not preserved.');
+  const angelicBlessing = cards.find(card => card.name === 'Angelic Blessing');
+  db.prepare('UPDATE divine_cards SET image_path=?,name=?,effect=?,note=? WHERE id=?')
+    .run('/assets/divine-cards/too-easy.png', 'Too Easy!', 'Legacy effect', 'Legacy note', angelicBlessing.id);
+  service.seedDivineCardAssets();
+  const migratedAngelicBlessing = service.adminBundle().cards.find(card => card.id === angelicBlessing.id);
+  if (migratedAngelicBlessing.name !== 'Angelic Blessing' || !migratedAngelicBlessing.imagePath.endsWith('/angelic-blessing.png')) {
+    throw new Error('A deployed legacy catalog row was not migrated to the 2026 Divine Card.');
+  }
   const defenseStep = cards.find(card => card.name === 'Defense Step');
   if (!defenseStep?.note.includes('12 seconds')) throw new Error('Defense Step must use the current 12-second internal cooldown.');
   if (!cards.every(card => card.effect && card.note && card.cardType && card.displayOrder)) throw new Error('Card Effect, Note, type, or display order is missing.');

@@ -8,6 +8,9 @@ data/*.sqlite-shm
 data/*.sqlite-wal
 data/uploads/
 data/*-uploads/
+data/character-builds.json.bak
+data/character-builds.json.lock
+data/character-builds.json.*.tmp
 *.log
 npm-debug.log*
 .DS_Store

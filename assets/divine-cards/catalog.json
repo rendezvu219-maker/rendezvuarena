@@ -31,33 +31,36 @@
   },
   {
     "id": "00019809_00000000C4D7EC7C",
-    "filename": "too-easy.png",
-    "name": "Too Easy!",
+    "filename": "angelic-blessing.png",
+    "legacyFilenames": ["too-easy.png"],
+    "name": "Angelic Blessing",
     "slotPool": 1,
     "cardType": "defense",
     "displayOrder": 4,
-    "effect": "Grants extra HP for 2 seconds when damage brings your HP to 50% or lower.",
-    "note": "Activation: Take damage that brings current HP to 50% or less. Can activate once every 30 seconds."
+    "effect": "Boosts recovery amounts.",
+    "note": "Activation: When recovering in an allied God of Destruction area."
   },
   {
     "id": "00019813_0000000002B03815",
-    "filename": "strategic-escape.png",
-    "name": "Strategic Escape",
+    "filename": "rocket-booster.png",
+    "legacyFilenames": ["strategic-escape.png"],
+    "name": "Rocket Booster",
     "slotPool": 1,
     "cardType": "technical",
     "displayOrder": 5,
-    "effect": "Boosts movement speed while your back is turned to a nearby enemy hero.",
-    "note": "Activation: Face away from a nearby enemy hero. The effect remains active while the condition is met."
+    "effect": "Shortens the time needed to enter high-speed movement.",
+    "note": "Activation: While moving."
   },
   {
     "id": "00019820_0000000075B70883",
-    "filename": "gekishin-high.png",
-    "name": "GEKISHIN High",
+    "filename": "high-intensity.png",
+    "legacyFilenames": ["gekishin-high.png"],
+    "name": "High Intensity",
     "slotPool": 1,
     "cardType": "technical",
     "displayOrder": 6,
-    "effect": "Shortens the cooldown of the skill used to activate a GEKISHIN Burst.",
-    "note": "Activation: Successfully land a GEKISHIN Burst."
+    "effect": "Reduces charging time for Gekishin Burst (excluding Max Gekishin Burst).",
+    "note": "Activation: Every KO or assist on an enemy hero."
   },
   {
     "id": "00019824_0000000095B2EC4D",
@@ -71,83 +74,80 @@
   },
   {
     "id": "00019828_00000000E2B5DCDB",
-    "filename": "prepare-to-die.png",
-    "name": "Prepare to Die!",
+    "filename": "gutsy.png",
+    "legacyFilenames": ["prepare-to-die.png"],
+    "name": "Gutsy",
     "slotPool": 2,
     "cardType": "attack",
     "displayOrder": 2,
-    "effect": "Boosts damage dealt to a weakened enemy hero; the boost becomes much stronger if they survive for at least 2 seconds.",
-    "note": "Activation: Hit an enemy hero while they have 50% or less HP. The effect ends when the confrontation ends."
+    "effect": "Reduces maximum total HP and boosts the power of all attacks.",
+    "note": "Activation: Always active."
   },
   {
     "id": "00019832_000000005DDEBDC6",
-    "filename": "steel-skin.png",
-    "name": "Steel Skin",
+    "filename": "deep-grudge.png",
+    "legacyFilenames": ["steel-skin.png"],
+    "name": "Deep Grudge",
     "slotPool": 2,
     "cardType": "defense",
     "displayOrder": 3,
-    "effect": "Reduces a fixed amount of damage from every hit received from an enemy hero.",
-    "note": "Activation: Take an attack from an enemy hero. The reduction is applied per hit."
+    "effect": "Grants extra HP.",
+    "note": "Activation: When hit by an enemy hero or companion attack."
   },
   {
     "id": "00019836_000000002AD98D50",
-    "filename": "solid-barrier.png",
-    "name": "Solid Barrier",
+    "filename": "adrenaline-power.png",
+    "legacyFilenames": ["solid-barrier.png"],
+    "name": "Adrenaline Power",
     "slotPool": 2,
     "cardType": "defense",
     "displayOrder": 4,
-    "effect": "Grants a barrier that greatly reduces damage from enemy heroes after avoiding hero damage for 15 seconds.",
-    "note": "Activation: Take no damage from enemy heroes for 15 seconds. The barrier breaks 1.5 seconds after it is damaged by an enemy hero."
+    "effect": "Reduces initial damage on hit and takes the reduced amount of damage over time.",
+    "note": "Activation: When hit by an attack (excluding God of Destruction attacks)."
   },
   {
     "id": "00019856_00000000ECBE5939",
-    "filename": "art-of-decoy.png",
-    "name": "Art of Decoy",
+    "filename": "ninja-concealment-arts.png",
+    "legacyFilenames": ["art-of-decoy.png"],
+    "name": "Ninja Concealment Arts",
     "slotPool": 2,
     "cardType": "technical",
     "displayOrder": 5,
-    "effect": "Greatly boosts movement speed and increases Vanishing Step cooldown recovery speed for 6 seconds.",
-    "note": "Activation: Become obstructed by an enemy hero. Can activate once every 10 seconds."
+    "effect": "Generates smoke around you.",
+    "note": "Activation: When close to a boss."
   },
   {
     "id": "00019860_000000009BB969AF",
-    "filename": "epic-hunter.png",
-    "name": "Epic Hunter",
+    "filename": "heal-block.png",
+    "legacyFilenames": ["epic-hunter.png"],
+    "name": "Heal Block",
     "slotPool": 2,
     "cardType": "technical",
     "displayOrder": 6,
-    "effect": "Boosts damage dealt to a boss for 4 seconds.",
-    "note": "Activation: Damage a boss while it has 50% or less HP. The effect ends when the last boss meeting the condition is KO'd."
+    "effect": "The target enemy hero loses extra HP and is prevented from recovering total HP (unless transformed) or gaining extra HP.",
+    "note": "Activation: Hit an enemy hero whose combined Base HP and Armor is 30% or lower with a Skill."
   },
   {
     "id": "00019864_000000007CD14978",
-    "filename": "wicked-warrior.png",
-    "name": "Wicked Warrior",
+    "filename": "super-charge.png",
+    "legacyFilenames": ["wicked-warrior.png"],
+    "name": "Super Charge",
     "slotPool": 3,
     "cardType": "attack",
     "displayOrder": 1,
-    "effect": "Boosts Rush Attack damage after repeatedly striking the same enemy hero with Rush Attacks.",
-    "note": "Activation: Land 3 Rush Attacks in a row on one enemy hero. The effect ends 4 seconds after the Rush Attack sequence ends."
+    "effect": "Reduces Super Attack cooldowns.",
+    "note": "Activation: Every KO on an enemy hero."
   },
   {
     "id": "00019868_000000000BD679EE",
-    "filename": "pursuer.png",
-    "name": "Pursuer",
+    "filename": "stealth-attack.png",
+    "legacyFilenames": ["pursuer.png"],
+    "name": "Stealth Attack",
     "slotPool": 3,
     "cardType": "attack",
     "displayOrder": 2,
-    "effect": "Deals additional Energy DMG and boosts movement speed while heading toward the affected enemy hero.",
-    "note": "Activation: Hit one enemy hero with 2 skills within 2 seconds. The movement effect lasts 7.5 seconds and can activate once every 7.5 seconds."
-  },
-  {
-    "id": "00019873_00000000B4BD18F3",
-    "filename": "guardian-angel.png",
-    "name": "Guardian Angel",
-    "slotPool": 3,
-    "cardType": "defense",
-    "displayOrder": 3,
-    "effect": "Takes part of the damage that a nearby ally would receive from an enemy hero.",
-    "note": "Activation: A nearby ally without Guardian Angel takes damage from an enemy hero. Damage transferred to you is reduced, with additional reduction when more allies are nearby."
+    "effect": "For a set period, you cannot be discovered by enemies, and hitting an enemy hero with a Skill grants extra DMG.",
+    "note": "Activation: Every KO or assist on an enemy hero."
   },
   {
     "id": "00019879_00000000C3BA2865",
@@ -155,19 +155,20 @@
     "name": "Defense Step",
     "slotPool": 3,
     "cardType": "defense",
-    "displayOrder": 4,
+    "displayOrder": 3,
     "effect": "Reduces damage from enemy heroes for 4 seconds after using Vanishing Step. The effect is much stronger against Super Attacks and decreases over time.",
     "note": "Activation: After using Vanishing Step. Internal cooldown: 12 seconds."
   },
   {
-    "id": "00019883_0000000005DDFC0C",
-    "filename": "backstab.png",
-    "name": "Backstab",
+    "id": "00019873_00000000B4BD18F3",
+    "filename": "turtle-shell.png",
+    "legacyFilenames": ["guardian-angel.png"],
+    "name": "Turtle Shell",
     "slotPool": 3,
-    "cardType": "technical",
-    "displayOrder": 5,
-    "effect": "Greatly shortens the cooldown of a skill that hits an enemy hero shortly after you are discovered.",
-    "note": "Activation: Land a skill other than a Super Attack on an enemy hero within 3 seconds of being discovered."
+    "cardType": "defense",
+    "displayOrder": 4,
+    "effect": "Extends the cooldown of Vanishing Step and boosts maximum total HP.",
+    "note": "Activation: Always active."
   },
   {
     "id": "00019887_0000000072DACC9A",
@@ -175,8 +176,19 @@
     "name": "Limit-Breaking Jump",
     "slotPool": 3,
     "cardType": "technical",
-    "displayOrder": 6,
+    "displayOrder": 5,
     "effect": "Lets you use Vanishing Step one additional time while its normal cooldown is still active.",
     "note": "Activation: Vanishing Step is on cooldown. Can activate once every 6 seconds."
+  },
+  {
+    "id": "00019883_0000000005DDFC0C",
+    "filename": "full-throttle.png",
+    "legacyFilenames": ["backstab.png"],
+    "name": "Full Throttle",
+    "slotPool": 3,
+    "cardType": "technical",
+    "displayOrder": 6,
+    "effect": "Boosts maximum movement speed during high-speed movement.",
+    "note": "Activation: Always active."
   }
 ]

@@ -40,7 +40,7 @@ try {
   if (!androidPreset) throw new Error('Android 18 recommendation was not created.');
   const androidCore = androidPreset.slots.sort((a, b) => a.slot - b.slot).map(item => item.card.name);
   if (androidCore.join('|') !== 'Build Up|Giant Slayer|Defense Step') throw new Error(`Android 18 core build was resolved incorrectly: ${androidCore.join('|')}`);
-  if (!androidPreset.swapOptions.some(item => item.slot === 2 && item.card.name === 'Solid Barrier')) throw new Error('Android 18 Slot 2 situational Barrier was not preserved.');
+  if (!androidPreset.swapOptions.some(item => item.slot === 2 && item.card.name === 'Adrenaline Power')) throw new Error('Android 18 Slot 2 situational card was not migrated to the 2026 catalog.');
 
   const krillinPresets = cardService.adminBundle().presets.filter(preset => preset.sourceKey.startsWith('user-spreadsheet-v1:0003:'));
   if (krillinPresets.length !== 3) throw new Error(`Krillin Any-card recommendation should create three manageable variants, got ${krillinPresets.length}.`);

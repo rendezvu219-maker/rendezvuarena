@@ -5,6 +5,8 @@ import { HEROES_DATA } from '../js/heroes-data.js';
 const ids = HEROES.map(hero => hero.id);
 assert.equal(new Set(ids).size, ids.length, 'Hero IDs must be unique.');
 assert.equal(HEROES.length, 41, 'Current roster should contain 41 heroes.');
+assert.deepEqual(ids, ['0041', ...Array.from({ length:40 }, (_, index) => String(index + 1).padStart(4, '0'))]);
+assert.deepEqual(HEROES.filter(hero => hero.isNew).map(hero => hero.id), ['0041']);
 
 const superGogeta = HEROES.find(hero => hero.id === '0041');
 assert.deepEqual(superGogeta, { id: '0041', name: 'Super Gogeta', role: 'Technical', isNew: true });
@@ -15,7 +17,7 @@ assert.equal(superGogetaData.skills[0].name, 'Honed Senses');
 assert.equal(superGogetaData.skills[5].name, 'Soul Punisher');
 
 const jiren = HEROES.find(hero => hero.id === '0040');
-assert.deepEqual(jiren, { id: '0040', name: 'Jiren (Full Power)', role: 'Tank', isNew: true });
+assert.deepEqual(jiren, { id: '0040', name: 'Jiren (Full Power)', role: 'Tank', isNew: false });
 
 const jirenData = HEROES_DATA['0040'];
 assert.equal(jirenData.difficulty, '20');
@@ -36,7 +38,7 @@ const gokuBlack = HEROES.find(hero => hero.id === '0039');
 assert(gokuBlack, 'Goku Black must be present in the hero pool.');
 assert.equal(gokuBlack.name, 'Goku Black');
 assert.equal(gokuBlack.role, 'Technical');
-assert.equal(gokuBlack.isNew, true);
+assert.equal(gokuBlack.isNew, false);
 
 const gokuBlackData = HEROES_DATA['0039'];
 assert.equal(gokuBlackData.description.startsWith('A dark hero'), true);

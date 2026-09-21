@@ -1,5 +1,7 @@
 # Static GitHub Pages + Firebase deployment
 
+Character Build Guides on `heroes.html` read the committed `data/character-builds.json` directly. This feature needs neither Firebase nor a production Node/SQLite server. Edit through the local Admin, then commit and push the JSON and any new card images. See [BUILD_GUIDE_VI.md](BUILD_GUIDE_VI.md) for migration, editing, and deployment details.
+
 The primary competitive flow is now static: `index.html`, `quick-match.html`, `tournament.html`, `bracket.html`, and `draft.html`. Express, Socket.IO, SQLite, Railway, accounts, and Divine Cards are not used by these pages. The legacy files remain in the repository for reference and do not need to be deployed as a server.
 
 ## 1. Configure Firebase
