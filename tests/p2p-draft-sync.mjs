@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import { P2PDraftSync } from '../js/p2p-sync.js';
-import { p2pDraftLinks } from '../js/draft-links.js';
+import { DRAFT_LINK_VERSION, p2pDraftLinks, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from '../js/draft-links.js';
 
 // No BroadcastChannel or shared client storage: each participant must use the
 // remote protocol. The fake signalling/data network lets us exercise races.
@@ -89,9 +89,36 @@ try {
   for (const [role, link] of Object.entries(links)) {
     const url = new URL(link), fragment = new URLSearchParams(url.hash.slice(1));
     assert.ok(url.pathname.startsWith('/project/'));
+    assert.equal(url.searchParams.get('v'), DRAFT_LINK_VERSION, 'New invites must bypass stale room HTML.');
     assert.equal(fragment.get('access'), secrets[role]);
     assert.equal(fragment.get('role'), role);
+    assert.equal(validateDraftRoomLink(readDraftRoomLink(link)).accessToken, secrets[role]);
   }
+  const queryInvite = new URL(links.teamB);
+  queryInvite.search = queryInvite.hash.slice(1); queryInvite.hash = '';
+  assert.equal(validateDraftRoomLink(readDraftRoomLink(queryInvite)).accessToken, secrets.teamB, 'Query-string invites must retain credentials too.');
+  const incomplete = 'https://example.test/project/draft-room.html#room=QATEST&role=teamB&host=rv-qatest';
+  assert.throws(() => validateDraftRoomLink(readDraftRoomLink(incomplete)), /DRAFT_LINK_MISSING_ACCESS/);
+  const mixed = new URL(incomplete); mixed.search = '?room=OTHER&access=other-secret';
+  assert.throws(() => validateDraftRoomLink(readDraftRoomLink(mixed)), /DRAFT_LINK_MISSING_ACCESS/, 'Never borrow a credential from a different invitation.');
+  assert.throws(() => p2pDraftLinks(window.location.href, 'QATEST', 'rv-qatest', { host:'only-host' }), /DRAFT_LINK_MISSING_ACCESS/);
+  assert.throws(() => validateDraftRoomLink({ roomCode:'QATEST', accessToken:'secret', hostParam:'rv-qatest', role:'referee' }), /DRAFT_LINK_INVALID_ROLE/);
+
+  let copiedText = '', selected = false, fallback = false;
+  const copyButton = { textContent:'COPY' };
+  const copyInput = { value:links.teamB, focus() {}, select() { selected = true; }, ownerDocument:{ execCommand() { fallback = true; return true; } } };
+  assert.equal(await copyDraftLink(copyInput, copyButton, { async writeText(text) { copiedText = text; } }), true);
+  assert.equal(copiedText, links.teamB);
+  assert.equal(copyButton.textContent, 'COPIED');
+  assert.equal(await copyDraftLink(copyInput, copyButton, { async writeText() { throw new Error('Permission denied'); } }), true);
+  assert.ok(selected && fallback, 'Denied Clipboard API must try copying selected text.');
+  copyInput.ownerDocument.execCommand = () => false;
+  assert.equal(await copyDraftLink(copyInput, copyButton, {}), false);
+  assert.equal(copyButton.textContent, 'PRESS CTRL+C', 'A blocked copy must not report success.');
+  copyInput.value = incomplete; copiedText = '';
+  assert.equal(await copyDraftLink(copyInput, copyButton, { async writeText(text) { copiedText = text; } }), false);
+  assert.equal(copiedText, '', 'Do not put an incomplete invitation into the clipboard.');
+  assert.equal(copyButton.textContent, 'INVALID LINK');
   seed('QATEST');
   const host = session('host'); await host.connect();
   assert.deepEqual(host.shareLinks, links);
@@ -153,6 +180,11 @@ try {
   const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
   assert.match(app, /linkA\.value = links\.teamA/);
   assert.doesNotMatch(app, /linkA\.value = .*hostPeerId/);
+  assert.match(app, /copyDraftLink\(input, btn\)/);
+  assert.match(app, /validateDraftRoomLink\(invitation\)/);
+  const setup = fs.readFileSync(new URL('../js/host-setup.js', import.meta.url), 'utf8');
+  assert.match(setup, /p2pDraftLinks\(window.location.href/);
+  assert.match(setup, /copyDraftLink\(input, button\)/);
   const oldPage = fs.readFileSync(new URL('../quick-match.html', import.meta.url), 'utf8');
   assert.match(oldPage, /http-equiv="refresh" content="0;url=quick-draft.html"/);
   assert.doesNotMatch(oldPage, /quick-form/);

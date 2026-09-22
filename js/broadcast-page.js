@@ -1,7 +1,8 @@
 import { DraftEngine } from './draft.js';
 import { HEROES, PICKS_PER_TEAM } from './heroes.js';
 import { BroadcastUI } from './broadcast.js?v=0.6.43-broadcast-reveal-queue';
-import { loadDraftConfigFromUrl } from './app.js?v=0.7.3-cross-browser';
+import { loadDraftConfigFromUrl } from './app.js?v=0.7.4-link-check';
+import { readDraftRoomLink } from './draft-links.js?v=0.7.4-link-check';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';
 
@@ -224,8 +225,7 @@ function renderError(error) {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const params = new URLSearchParams(window.location.search);
-    const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    const hasRoomAccess = Boolean(fragment.get('room') && fragment.get('access'));
+    const hasRoomAccess = Boolean(readDraftRoomLink(window.location.href).roomCode);
     const hasQuickDraftConfig = Boolean(params.get('config'));
     if (!hasRoomAccess && !hasQuickDraftConfig) {
       await openBroadcastSelector();

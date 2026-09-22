@@ -10,6 +10,14 @@ After deploying the Quick Draft connection fix, reload the Host page and copy fr
 
 Regression coverage: `node tests/p2p-draft-sync.mjs` checks participants without shared storage/BroadcastChannel, delayed snapshots, late Host startup, reconnect, timeout, role links and preserved TURN defaults. `node tests/quick-draft-server-roles.mjs` verifies server links and role privacy. Browser QA passed with Host, Team A and Team B on three separate loopback origins (independent storage) in the in-app Chromium browser: both teams joined, shared the coin call/result and side choice, received the same Divine Draws, and entered the ban/pick screen. This does not replace a real Brave/Chrome or different-network test; those environments were not available for automation.
 
+## Quick Draft invitation follow-up (0.7.4-link-check)
+
+Setup and Host waiting-room links now share one validated builder and include a page-version query to avoid stale room HTML. Both entry modules and their invitation dependencies are versioned. The invitation reader accepts a complete query-string or fragment invitation without mixing credentials between them. Missing access codes remain rejected; no token is invented or recovered from another browser's storage.
+
+Both COPY controls validate the invitation before writing it. When Clipboard API access is denied, they try copying selected text; if that also fails, they select the full link and explicitly request Ctrl+C rather than silently leaving an old clipboard value. The error page displays the application version and distinguishes missing access from an invalid role.
+
+Follow-up verification: automated tests cover both URL forms, incomplete links, cross-room credential mixing, missing generated tokens, Clipboard API denial and manual-copy fallback. Local browser QA on three separate loopback origins reached the coin-flip stage for both URL forms; the tokenless form reported `DRAFT_LINK_MISSING_ACCESS`. The user's precise Brave/Chrome failure has not been reproduced; this release hardens invitation handling and makes the next failure diagnosable. It is not proof that all cross-browser/network issues are resolved.
+
 ## 1. Configure Firebase
 
 1. Create a Firebase project and a Web app.

@@ -3,6 +3,7 @@ import { HEROES, STAGE_PRESETS, THEMES, applyTheme } from './heroes.js';
 import { bindDraftRulesForm, renderDraftRulesForm } from './draft-rules-form.js';
 import { t } from './i18n.js';
 import { api } from './api.js';
+import { p2pDraftLinks, copyDraftLink } from './draft-links.js?v=0.7.4-link-check';
 
 function escapeAttribute(value) {
   return String(value ?? '').replace(/[&<>\"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' }[char]));
@@ -333,13 +334,7 @@ export class HostSetup {
       localStorage.setItem(`rv_secrets_${roomCode}`, JSON.stringify(access));
     } catch {}
 
-    const baseUrl = new URL('draft-room.html', window.location.href).href;
-    const links = {
-      host: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=host&access=${encodeURIComponent(access.host)}&host=${encodeURIComponent(hostPeerId)}`,
-      teamA: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=teamA&access=${encodeURIComponent(access.teamA)}&host=${encodeURIComponent(hostPeerId)}`,
-      teamB: `${baseUrl}#room=${encodeURIComponent(roomCode)}&role=teamB&access=${encodeURIComponent(access.teamB)}&host=${encodeURIComponent(hostPeerId)}`,
-      broadcaster: `${baseUrl.replace('draft-room.html', 'broadcast.html')}#room=${encodeURIComponent(roomCode)}&role=broadcaster&access=${encodeURIComponent(access.broadcaster)}&host=${encodeURIComponent(hostPeerId)}`,
-    };
+    const links = p2pDraftLinks(window.location.href, roomCode, hostPeerId, access);
 
     return {
       roomCode,
@@ -534,10 +529,7 @@ export class HostSetup {
       grid.querySelectorAll('[data-copy-link]').forEach(button => button.addEventListener('click', async () => {
         const input = document.getElementById(button.dataset.copyLink);
         if (!input?.value) return;
-        await navigator.clipboard.writeText(input.value);
-        const original = button.textContent;
-        button.textContent = 'COPIED';
-        setTimeout(() => { button.textContent = original; }, 1500);
+        await copyDraftLink(input, button);
       }));
       status.textContent = `LIVE ROOM ${room.roomCode} · Team links control only their own turns. Broadcast is view-only.`;
       status.classList.add('success');

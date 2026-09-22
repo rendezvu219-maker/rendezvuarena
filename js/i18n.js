@@ -27,6 +27,11 @@ const ROLE_KEYS = Object.freeze({ Damage:'damage', Tank:'tank', Technical:'techn
 
 const UI_EXTRA = Object.freeze({
   "en": {
+    "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: This invitation has no room ID.",
+    "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: The received link has no access code. Ask the Host to copy the full Team link, including &access=... . Reloading this incomplete link cannot restore the missing code.",
+    "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: This invitation has no valid team role. Ask the Host for the full Team link.",
+    "draftInviteCopyBlocked": "Automatic copy was blocked. The complete link is selected: press Ctrl+C, then paste it into the other browser.",
+    "draftInviteCopied": "Complete invitation copied, including its access code.",
     "viewOnly": "VIEW ONLY",
     "game": "GAME",
     "normal": "NORMAL",
@@ -149,6 +154,11 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "Reduced"
   },
   "ja": {
+    "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: この招待リンクにはルームIDがありません。",
+    "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: 受信したリンクにアクセスコードがありません。ホストに &access=... を含むチームリンク全体をコピーしてもらってください。再読み込みでは不足したコードを復元できません。",
+    "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: この招待リンクには有効なチーム権限がありません。ホストからチームリンク全体を受け取ってください。",
+    "draftInviteCopyBlocked": "自動コピーがブロックされました。リンク全体を選択したので、Ctrl+Cを押して別のブラウザーに貼り付けてください。",
+    "draftInviteCopied": "アクセスコードを含む招待リンク全体をコピーしました。",
     "viewOnly": "閲覧のみ",
     "game": "ゲーム",
     "normal": "ノーマル",
@@ -271,6 +281,11 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "低減"
   },
   "zh-CN": {
+    "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: 此邀请链接缺少房间编号。",
+    "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: 收到的链接缺少访问码。请房主复制包含 &access=... 的完整队伍链接。刷新无法恢复缺失的访问码。",
+    "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: 此邀请链接没有有效的队伍角色。请向房主索取完整队伍链接。",
+    "draftInviteCopyBlocked": "自动复制被阻止。已选中完整链接，请按 Ctrl+C，再粘贴到另一个浏览器。",
+    "draftInviteCopied": "已复制包含访问码的完整邀请链接。",
     "viewOnly": "仅查看",
     "game": "第{number}局",
     "normal": "普通",
@@ -393,6 +408,11 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "减少"
   },
   "ko": {
+    "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: 초대 링크에 방 ID가 없습니다.",
+    "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: 받은 링크에 접근 코드가 없습니다. 호스트에게 &access=... 를 포함한 전체 팀 링크를 복사해 달라고 요청하세요. 새로고침으로는 누락된 코드를 복원할 수 없습니다.",
+    "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: 초대 링크에 유효한 팀 역할이 없습니다. 호스트에게 전체 팀 링크를 요청하세요.",
+    "draftInviteCopyBlocked": "자동 복사가 차단되었습니다. 전체 링크를 선택했으니 Ctrl+C를 누른 뒤 다른 브라우저에 붙여넣으세요.",
+    "draftInviteCopied": "접근 코드를 포함한 전체 초대 링크를 복사했습니다.",
     "viewOnly": "보기 전용",
     "game": "게임",
     "normal": "일반",
@@ -515,6 +535,11 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "줄이기"
   },
   "es": {
+    "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: Esta invitación no contiene el ID de la sala.",
+    "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: El enlace recibido no contiene el código de acceso. Pide al anfitrión que copie el enlace completo del equipo, incluido &access=... . Recargar este enlace incompleto no recuperará el código.",
+    "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: Esta invitación no contiene un rol de equipo válido. Pide al anfitrión el enlace completo del equipo.",
+    "draftInviteCopyBlocked": "Se bloqueó la copia automática. El enlace completo está seleccionado: pulsa Ctrl+C y pégalo en el otro navegador.",
+    "draftInviteCopied": "Se copió la invitación completa, incluido el código de acceso.",
     "viewOnly": "SOLO LECTURA",
     "game": "PARTIDA",
     "normal": "NORMAL",
@@ -637,6 +662,11 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "Reducido"
   },
   "vi": {
+    "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: Link mời này thiếu mã phòng.",
+    "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: Link nhận được thiếu mã truy cập. Nhờ Host copy toàn bộ link đội, bao gồm &access=... . Tải lại link thiếu mã không thể khôi phục mã đã mất.",
+    "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: Link mời không có vai trò đội hợp lệ. Nhờ Host gửi lại toàn bộ link đội.",
+    "draftInviteCopyBlocked": "Trình duyệt đã chặn copy tự động. Toàn bộ link đã được bôi chọn: nhấn Ctrl+C rồi dán sang trình duyệt còn lại.",
+    "draftInviteCopied": "Đã copy toàn bộ link mời, bao gồm mã truy cập.",
     "viewOnly": "CHỈ XEM",
     "game": "VÁN",
     "normal": "THƯỜNG",

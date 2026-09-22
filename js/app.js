@@ -3,8 +3,9 @@ import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHer
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js?v=0.7.3-cross-browser';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.4-link-check';
 import { api, escapeHtml } from './api.js';
+import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.4-link-check';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
 import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
 
@@ -132,10 +133,7 @@ export class DraftUI {
           btn.addEventListener('click', async () => {
             const input = document.getElementById(btn.dataset.copyWaiting);
             if (!input?.value) return;
-            await navigator.clipboard.writeText(input.value);
-            const orig = btn.textContent;
-            btn.textContent = 'COPIED';
-            setTimeout(() => { btn.textContent = orig; }, 1200);
+            await copyDraftLink(input, btn);
           });
         });
       }
@@ -2661,10 +2659,9 @@ function localDraftUrl(config, role = 'host') {
 
 export async function loadDraftConfigFromUrl() {
   const params = new URLSearchParams(window.location.search);
-  const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-  const roomCode = fragment.get('room') || params.get('room');
-  const accessToken = fragment.get('access');
-  const hostParam = fragment.get('host') || params.get('host');
+  const invitation = readDraftRoomLink(window.location.href);
+  const { roomCode, accessToken, hostParam } = invitation;
+  if (roomCode) validateDraftRoomLink(invitation);
 
   if (roomCode && accessToken && !hostParam) {
     try {
@@ -2689,7 +2686,7 @@ export async function loadDraftConfigFromUrl() {
   }
 
   if (roomCode) {
-    const role = fragment.get('role') || params.get('role') || 'host';
+    const role = invitation.role || 'host';
     const hostPeerId = hostParam || `rv-${roomCode.toLowerCase()}`;
     const sync = new P2PDraftSync({ roomCode, role, hostPeerId, accessToken: accessToken || '', config: null });
     await sync.connect();
@@ -2742,9 +2739,10 @@ function showBootstrapError(error) {
       <span class="state-icon" aria-hidden="true">!</span>
       <h1>DRAFT ROOM ERROR</h1>
       <p>${escapeHtml(error?.message || error)}</p>
+      <p data-no-i18n="true">Quick Draft ${DRAFT_LINK_VERSION}</p>
       <div class="route-error-actions">
         <button class="btn btn-primary" id="retry-draft-connection">RETRY CONNECTION</button>
-        <a class="btn btn-ghost" href="quick-draft.html">OPEN QUICK DRAFT</a>
+        <a class="btn btn-ghost" href="quick-draft.html?v=${DRAFT_LINK_VERSION}">OPEN QUICK DRAFT</a>
         <a class="btn btn-ghost" href="dashboard.html">TOURNAMENT OPERATIONS</a>
       </div>
     </div>

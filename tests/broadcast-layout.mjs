@@ -52,7 +52,7 @@ assert.match(script, /this\.revealQueue\.push\(\{ hero, team, action \}\)/);
 assert.match(script, /this\.revealHoldUntil = Date\.now\(\) \+ BROADCAST_HERO_HOLD_MS/);
 assert.match(script, /this\.revealTimer = setTimeout\(\(\) => this\.scheduleNextHeroReveal\(\), delay\)/);
 assert.match(script, /if \(this\.hasLockedHeroReveal\) \{\s*this\.pendingWaitingAction = action \|\| null;\s*return;/, 'Late state snapshots must not cancel active or queued hero reveals.');
-assert.match(broadcastHtml, /broadcast-page\.js\?v=0\.7\.3-cross-browser/, 'Broadcast HTML must cache-bust the controller after the cross-browser connection fix.');
+assert.match(broadcastHtml, /broadcast-page\.js\?v=0\.7\.4-link-check/, 'Broadcast HTML must cache-bust the invitation reader.');
 assert.match(broadcastHtml, /broadcast\.css\?v=0\.6\.44-broadcast-reveal-queue/, 'Broadcast HTML must cache-bust the media-switching styles.');
 assert.doesNotMatch(script, /video\.currentTime >=/, 'Broadcast must play the full trailer instead of cutting it at three seconds.');
 assert.match(script, /copy\.classList\.remove\('hidden'\)/);
