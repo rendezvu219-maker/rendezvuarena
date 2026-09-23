@@ -7,45 +7,45 @@
       "cardId": "00019789_000000007BBC8D61",
       "locale": "ja",
       "name": "Lightning Swift",
-      "description": "バニシングステップ使用後2秒以内に攻撃した敵に、追加のエネルギーダメージを与えます。",
-      "effect": "バニシングステップ使用後2秒以内に攻撃した敵に、追加のエネルギーダメージを与えます。",
-      "note": "発動条件：バニシングステップ使用後。6秒に1回発動可能。",
+      "description": "バニシングステップ使用後2秒以内に攻撃した敵に、追加のエネルギーダメージ1,200を与えます。",
+      "effect": "バニシングステップ使用後2秒以内に攻撃した敵に、追加のエネルギーダメージ1,200を与えます。",
+      "note": "発動条件：バニシングステップ使用後。クールダウン：15秒。",
       "translationStatus": "user-provided-source"
     },
     {
       "cardId": "00019789_000000007BBC8D61",
       "locale": "zh-CN",
       "name": "Lightning Swift",
-      "description": "对在使用消失步后2秒内受到攻击的敌人造成额外的能量伤害。",
-      "effect": "对在使用消失步后2秒内受到攻击的敌人造成额外的能量伤害。",
-      "note": "激活条件：使用消失步后。每6秒可激活一次。",
+      "description": "对在使用消失步后2秒内受到攻击的敌人造成1,200点额外能量伤害。",
+      "effect": "对在使用消失步后2秒内受到攻击的敌人造成1,200点额外能量伤害。",
+      "note": "激活条件：使用消失步后。冷却时间：15秒。",
       "translationStatus": "user-provided-source"
     },
     {
       "cardId": "00019789_000000007BBC8D61",
       "locale": "ko",
       "name": "Lightning Swift",
-      "description": "배니싱 스텝 사용 후 2초 이내에 공격받은 적에게 추가 에너지 데미지를 입힙니다.",
-      "effect": "배니싱 스텝 사용 후 2초 이내에 공격받은 적에게 추가 에너지 데미지를 입힙니다.",
-      "note": "발동 조건: 배니싱 스텝 사용 후. 6초마다 1회 활성화 가능합니다.",
+      "description": "배니싱 스텝 사용 후 2초 이내에 공격받은 적에게 추가 에너지 데미지 1,200을 입힙니다.",
+      "effect": "배니싱 스텝 사용 후 2초 이내에 공격받은 적에게 추가 에너지 데미지 1,200을 입힙니다.",
+      "note": "발동 조건: 배니싱 스텝 사용 후. 재사용 대기시간: 15초.",
       "translationStatus": "user-provided-source"
     },
     {
       "cardId": "00019789_000000007BBC8D61",
       "locale": "es",
       "name": "Lightning Swift",
-      "description": "Inflige Daño de Energía adicional a los enemigos atacados dentro de los 2 segundos posteriores al uso del Paso Evanescente.",
-      "effect": "Inflige Daño de Energía adicional a los enemigos atacados dentro de los 2 segundos posteriores al uso del Paso Evanescente.",
-      "note": "Activación: Después de usar el Paso Evanescente. Se puede activar una vez cada 6 segundos.",
+      "description": "Inflige 1.200 de Daño de Energía adicional a los enemigos atacados dentro de los 2 segundos posteriores al uso del Paso Evanescente.",
+      "effect": "Inflige 1.200 de Daño de Energía adicional a los enemigos atacados dentro de los 2 segundos posteriores al uso del Paso Evanescente.",
+      "note": "Activación: Después de usar el Paso Evanescente. Tiempo de reutilización: 15 segundos.",
       "translationStatus": "user-provided-source"
     },
     {
       "cardId": "00019789_000000007BBC8D61",
       "locale": "vi",
       "name": "Lightning Swift",
-      "description": "Gây thêm sát thương năng lượng lên kẻ địch bị tấn công trong vòng 2 giây sau khi dùng Bộ Pháp Biến Mất (Vanishing Step).",
-      "effect": "Gây thêm sát thương năng lượng lên kẻ địch bị tấn công trong vòng 2 giây sau khi dùng Bộ Pháp Biến Mất (Vanishing Step).",
-      "note": "Điều kiện kích hoạt: Sau khi dùng Bộ Pháp Biến Mất (Vanishing Step). Có thể kích hoạt một lần mỗi 6 giây.",
+      "description": "Gây thêm 1.200 sát thương năng lượng lên kẻ địch bị tấn công trong vòng 2 giây sau khi dùng Bộ Pháp Biến Mất (Vanishing Step).",
+      "effect": "Gây thêm 1.200 sát thương năng lượng lên kẻ địch bị tấn công trong vòng 2 giây sau khi dùng Bộ Pháp Biến Mất (Vanishing Step).",
+      "note": "Điều kiện kích hoạt: Sau khi dùng Bộ Pháp Biến Mất (Vanishing Step). Hồi chiêu: 15 giây.",
       "translationStatus": "translated-from-zh-CN"
     },
     {
@@ -54,7 +54,7 @@
       "name": "Super Snowball",
       "description": "敵ヒーローをKOまたはアシストするたびに、すべての攻撃の威力が上昇します。",
       "effect": "敵ヒーローをKOまたはアシストするたびに、すべての攻撃の威力が上昇します。",
-      "note": "発動条件：敵ヒーローのKOまたはアシスト。1スタックにつき全攻撃力25アップを付与し、最大8スタックまで累積します。KOされると全スタックを失います。",
+      "note": "発動条件：敵ヒーローのKOまたはアシスト。1スタックにつき全攻撃力25アップを付与し、最大10スタックまで累積します。KOされると全スタックを失います。",
       "translationStatus": "user-provided-source"
     },
     {
@@ -63,7 +63,7 @@
       "name": "Super Snowball",
       "description": "每次击倒敌方英雄或获得助攻时，提升所有攻击的威力。",
       "effect": "每次击倒敌方英雄或获得助攻时，提升所有攻击的威力。",
-      "note": "激活条件：击倒敌方英雄或助攻。每层增加25点全攻击力，最多可叠加8层。被击倒时失去所有层数。",
+      "note": "激活条件：击倒敌方英雄或助攻。每层增加25点全攻击力，最多可叠加10层。被击倒时失去所有层数。",
       "translationStatus": "user-provided-source"
     },
     {
@@ -72,7 +72,7 @@
       "name": "Super Snowball",
       "description": "적 영웅을 KO 시키거나 어시스트할 때마다 모든 공격의 위력이 증가합니다.",
       "effect": "적 영웅을 KO 시키거나 어시스트할 때마다 모든 공격의 위력이 증가합니다.",
-      "note": "발동 조건: 적 영웅 KO 또는 어시스트. 스택당 모든 공격력 25 증가를 부여하며, 최대 8스택까지 누적됩니다. KO 당하면 모든 스택을 잃습니다.",
+      "note": "발동 조건: 적 영웅 KO 또는 어시스트. 스택당 모든 공격력 25 증가를 부여하며, 최대 10스택까지 누적됩니다. KO 당하면 모든 스택을 잃습니다.",
       "translationStatus": "user-provided-source"
     },
     {
@@ -81,7 +81,7 @@
       "name": "Super Snowball",
       "description": "Aumenta el poder de todos los ataques cada vez que logras un KO o asistencia sobre un héroe enemigo.",
       "effect": "Aumenta el poder de todos los ataques cada vez que logras un KO o asistencia sobre un héroe enemigo.",
-      "note": "Activación: KO o asistencia de un héroe enemigo. Otorga 25 de Aumento de Ataque Total por acumulación, hasta 8 acumulaciones. Todas las acumulaciones se pierden al ser noqueado.",
+      "note": "Activación: KO o asistencia de un héroe enemigo. Otorga 25 de Aumento de Ataque Total por acumulación, hasta 10 acumulaciones. Todas las acumulaciones se pierden al ser noqueado.",
       "translationStatus": "user-provided-source"
     },
     {
@@ -90,7 +90,7 @@
       "name": "Super Snowball",
       "description": "Mỗi khi hạ gục hero địch hoặc nhận hỗ trợ, tăng sức mạnh của mọi đòn tấn công.",
       "effect": "Mỗi khi hạ gục hero địch hoặc nhận hỗ trợ, tăng sức mạnh của mọi đòn tấn công.",
-      "note": "Điều kiện kích hoạt: Hạ gục hero địch hoặc nhận hỗ trợ. Mỗi tầng tăng 25 điểm Toàn Công, tối đa cộng dồn 8 tầng. Khi bị hạ gục, mất toàn bộ số tầng.",
+      "note": "Điều kiện kích hoạt: Hạ gục hero địch hoặc nhận hỗ trợ. Mỗi tầng tăng 25 điểm Toàn Công, tối đa cộng dồn 10 tầng. Khi bị hạ gục, mất toàn bộ số tầng.",
       "translationStatus": "translated-from-zh-CN"
     },
     {
@@ -99,7 +99,7 @@
       "name": "Build Up",
       "description": "敵NPCを十分にKOまたはアシストするたびに、すべての防御力が上昇します。",
       "effect": "敵NPCを十分にKOまたはアシストするたびに、すべての防御力が上昇します。",
-      "note": "発動条件：敵NPCのKOまたはアシスト5回ごと。1スタックにつき全防御力22アップを付与し、最大10スタックまで累積します。",
+      "note": "発動条件：敵NPCのKOまたはアシスト5回ごと。全防御力アップの最大値：25。",
       "translationStatus": "user-provided-source"
     },
     {
@@ -108,7 +108,7 @@
       "name": "Build Up",
       "description": "每当击倒足够的敌方NPC或获得助攻时，提升所有防御力。",
       "effect": "每当击倒足够的敌方NPC或获得助攻时，提升所有防御力。",
-      "note": "激活条件：每击倒5名敌方NPC或获得助攻。每层增加22点全防御力，最多可叠加10层。",
+      "note": "激活条件：每击倒5名敌方NPC或获得助攻。全防御力提升的最大值：25。",
       "translationStatus": "user-provided-source"
     },
     {
@@ -117,7 +117,7 @@
       "name": "Build Up",
       "description": "적 NPC를 충분히 KO시키거나 어시스트할 때마다 모든 방어력이 증가합니다.",
       "effect": "적 NPC를 충분히 KO시키거나 어시스트할 때마다 모든 방어력이 증가합니다.",
-      "note": "발동 조건: 적 NPC KO 또는 어시스트 5회마다. 스택당 모든 방어력 22 증가를 부여하며, 최대 10스택까지 누적됩니다.",
+      "note": "발동 조건: 적 NPC KO 또는 어시스트 5회마다. 모든 방어력 증가 최대치: 25.",
       "translationStatus": "user-provided-source"
     },
     {
@@ -126,7 +126,7 @@
       "name": "Build Up",
       "description": "Aumenta todas las defensas cada vez que logras suficientes KO o asistencias sobre NPC enemigos.",
       "effect": "Aumenta todas las defensas cada vez que logras suficientes KO o asistencias sobre NPC enemigos.",
-      "note": "Activación: Cada 5 KO o asistencias de NPC enemigos. Otorga 22 de Aumento de Defensa Total por acumulación, hasta 10 acumulaciones.",
+      "note": "Activación: Cada 5 KO o asistencias de NPC enemigos. Aumento máximo de Defensa Total: 25.",
       "translationStatus": "user-provided-source"
     },
     {
@@ -135,7 +135,7 @@
       "name": "Build Up",
       "description": "Mỗi khi hạ gục đủ số NPC địch hoặc nhận hỗ trợ, tăng toàn bộ phòng ngự.",
       "effect": "Mỗi khi hạ gục đủ số NPC địch hoặc nhận hỗ trợ, tăng toàn bộ phòng ngự.",
-      "note": "Điều kiện kích hoạt: Mỗi 5 lần hạ gục NPC địch hoặc nhận hỗ trợ. Mỗi tầng tăng 22 điểm Toàn Phòng Ngự, tối đa cộng dồn 10 tầng.",
+      "note": "Điều kiện kích hoạt: Mỗi 5 lần hạ gục NPC địch hoặc nhận hỗ trợ. Mức tăng Toàn Phòng Ngự tối đa: 25.",
       "translationStatus": "translated-from-zh-CN"
     },
     {

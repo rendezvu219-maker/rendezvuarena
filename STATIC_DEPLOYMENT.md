@@ -18,6 +18,16 @@ Both COPY controls validate the invitation before writing it. When Clipboard API
 
 Follow-up verification: automated tests cover both URL forms, incomplete links, cross-room credential mixing, missing generated tokens, Clipboard API denial and manual-copy fallback. Local browser QA on three separate loopback origins reached the coin-flip stage for both URL forms; the tokenless form reported `DRAFT_LINK_MISSING_ACCESS`. The user's precise Brave/Chrome failure has not been reproduced; this release hardens invitation handling and makes the next failure diagnosable. It is not proof that all cross-browser/network issues are resolved.
 
+## Spectator media (0.7.5-fast-trailers)
+
+Source trailers and artwork remain in `assets/trailers/`. The site prefers generated H.264/30fps faststart videos and lightweight WebP posters in `assets/trailers/web/`; originals remain available as fallbacks. Content-hashed filenames prevent an updated video or picture from reusing an old cached asset. The September update includes the replacement videos and posters for 0040 and 0041.
+
+After replacing source media, run `npm run assets:trailers -- /path/to/ffmpeg` (or set `FFMPEG_PATH`). Commit the source files, generated assets and `js/trailer-assets.js` together. FFmpeg is only a local build tool; GitHub Pages requires no runtime transcoding or server. Generated versions are compressed, not lossless replacements for the source files.
+
+Broadcast starts playback immediately, buffers only the next confirmed pick/ban, and keeps the video-then-picture sequence. When other reveals are queued, the picture hold is 750ms instead of 3 seconds; healthy clips still play in full. A video with no progress for 8 seconds or a poster that fails to load cannot indefinitely block later reveals. Private team previews are not shared or preloaded for spectators.
+
+Verification: `npm run check` and `npm test` passed locally. Browser QA played the new 0040 and 0041 videos sequentially through the actual Broadcast UI and displayed both matching posters afterward. This verifies local playback, not a guaranteed latency on every network. Media tests verify source hashes, H.264 encoding, faststart metadata, cancellation, stalled playback and poster revisions.
+
 ## 1. Configure Firebase
 
 1. Create a Firebase project and a Web app.

@@ -40,7 +40,7 @@ for (const query of ['d', 'da', 'dai', 'daim', 'daima']) {
 const fallbackMarkup = imageWithFallback(NIKITA_EASTER_EGG.imagePath, getHeroImg('0017'), 'Son Goku (Mini) <Nikita>', 'hero-detail-image');
 assert.equal(fallbackMarkup, '<img class="hero-detail-image" src="assets/easter-eggs/goku-mini-nikita.png" alt="Son Goku (Mini) &lt;Nikita&gt;" loading="lazy" data-fallback-src="assets/heroes/0017/btn_character.webp">');
 assert.match(broadcast, /getHeroImgSp\(hero\.id\)/, 'Broadcast result cards must use SP portraits.');
-assert.match(broadcast, /image\.src = getHeroFullImg\(hero\.id\)/, 'Broadcast reveal must keep full art.');
+assert.match(broadcast, /src: getHeroFullImg\(hero\.id\)/, 'Broadcast reveal must keep full art as its poster fallback.');
 assert.match(rules, /src=\"\$\{getHeroImgSp\(hero\.id\)\}/, 'Protection and Global Ban cards must use SP portraits.');
 assert.doesNotMatch(rules, /\$\{role\.label\}/, 'Protection cards must not repeat role text beside the icon.');
 assert.match(downloader, /btn_character_sp\.webp/);

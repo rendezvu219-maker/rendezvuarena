@@ -1,4 +1,5 @@
 // Dragon Ball RendezVu Arena - Hero Database (current official roster)
+import { WEB_TRAILERS, WEB_TRAILER_POSTERS } from './trailer-assets.js?v=0.7.5-fast-trailers';
 
 export const ROLES = {
   Damage:    { name: 'Damage',    color: 'var(--role-damage)', glow: 'var(--role-damage-glow)',   icon: 'DMG', label: 'DMG',  max: 2, iconPath: 'assets/roles/damage.png' },
@@ -158,6 +159,7 @@ export function getHeroTrailerUrls(id, configuredUrl = '') {
   const heroId = String(id || '').padStart(4, '0');
   return [...new Set([
     configuredUrl,
+    WEB_TRAILERS[heroId]?.src,
     `assets/trailers/${heroId}.mp4`,
     `assets/trailers/${heroId}.webm`,
     `assets/trailers/${heroId}.mov`,
@@ -168,6 +170,7 @@ export function getHeroTrailerPosterUrls(id, configuredUrl = '') {
   const heroId = String(id || '').padStart(4, '0');
   return [...new Set([
     configuredUrl,
+    WEB_TRAILER_POSTERS[heroId]?.src,
     `assets/trailers/${heroId}.png`,
     `assets/trailers/${heroId}.webp`,
     `assets/trailers/${heroId}.jpg`,

@@ -44,15 +44,15 @@ assert.match(heroes, /\/?assets\/trailers\/\$\{heroId\}\.mp4/);
 assert.match(heroes, /\/?assets\/trailers\/\$\{heroId\}\.png/);
 assert.match(script, /const BROADCAST_HERO_HOLD_MS = 3000;/);
 assert.match(script, /stage\.classList\.add\('media-switching'\)/);
-assert.ok(script.indexOf("image.classList.remove('visible')") < script.indexOf('image.src = candidate.src'), 'The old poster must be hidden before the next hero image source is assigned.');
-assert.match(script, /if \(!posterReady\) \{\s*heroHoldRequested = true;/, 'The held hero image must never show a stale frame while its new poster is still loading.');
+assert.ok(script.indexOf("image.classList.remove('visible', 'poster-frame')") < script.indexOf('image.src = candidate.src'), 'The old poster must be hidden before the next hero image source is assigned.');
+assert.match(script, /if \(!posterReady && !posterExhausted\)/, 'Wait for this hero poster, but bound a missing image.');
 assert.match(css, /\.bc-hero-stage\.media-switching \.bc-trailer-video,[\s\S]*opacity:0 !important; transition:none !important;/, 'Media switching must suppress stale video and poster frames without a fade.');
-assert.match(script, /video\.onended = showLockedHero/);
+assert.match(script, /onDone: showLockedHero/);
 assert.match(script, /this\.revealQueue\.push\(\{ hero, team, action \}\)/);
-assert.match(script, /this\.revealHoldUntil = Date\.now\(\) \+ BROADCAST_HERO_HOLD_MS/);
+assert.match(script, /this\.revealQueue.length \? BROADCAST_QUEUED_HOLD_MS : BROADCAST_HERO_HOLD_MS/);
 assert.match(script, /this\.revealTimer = setTimeout\(\(\) => this\.scheduleNextHeroReveal\(\), delay\)/);
 assert.match(script, /if \(this\.hasLockedHeroReveal\) \{\s*this\.pendingWaitingAction = action \|\| null;\s*return;/, 'Late state snapshots must not cancel active or queued hero reveals.');
-assert.match(broadcastHtml, /broadcast-page\.js\?v=0\.7\.4-link-check/, 'Broadcast HTML must cache-bust the invitation reader.');
+assert.match(broadcastHtml, /broadcast-page\.js\?v=0\.7\.5-fast-trailers/, 'Broadcast HTML must cache-bust the media player.');
 assert.match(broadcastHtml, /broadcast\.css\?v=0\.6\.44-broadcast-reveal-queue/, 'Broadcast HTML must cache-bust the media-switching styles.');
 assert.doesNotMatch(script, /video\.currentTime >=/, 'Broadcast must play the full trailer instead of cutting it at three seconds.');
 assert.match(script, /copy\.classList\.remove\('hidden'\)/);
@@ -93,6 +93,7 @@ Object.assign(queueHarness, {
   revealHoldUntil: 0,
   revealQueue: [],
   played: [],
+  prepareQueuedTrailer() {},
 });
 queueHarness.playHeroReveal = function playHeroReveal(item) {
   this.played.push(item.hero.id);

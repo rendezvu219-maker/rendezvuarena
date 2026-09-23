@@ -1,6 +1,6 @@
 // Keep repository prefixes and never mix server-backed and P2P room links.
-import { t } from './i18n.js?v=0.7.4-link-check';
-export const DRAFT_LINK_VERSION = '0.7.4-link-check';
+import { t } from './i18n.js?v=0.7.5-fast-trailers';
+export const DRAFT_LINK_VERSION = '0.7.5-fast-trailers';
 
 export function readDraftRoomLink(value) {
   const url = new URL(value);

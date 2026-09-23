@@ -6,8 +6,8 @@
     "slotPool": 1,
     "cardType": "attack",
     "displayOrder": 1,
-    "effect": "Deals additional Energy DMG to enemies attacked within 2 seconds of using Vanishing Step.",
-    "note": "Activation: After using Vanishing Step. Can activate once every 6 seconds."
+    "effect": "Deals 1,200 additional Energy DMG to enemies attacked within 2 seconds of using Vanishing Step.",
+    "note": "Activation: After using Vanishing Step. Cooldown: 15 seconds."
   },
   {
     "id": "00019798_000000000CBBBDF7",
@@ -17,7 +17,7 @@
     "cardType": "attack",
     "displayOrder": 2,
     "effect": "Boosts the power of all attacks whenever you score a KO or assist on an enemy hero.",
-    "note": "Activation: Enemy hero KO or assist. Grants 25 All Attack Up per stack, up to 8 stacks. All stacks are lost when you are KO'd."
+    "note": "Activation: Enemy hero KO or assist. Grants 25 All Attack Up per stack, up to 10 stacks. All stacks are lost when you are KO'd."
   },
   {
     "id": "00019802_00000000B3D0DCEA",
@@ -27,7 +27,7 @@
     "cardType": "defense",
     "displayOrder": 3,
     "effect": "Boosts all defenses whenever you score enough KOs or assists on enemy NPCs.",
-    "note": "Activation: Every 5 enemy NPC KOs or assists. Grants 22 All Defense Up per stack, up to 10 stacks."
+    "note": "Activation: Every 5 enemy NPC KOs or assists. Maximum All Defense Up: 25."
   },
   {
     "id": "00019809_00000000C4D7EC7C",
