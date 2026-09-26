@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-26T02:25:30.828Z",
+  "updatedAt": "2026-09-26T02:31:14.316Z",
   "migration": {
     "source": "rendezvu-arena.sqlite",
     "cards": 18,
@@ -5202,6 +5202,121 @@
           "note": ""
         }
       ],
+      "energyThreshold": 100,
+      "energyRate": 1
+    },
+    {
+      "id": 50,
+      "name": "Beerus Recommended Build",
+      "description": "",
+      "scenario": "Recommended general build",
+      "sourceKey": "",
+      "createdAt": "2026-09-26T02:30:15.342Z",
+      "heroAssignments": [
+        {
+          "heroId": "0038",
+          "isDefault": true,
+          "assignedAt": "2026-09-26T02:30:30.034Z"
+        }
+      ],
+      "translations": {
+        "en": {
+          "name": "Beerus Recommended Build",
+          "description": "",
+          "scenario": "Recommended general build",
+          "translationStatus": "source",
+          "updatedAt": "2026-09-26T02:30:15.342Z"
+        }
+      },
+      "updatedAt": "2026-09-26T02:30:30.034Z",
+      "slots": [
+        {
+          "slot": 1,
+          "cardId": "00019798_000000000CBBBDF7"
+        },
+        {
+          "slot": 2,
+          "cardId": "00019836_000000002AD98D50"
+        },
+        {
+          "slot": 3,
+          "cardId": "00019873_00000000B4BD18F3"
+        }
+      ],
+      "swapOptions": [
+        {
+          "slot": 1,
+          "priority": 1,
+          "cardId": "00019813_0000000002B03815",
+          "note": ""
+        },
+        {
+          "slot": 1,
+          "priority": 2,
+          "cardId": "00019789_000000007BBC8D61",
+          "note": ""
+        },
+        {
+          "slot": 2,
+          "priority": 1,
+          "cardId": "00019860_000000009BB969AF",
+          "note": ""
+        },
+        {
+          "slot": 3,
+          "priority": 1,
+          "cardId": "00019887_0000000072DACC9A",
+          "note": ""
+        },
+        {
+          "slot": 3,
+          "priority": 2,
+          "cardId": "00019868_000000000BD679EE",
+          "note": ""
+        }
+      ],
+      "energyThreshold": 100,
+      "energyRate": 1
+    },
+    {
+      "id": 51,
+      "name": "Jiren Recommended Build",
+      "description": "",
+      "scenario": "Recommended general build",
+      "sourceKey": "",
+      "createdAt": "2026-09-26T02:30:58.440Z",
+      "heroAssignments": [
+        {
+          "heroId": "0040",
+          "isDefault": true,
+          "assignedAt": "2026-09-26T02:31:14.316Z"
+        }
+      ],
+      "translations": {
+        "en": {
+          "name": "Jiren Recommended Build",
+          "description": "",
+          "scenario": "Recommended general build",
+          "translationStatus": "source",
+          "updatedAt": "2026-09-26T02:30:58.440Z"
+        }
+      },
+      "updatedAt": "2026-09-26T02:31:14.316Z",
+      "slots": [
+        {
+          "slot": 1,
+          "cardId": "00019802_00000000B3D0DCEA"
+        },
+        {
+          "slot": 2,
+          "cardId": "00019836_000000002AD98D50"
+        },
+        {
+          "slot": 3,
+          "cardId": "00019873_00000000B4BD18F3"
+        }
+      ],
+      "swapOptions": [],
       "energyThreshold": 100,
       "energyRate": 1
     }
