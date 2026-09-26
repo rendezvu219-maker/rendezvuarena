@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-21T06:30:39.214Z",
+  "updatedAt": "2026-09-26T02:25:30.828Z",
   "migration": {
     "source": "rendezvu-arena.sqlite",
     "cards": 18,
@@ -5149,6 +5149,61 @@
           "updatedAt": "2026-09-21T06:30:39.214Z"
         }
       }
+    },
+    {
+      "id": 49,
+      "name": "Goku Black Recommended Build",
+      "description": "",
+      "scenario": "Recommended general build",
+      "sourceKey": "",
+      "createdAt": "2026-09-26T02:24:54.698Z",
+      "heroAssignments": [
+        {
+          "heroId": "0039",
+          "isDefault": true,
+          "assignedAt": "2026-09-26T02:25:30.828Z"
+        }
+      ],
+      "translations": {
+        "en": {
+          "name": "Goku Black Recommended Build",
+          "description": "",
+          "scenario": "Recommended general build",
+          "translationStatus": "source",
+          "updatedAt": "2026-09-26T02:24:54.698Z"
+        }
+      },
+      "updatedAt": "2026-09-26T02:25:30.828Z",
+      "slots": [
+        {
+          "slot": 1,
+          "cardId": "00019798_000000000CBBBDF7"
+        },
+        {
+          "slot": 2,
+          "cardId": "00019836_000000002AD98D50"
+        },
+        {
+          "slot": 3,
+          "cardId": "00019873_00000000B4BD18F3"
+        }
+      ],
+      "swapOptions": [
+        {
+          "slot": 1,
+          "priority": 1,
+          "cardId": "00019802_00000000B3D0DCEA",
+          "note": ""
+        },
+        {
+          "slot": 2,
+          "priority": 1,
+          "cardId": "00019860_000000009BB969AF",
+          "note": ""
+        }
+      ],
+      "energyThreshold": 100,
+      "energyRate": 1
     }
   ]
 }
