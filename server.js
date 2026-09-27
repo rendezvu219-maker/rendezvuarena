@@ -2739,6 +2739,7 @@ app.post('/api/quick-draft-rooms', optionalAuth, (req, res) => {
           previousPicksB: oldConfig.previousPicksB || config.previousPicksB,
           previousBansA: oldConfig.previousBansA || config.previousBansA,
           previousBansB: oldConfig.previousBansB || config.previousBansB,
+          sideAssignment: draftRoomSideAssignment(room),
           gameRollId,
         };
         const oldState = jsonParse(room.state_json);
@@ -2771,9 +2772,19 @@ function draftMatchContext(matchId) {
   `).get(matchId);
 }
 
-function draftEngineTeamsByEntrant(state = {}) {
+function draftRoomSideAssignment(room, state = jsonParse(room?.state_json)) {
+  const config = jsonParse(room?.config_json);
+  for (const assignment of [state?.preDraft?.sideAssignment, config.sideAssignment]) {
+    if (['teamA', 'teamB'].includes(assignment?.A) && ['teamA', 'teamB'].includes(assignment?.B) && assignment.A !== assignment.B) {
+      return { A: assignment.A, B: assignment.B };
+    }
+  }
+  return { A: 'teamA', B: 'teamB' };
+}
+
+function draftEngineTeamsByEntrant(state = {}, room = null) {
   const engine = state.engine || {};
-  const assignment = state.preDraft?.sideAssignment;
+  const assignment = draftRoomSideAssignment(room, state);
   const swapped = assignment?.A === 'teamB' && assignment?.B === 'teamA';
   return swapped
     ? { teamA: engine.teamB || {}, teamB: engine.teamA || {} }
@@ -2783,14 +2794,14 @@ function draftEngineTeamsByEntrant(state = {}) {
 function draftSideForRoomRole(room, role) {
   if (!['teamA', 'teamB'].includes(role)) return null;
   const state = jsonParse(room?.state_json);
-  const assignment = state?.preDraft?.sideAssignment;
+  const assignment = draftRoomSideAssignment(room, state);
   if (assignment?.A === role) return 'A';
   if (assignment?.B === role) return 'B';
   return role === 'teamB' ? 'B' : 'A';
 }
 
 function saveDraftSnapshotToGame({ match, room, state, winnerTeamId = null, status = 'draft_complete' }) {
-  const engine = draftEngineTeamsByEntrant(state);
+  const engine = draftEngineTeamsByEntrant(state, room);
   db.prepare(`
     UPDATE match_games SET
       status=?,winner_team_id=?,picks_a_json=?,picks_b_json=?,bans_a_json=?,bans_b_json=?,
@@ -2830,6 +2841,7 @@ function refreshedDraftConfig(match, room) {
     format: `BO${match.best_of}`,
     gameNumber: currentGameNumber,
     gameRollId,
+    sideAssignment: draftRoomSideAssignment(room),
     seriesRule: match.series_rule,
     squadraBlastCarryBans,
     seriesScoreA: score.scoreA,
@@ -4050,7 +4062,7 @@ io.on('connection',socket=>{
       db.prepare('UPDATE draft_rooms SET state_json=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?')
         .run(JSON.stringify(safe),status,room.id);
       if(safe.engine?.state==='complete'){
-        const entrantTeams=draftEngineTeamsByEntrant(safe);
+        const entrantTeams=draftEngineTeamsByEntrant(safe,room);
         db.prepare(`UPDATE match_games SET status='draft_complete',picks_a_json=?,picks_b_json=?,bans_a_json=?,bans_b_json=?,divine_json=?,draft_snapshot_json=?,completed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE match_id=? AND game_number=? AND status<>'completed'`)
           .run(JSON.stringify(entrantTeams.teamA?.picks||[]),JSON.stringify(entrantTeams.teamB?.picks||[]),JSON.stringify(entrantTeams.teamA?.bans||[]),JSON.stringify(entrantTeams.teamB?.bans||[]),JSON.stringify(safe.chosenDivineRules||[]),JSON.stringify(safe),room.match_id,stateGameNumber);
       }

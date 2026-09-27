@@ -1,4 +1,4 @@
-import { HostSetup } from './host-setup.js?v=0.7.6-team-pov';
+import { HostSetup } from './host-setup.js?v=0.7.7-keep-sides';
 import { t } from './i18n.js';
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -36,6 +36,12 @@ The Host invitation panel appears only in Game 1. Later games may briefly wait f
 
 Regression coverage: `node tests/draft-team-pov.mjs` checks both team views on either turn, swapped sides, imported snapshots, actual Team B lock-in of Team A's previous Vegito, global carried bans, Game 3 reset, Fearless and Game 2 reconnect/invitation behavior. A local browser fixture using the real grid renderer confirmed that only Team A shows Vegito's team lock on both turns.
 
+## Carry side selection between games (0.7.7-keep-sides)
+
+The resolved Blue/Red assignment is now saved in the room configuration and restored before creating the next game's draft engine. Skipping the coin flip from Game 2 onward no longer resets Team A to Blue. Divine setup, team controls, scores, team-specific pick history and Spectator all use the carried assignment. New series still run a fresh coin flip when enabled. Server-backed rooms also retain the assignment when a later snapshot omits pre-draft state.
+
+Regression coverage: `tests/draft-side-persistence.mjs` advances a red-side Team A loss through the real result handler, JSON serialization and the next-game constructor, checking both Divine settings, scores, history and Spectator identity. The shared-room BO5 test verifies persisted swapped sides and original-entrant histories through Game 5, plus a clean rematch.
+
 ## 1. Configure Firebase
 
 1. Create a Firebase project and a Web app.

@@ -209,7 +209,7 @@ try {
       status: 'complete',
       gameNumber: 1,
       gameRollId: gameOneRollId,
-      preDraft: { stage: 'complete', gameNumber: 1, gameRollId: gameOneRollId, sideAssignment: { A: 'teamA', B: 'teamB' } },
+      preDraft: { stage: 'complete', gameNumber: 1, gameRollId: gameOneRollId, sideAssignment: { A: 'teamB', B: 'teamA' } },
       engine: {
         state: 'complete', gameNumber: 1,
         teamA: { picks: ['0001','0002','0003','0004'], bans: ['0009'] },
@@ -242,10 +242,11 @@ try {
   assert.equal(gameTwoRoom.payload.room.config.gameNumber, 2);
   const gameTwoRollId = gameTwoRoom.payload.room.config.gameRollId;
   assert.notEqual(gameTwoRollId, gameOneRollId, 'Game 2 must use a fresh random-roll identity.');
-  assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksA, ['0001','0002','0003','0004']);
-  assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksB, ['0005','0006','0007','0008']);
-  assert.deepEqual(gameTwoRoom.payload.room.config.previousBansA, ['0009']);
-  assert.deepEqual(gameTwoRoom.payload.room.config.previousBansB, ['0010']);
+  assert.deepEqual(gameTwoRoom.payload.room.config.sideAssignment, { A:'teamB', B:'teamA' }, 'The next game must preserve Red/Blue sides.');
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksA, ['0005','0006','0007','0008']);
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousPicksB, ['0001','0002','0003','0004']);
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousBansA, ['0010']);
+  assert.deepEqual(gameTwoRoom.payload.room.config.previousBansB, ['0009']);
 
   const authorityShift = waitForEvent(teamA.socket, 'draft:authority');
   host.socket.disconnect();
@@ -276,6 +277,7 @@ try {
     method: 'POST', body: { accessToken: teamAAccess },
   });
   assert.equal(gameThreeRoom.payload.room.config.gameNumber, 3);
+  assert.deepEqual(gameThreeRoom.payload.room.config.sideAssignment, { A:'teamB', B:'teamA' }, 'Config sides survive a game without a pre-draft snapshot.');
   const gameThreeRollId = gameThreeRoom.payload.room.config.gameRollId;
   assert.notEqual(gameThreeRollId, gameTwoRollId, 'Game 3 must use a fresh random-roll identity.');
   assert.deepEqual(gameThreeRoom.payload.room.config.previousPicksA, [], 'Squadra Blast Game 3 must clear prior picks.');
@@ -362,10 +364,11 @@ try {
   assert.equal(gameFiveRoom.payload.room.config.gameNumber, 5);
   const gameFiveRollId = gameFiveRoom.payload.room.config.gameRollId;
   assert.notEqual(gameFiveRollId, gameFourRollId);
-  assert.deepEqual(gameFiveRoom.payload.room.config.previousPicksA, ['0027','0028','0029','0030']);
-  assert.deepEqual(gameFiveRoom.payload.room.config.previousPicksB, ['0031','0032','0033','0034']);
-  assert.deepEqual(gameFiveRoom.payload.room.config.previousBansA, ['0035']);
-  assert.deepEqual(gameFiveRoom.payload.room.config.previousBansB, ['0036']);
+  assert.deepEqual(gameFiveRoom.payload.room.config.sideAssignment, { A:'teamB', B:'teamA' });
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousPicksA, ['0031','0032','0033','0034']);
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousPicksB, ['0027','0028','0029','0030']);
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousBansA, ['0036']);
+  assert.deepEqual(gameFiveRoom.payload.room.config.previousBansB, ['0035']);
 
   const gameFiveStateSeen = waitForEvent(teamB.socket, 'draft:state');
   teamA.socket.emit('draft:state', {
@@ -396,6 +399,7 @@ try {
   });
   assert.notEqual(rematch.payload.room.roomCode, room.roomCode, 'Reusing a played Quick Draft session must create a new room.');
   assert.equal(rematch.payload.room.config.gameNumber, 1);
+  assert.equal(rematch.payload.room.config.sideAssignment, undefined, 'A fresh rematch must not inherit old sides.');
   assert.equal(rematch.payload.room.config.seriesScoreA, 0);
   assert.equal(rematch.payload.room.config.seriesScoreB, 0);
   assert.notEqual(rematch.payload.room.config.gameRollId, gameFiveRollId);

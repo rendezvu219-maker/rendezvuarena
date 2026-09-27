@@ -3,9 +3,9 @@ import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHer
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js?v=0.7.6-team-pov';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.7-keep-sides';
 import { api, escapeHtml } from './api.js';
-import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.6-team-pov';
+import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.7-keep-sides';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
 import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
 
@@ -57,7 +57,8 @@ export class DraftUI {
       && Number(this.initialRoomState?.preDraft?.gameNumber) === Number(config.gameNumber || 1)
       ? this.initialRoomState.preDraft
       : null;
-    this.sideAssignment = normalizeSideAssignment(this.preDraftState?.sideAssignment);
+    this.sideAssignment = normalizeSideAssignment(this.preDraftState?.sideAssignment)
+      || (!this.config.enableCoinFlip ? normalizeSideAssignment(this.config.sideAssignment) : null);
     this.preDraftTimers = new Map();
     this.sideAnimationSignature = '';
     this.preDraftControlsBound = false;
@@ -268,6 +269,7 @@ export class DraftUI {
     const normalized = normalizeSideAssignment(assignment);
     if (!normalized) return false;
     this.sideAssignment = normalized;
+    this.config.sideAssignment = { ...normalized };
     if (this.preDraftState) this.preDraftState.sideAssignment = normalized;
 
     const blue = this.teamForSide('A');
@@ -1373,7 +1375,9 @@ if (this.engine.selectedHero === h.id) {
     this.bindPreDraftControls();
 
     if (!this.preDraftState) {
-      const defaultAssignment = { A: 'teamA', B: 'teamB' };
+      const defaultAssignment = normalizeSideAssignment(this.sideAssignment)
+        || normalizeSideAssignment(this.config.sideAssignment)
+        || { A: 'teamA', B: 'teamB' };
       this.preDraftState = this.config.enableCoinFlip
         ? {
             version: 2,
@@ -1853,7 +1857,7 @@ if (this.engine.selectedHero === h.id) {
   finishPreDraft({ alreadyCommitted = false } = {}) {
     if (!this.isAuthoritativeHost || !this.preDraftState) return;
     this.preDraftState.stage = 'complete';
-    this.applySideAssignment(this.preDraftState.sideAssignment || { A: 'teamA', B: 'teamB' }, { revealHeader: true });
+    this.applySideAssignment(this.preDraftState.sideAssignment || this.sideAssignment || { A: 'teamA', B: 'teamB' }, { revealHeader: true });
     if (!alreadyCommitted) this.publishRoomState(true);
     this.setPreDraftStage(false);
     if (this.chosenDivineRules.length === 2) {
@@ -2533,6 +2537,8 @@ if (this.engine.selectedHero === h.id) {
         this.config.previousPicksB = [...new Set([...(this.config.previousPicksB || []), ...entrantBPicks])];
       }
       this.config.gameNumber = nextGameNumber;
+      this.config.sideAssignment = normalizeSideAssignment(this.sideAssignment)
+        || { A: 'teamA', B: 'teamB' };
       if (nextGameNumber > 1) {
         this.config.enableCoinFlip = false;
       }

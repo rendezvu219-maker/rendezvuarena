@@ -1,8 +1,8 @@
 import { DraftEngine } from './draft.js';
 import { HEROES, PICKS_PER_TEAM } from './heroes.js';
 import { BroadcastUI } from './broadcast.js?v=0.7.5-fast-trailers';
-import { loadDraftConfigFromUrl } from './app.js?v=0.7.6-team-pov';
-import { readDraftRoomLink } from './draft-links.js?v=0.7.6-team-pov';
+import { loadDraftConfigFromUrl } from './app.js?v=0.7.7-keep-sides';
+import { readDraftRoomLink } from './draft-links.js?v=0.7.7-keep-sides';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';
 
@@ -30,8 +30,9 @@ function originalEntrants(config) {
   };
 }
 
-function resolvedSideConfig(config, state = config._roomState) {
-  const assignment = normalizeSideAssignment(state?.preDraft?.sideAssignment);
+export function resolvedSideConfig(config, state = config._roomState) {
+  const assignment = normalizeSideAssignment(state?.preDraft?.sideAssignment)
+    || ((!config.enableCoinFlip || Number(config.gameNumber || 1) > 1) ? normalizeSideAssignment(config.sideAssignment) : null);
   if (!assignment) return { ...config };
   const blue = originalEntrant(config, entrantForSide(assignment, 'A'));
   const red = originalEntrant(config, entrantForSide(assignment, 'B'));
@@ -234,6 +235,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const config = await loadDraftConfigFromUrl();
     if (!config) throw new Error('No Broadcast configuration was provided.');
+    config.sideAssignment = normalizeSideAssignment(config._roomState?.preDraft?.sideAssignment)
+      || normalizeSideAssignment(config.sideAssignment);
 
     document.getElementById('broadcast-view').dataset.transparent = String(['1', 'true', 'yes'].includes(String(params.get('transparent')).toLowerCase()));
 
@@ -280,6 +283,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     sync.on('state', state => {
       if (!state) return;
+      const assignment = normalizeSideAssignment(state.preDraft?.sideAssignment || state.nextConfig?.sideAssignment);
+      if (assignment) config.sideAssignment = assignment;
+      if (Number(state.gameNumber) > 0) config.gameNumber = Number(state.gameNumber);
       if (Number.isFinite(Number(state.seriesScoreA))) config.seriesScoreA = Number(state.seriesScoreA);
       if (Number.isFinite(Number(state.seriesScoreB))) config.seriesScoreB = Number(state.seriesScoreB);
       if (state.engine) {
