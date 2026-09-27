@@ -3,9 +3,9 @@ import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHer
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js?v=0.7.5-fast-trailers';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.6-team-pov';
 import { api, escapeHtml } from './api.js';
-import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.5-fast-trailers';
+import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.6-team-pov';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
 import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
 
@@ -113,8 +113,10 @@ export class DraftUI {
     if (description) description.textContent = missing.length ? t('waitingForTeamJoinDesc') : t('preDraftDesc');
 
     const linksContainer = document.getElementById('waiting-links-container');
-    if (linksContainer && this.isAuthoritativeHost && this.sync?.roomCode) {
-      linksContainer.style.display = 'flex';
+    const showInvitations = this.isAuthoritativeHost && this.sync?.roomCode
+      && Number(this.config.gameNumber || 1) === 1;
+    if (linksContainer) linksContainer.style.display = showInvitations ? 'flex' : 'none';
+    if (linksContainer && showInvitations) {
       const links = this.sync.shareLinks || {};
       
       const linkA = document.getElementById('waiting-link-a');
@@ -912,24 +914,33 @@ export class DraftUI {
     this.bansB.innerHTML = makeBanSlots('B', visibleBanCount);
   }
 
+  poolActionForViewer() {
+    const action = this.engine.currentAction;
+    const ownSide = this.sync ? this.sideForRole(this.roomRole) : null;
+    // Team links display their own pick eligibility even during the other
+    // team's turn. Host/preview screens continue to follow the active turn.
+    // Selection/lock authorization still uses the real currentAction.
+    return action?.type === 'pick' && ownSide ? { ...action, team: ownSide } : action;
+  }
+
   renderGrid() {
     this.grid.innerHTML = '';
     const heroes = this.currentFilter === 'all'
       ? this.engine.heroes
       : this.engine.heroes.filter(h => h.role === this.currentFilter);
 
-    const action = this.engine.currentAction;
+    const action = this.poolActionForViewer();
     const canInteract = this.canControlCurrentAction();
     heroes.forEach(h => {
       const localizedName = heroName(h.id, h.name);
-      const unavailableReason = this.engine.getHeroUnavailableReason(h.id);
+      const unavailableReason = this.engine.getHeroUnavailableReason(h.id, action);
       const isAvail = unavailableReason === null;
       const roleData = ROLES[h.role];
       // Enforce the game's fixed 2 Damage / 1 Tank / 1 Technical composition.
       let roleFull = false;
       let roleRestriction = null;
       if (isAvail && action?.type === 'pick') {
-        roleRestriction = this.engine.getRoleRestrictionReason(h.id);
+        roleRestriction = this.engine.getRoleRestrictionReason(h.id, action);
         roleFull = Boolean(roleRestriction);
       }
       const pickCounts = this.engine.pickCounts(h.id);

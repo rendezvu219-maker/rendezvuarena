@@ -2,7 +2,7 @@
 // Uses the same WebRTC handshake for same-browser tabs and remote browsers.
 // Zero-backend: 100% client-side, runs entirely on GitHub Pages without server or accounts.
 
-import { p2pDraftLinks } from './draft-links.js?v=0.7.5-fast-trailers';
+import { p2pDraftLinks } from './draft-links.js?v=0.7.6-team-pov';
 // Keep the bundled PeerJS ICE defaults, including TURN relay support.
 
 export class P2PDraftSync {

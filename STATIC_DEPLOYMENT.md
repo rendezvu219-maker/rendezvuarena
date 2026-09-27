@@ -28,6 +28,14 @@ Broadcast starts playback immediately, buffers only the next confirmed pick/ban,
 
 Verification: `npm run check` and `npm test` passed locally. Browser QA played the new 0040 and 0041 videos sequentially through the actual Broadcast UI and displayed both matching posters afterward. This verifies local playback, not a guaranteed latency on every network. Media tests verify source hashes, H.264 encoding, faststart metadata, cancellation, stalled playback and poster revisions.
 
+## Team-view and series waiting fix (0.7.6-team-pov)
+
+Team links now display pick restrictions and role limits for their own team, even while the opponent is picking. Previously both grids displayed the active team's restrictions, making a Squadra Blast team-only lock look global. Host and spectator grids still follow the active turn, and commands remain restricted to the actual acting team. Carried bans remain global when enabled; the Squadra Blast Game 3 reset and Fearless behavior are unchanged.
+
+The Host invitation panel appears only in Game 1. Later games may briefly wait for actual participant reconnections, then continue automatically using the same links. Hiding the panel does not bypass the presence check.
+
+Regression coverage: `node tests/draft-team-pov.mjs` checks both team views on either turn, swapped sides, imported snapshots, actual Team B lock-in of Team A's previous Vegito, global carried bans, Game 3 reset, Fearless and Game 2 reconnect/invitation behavior. A local browser fixture using the real grid renderer confirmed that only Team A shows Vegito's team lock on both turns.
+
 ## 1. Configure Firebase
 
 1. Create a Firebase project and a Web app.

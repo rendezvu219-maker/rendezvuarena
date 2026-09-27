@@ -1,4 +1,4 @@
-import { HostSetup } from './host-setup.js?v=0.7.5-fast-trailers';
+import { HostSetup } from './host-setup.js?v=0.7.6-team-pov';
 import { t } from './i18n.js';
 
 document.addEventListener('DOMContentLoaded', () => {

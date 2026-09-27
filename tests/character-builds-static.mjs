@@ -32,7 +32,11 @@ try {
   const vegeta = buildsForHero(bundle.presets, '0002');
   assert.ok(goku && vegeta.length, 'Export must retain the existing Goku and Vegeta builds.');
   assert.equal(goku.slots.length, 3);
-  assert.deepEqual(buildsForHero(bundle.presets, '0038'), [], 'An unassigned hero must have an empty, safe build list.');
+  // Create an unassigned fixture without assuming a live roster hero has no builds.
+  const unassignedFixture = bundle.presets.map(preset => ({ ...preset,
+    heroAssignments:preset.heroAssignments.filter(assignment => assignment.heroId !== '0038'),
+  }));
+  assert.deepEqual(buildsForHero(unassignedFixture, '0038'), [], 'An unassigned hero must have an empty, safe build list.');
   assert.equal(bundle.presets.length, source.presets.length, 'All current complete presets, including unassigned builds, must survive export.');
   for (const [presetId, heroId] of [[45,'0007'], [46,'0011'], [47,'0001'], [48,'0041']]) {
     assert.ok(buildsForHero(bundle.presets, heroId).some(preset => preset.id === presetId), `Preset ${presetId} must be visible on its named hero ${heroId}.`);

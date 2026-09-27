@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { BroadcastUI } from '../js/broadcast.js';
+import { DRAFT_LINK_VERSION } from '../js/draft-links.js';
 
 const script = await readFile(new URL('../js/broadcast.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../css/broadcast.css', import.meta.url), 'utf8');
@@ -52,7 +53,7 @@ assert.match(script, /this\.revealQueue\.push\(\{ hero, team, action \}\)/);
 assert.match(script, /this\.revealQueue.length \? BROADCAST_QUEUED_HOLD_MS : BROADCAST_HERO_HOLD_MS/);
 assert.match(script, /this\.revealTimer = setTimeout\(\(\) => this\.scheduleNextHeroReveal\(\), delay\)/);
 assert.match(script, /if \(this\.hasLockedHeroReveal\) \{\s*this\.pendingWaitingAction = action \|\| null;\s*return;/, 'Late state snapshots must not cancel active or queued hero reveals.');
-assert.match(broadcastHtml, /broadcast-page\.js\?v=0\.7\.5-fast-trailers/, 'Broadcast HTML must cache-bust the media player.');
+assert.ok(broadcastHtml.includes(`broadcast-page.js?v=${DRAFT_LINK_VERSION}`), 'Broadcast HTML must cache-bust the current room application.');
 assert.match(broadcastHtml, /broadcast\.css\?v=0\.6\.44-broadcast-reveal-queue/, 'Broadcast HTML must cache-bust the media-switching styles.');
 assert.doesNotMatch(script, /video\.currentTime >=/, 'Broadcast must play the full trailer instead of cutting it at three seconds.');
 assert.match(script, /copy\.classList\.remove\('hidden'\)/);

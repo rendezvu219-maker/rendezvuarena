@@ -1,8 +1,8 @@
 import { DraftEngine } from './draft.js';
 import { HEROES, PICKS_PER_TEAM } from './heroes.js';
 import { BroadcastUI } from './broadcast.js?v=0.7.5-fast-trailers';
-import { loadDraftConfigFromUrl } from './app.js?v=0.7.5-fast-trailers';
-import { readDraftRoomLink } from './draft-links.js?v=0.7.5-fast-trailers';
+import { loadDraftConfigFromUrl } from './app.js?v=0.7.6-team-pov';
+import { readDraftRoomLink } from './draft-links.js?v=0.7.6-team-pov';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';
 
