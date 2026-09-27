@@ -1,4 +1,4 @@
-import { HostSetup } from './host-setup.js?v=0.7.7-keep-sides';
+import { HostSetup } from './host-setup.js?v=0.7.8-rejoin-links';
 import { t } from './i18n.js';
 
 document.addEventListener('DOMContentLoaded', () => {

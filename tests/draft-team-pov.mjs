@@ -109,4 +109,34 @@ assert.equal(waiting.screen,'pre-draft-waiting-screen');
 waiting.draftPresence = {teamA:1,teamB:1};
 waiting.beginInitialDraftFlow();
 assert.equal(waiting.started,true,'Continue automatically once both teams reconnect.');
-console.log('Team-specific Squadra Blast UI, swapped sides, snapshots, real locks and Game 2 invitation visibility passed.');
+// Manual links are available throughout the series, but never open automatically.
+for (const id of ['btn-rejoin-links','rejoin-links-dialog','btn-close-rejoin-links','rejoin-link-a','rejoin-link-b','rejoin-link-spec','rejoin-label-a','rejoin-label-b','rejoin-label-spec']) nodes.set(id, element());
+const dialog = nodes.get('rejoin-links-dialog');
+dialog.showModal = () => { dialog.open = true; };
+dialog.close = () => { dialog.open = false; };
+dialog.querySelectorAll = selector => selector === 'input' ? ['a','b','spec'].map(suffix => nodes.get(`rejoin-link-${suffix}`)) : [];
+waiting.config.teamA = 'Original A';
+waiting.sideAssignment = {A:'teamB',B:'teamA'};
+for (const gameNumber of [1,2,3,5]) {
+  waiting.config.gameNumber = gameNumber;
+  waiting.bindRejoinLinks();
+  assert.equal(nodes.get('btn-rejoin-links').hidden, false);
+  assert.ok(!dialog.open, 'Binding must not open the share dialog automatically.');
+  nodes.get('btn-rejoin-links').events.click();
+  assert.equal(dialog.open, true);
+  assert.equal(nodes.get('rejoin-link-a').value, 'a');
+  assert.equal(nodes.get('rejoin-link-b').value, 'b');
+  assert.equal(nodes.get('rejoin-link-spec').value, 'spec');
+  assert.equal(nodes.get('rejoin-label-a').textContent, 'Team A · Original A');
+  nodes.get('btn-close-rejoin-links').events.click();
+  assert.equal(dialog.open, false);
+}
+for (const role of ['teamA','teamB','broadcaster','referee']) {
+  waiting.roomRole = role;
+  waiting.bindRejoinLinks();
+  assert.equal(nodes.get('btn-rejoin-links').hidden, true);
+  waiting.openRejoinLinks();
+  assert.equal(dialog.open, false);
+  assert.equal(nodes.get('rejoin-link-a').value, '');
+}
+console.log('Team-specific Squadra Blast UI, side swaps, invitation visibility and host-only manual rejoin links passed.');

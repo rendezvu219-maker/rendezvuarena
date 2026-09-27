@@ -260,9 +260,27 @@
 </div>
 </div>
 </main>
+<style>
+#btn-rejoin-links { position:fixed; bottom:12px; left:12px; z-index:100000; }
+#btn-rejoin-links[hidden] { display:none; }
+#rejoin-links-dialog { width:min(560px, calc(100vw - 32px)); box-sizing:border-box; padding:24px; border:1px solid #45516b; border-radius:12px; background:#141b2b; color:#fff; }
+#rejoin-links-dialog::backdrop { background:rgba(0,0,0,.75); }
+#rejoin-links-dialog label { display:block; margin-top:18px; }
+#rejoin-links-dialog .rejoin-row { display:flex; gap:8px; margin-top:6px; }
+#rejoin-links-dialog input { flex:1; min-width:0; padding:8px; background:#0c111d; border:1px solid #45516b; color:#fff; border-radius:4px; }
+</style>
+<button id="btn-rejoin-links" class="btn btn-ghost btn-sm" type="button" data-no-i18n="true" hidden>SHARE / REJOIN LINKS</button>
+<dialog id="rejoin-links-dialog" aria-labelledby="rejoin-links-title" data-no-i18n="true">
+<h2 id="rejoin-links-title">Share / Rejoin links</h2>
+<p>Resend the matching link to rejoin this draft. Team A/B refer to the original teams, even after sides switch. Keep team links private; only share the spectator link publicly.</p>
+<label for="rejoin-link-a" id="rejoin-label-a">Team A</label><div class="rejoin-row"><input id="rejoin-link-a" readonly/><button type="button" class="btn btn-ghost btn-sm" data-copy-rejoin="rejoin-link-a">COPY</button></div>
+<label for="rejoin-link-b" id="rejoin-label-b">Team B</label><div class="rejoin-row"><input id="rejoin-link-b" readonly/><button type="button" class="btn btn-ghost btn-sm" data-copy-rejoin="rejoin-link-b">COPY</button></div>
+<label for="rejoin-link-spec" id="rejoin-label-spec">Spectator</label><div class="rejoin-row"><input id="rejoin-link-spec" readonly/><button type="button" class="btn btn-ghost btn-sm" data-copy-rejoin="rejoin-link-spec">COPY</button></div>
+<button id="btn-close-rejoin-links" type="button" class="btn btn-primary btn-sm" style="margin-top:24px;">CLOSE</button>
+</dialog>
 <script src="js/vendor/peerjs.min.js"></script>
 <script src="/socket.io/socket.io.js" onerror="console.warn('Socket.IO not found, using P2P mode')"></script>
-<script src="js/app.js?v=0.7.7-keep-sides" type="module"></script>
+<script src="js/app.js?v=0.7.8-rejoin-links" type="module"></script>
 <script src="js/i18n.js?v=0.7.2-migration-fix" type="module"></script>
 </body>
 </html>

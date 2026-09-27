@@ -3,9 +3,9 @@ import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHer
 import { HEROES_DATA } from './heroes-data.js';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js?v=0.7.7-keep-sides';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.8-rejoin-links';
 import { api, escapeHtml } from './api.js';
-import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.7-keep-sides';
+import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.8-rejoin-links';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
 import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
 
@@ -327,6 +327,7 @@ export class DraftUI {
   }
 
   applyAccessMode() {
+    this.bindRejoinLinks();
     document.body.dataset.draftRole = this.roomRole;
     const accessBadge = document.getElementById('draft-access-badge');
     if (accessBadge) {
@@ -354,6 +355,47 @@ export class DraftUI {
     }
     this.updateDraftWatchPresence();
     this.renderGrid();
+  }
+
+  bindRejoinLinks() {
+    const button = document.getElementById('btn-rejoin-links');
+    const dialog = document.getElementById('rejoin-links-dialog');
+    if (!button || !dialog) return;
+    const allowed = this.roomRole === 'host' && Boolean(this.sync?.shareLinks?.teamA);
+    button.hidden = !allowed;
+    if (!allowed) {
+      if (dialog.open) dialog.close();
+      dialog.querySelectorAll('input').forEach(input => { input.value = ''; });
+    }
+    if (button.dataset.bound) return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => this.openRejoinLinks());
+    document.getElementById('btn-close-rejoin-links')?.addEventListener('click', () => dialog.close());
+    dialog.querySelectorAll('[data-copy-rejoin]').forEach(copyButton => {
+      copyButton.addEventListener('click', async () => {
+        if (this.roomRole !== 'host') return;
+        const input = document.getElementById(copyButton.dataset.copyRejoin);
+        if (input?.value) await copyDraftLink(input, copyButton);
+      });
+    });
+  }
+
+  openRejoinLinks() {
+    if (this.roomRole !== 'host') return;
+    const dialog = document.getElementById('rejoin-links-dialog');
+    const links = this.sync?.shareLinks;
+    if (!dialog || !links?.teamA) return;
+    // Keep original entrant credentials, even when their blue/red sides swap.
+    for (const [suffix, role] of [['a', 'teamA'], ['b', 'teamB'], ['spec', 'broadcaster']]) {
+      const input = document.getElementById(`rejoin-link-${suffix}`);
+      if (input) input.value = links[role] || '';
+      const label = document.getElementById(`rejoin-label-${suffix}`);
+      if (label) label.textContent = role === 'broadcaster' ? 'Spectator' : `${role === 'teamA' ? 'Team A' : 'Team B'} · ${this.config[role] || role}`;
+    }
+    dialog.querySelectorAll('[data-copy-rejoin]').forEach(button => {
+      button.disabled = !document.getElementById(button.dataset.copyRejoin)?.value;
+    });
+    if (!dialog.open) dialog.showModal();
   }
 
   updateDraftWatchPresence() {
