@@ -3,7 +3,7 @@
 // Trailer playback uses local /assets/trailers/{heroId}.* files and falls back to full hero art.
 import { getHeroImgSp, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls } from './heroes.js?v=0.7.5-fast-trailers';
 import { playBroadcastTrailer } from './broadcast-media.js?v=0.7.5-fast-trailers';
-import { heroName, roleLabel, t } from './i18n.js';
+import { heroName, roleLabel, t } from './i18n.js?v=0.7.9-live-lock';
 import { normalizeSideAssignment, sideForEntrant } from './pre-draft.js';
 
 const BROADCAST_SIDE_ORBIT_LOOPS = 4;
@@ -96,6 +96,7 @@ export class BroadcastUI {
 
         <footer class="bc-lineup-dock">
           <div class="bc-team-cluster bc-team-cluster-a">
+            <div class="bc-history-locks" id="bc-history-a" hidden></div>
             <div class="bc-team-ban-dock bc-team-ban-dock-a" aria-label="Team Blue banned heroes">
               <div class="bc-team-bans bc-team-bans-a" id="bc-team-a-bans"></div>
               <div class="bc-ban-spacer" aria-hidden="true"></div>
@@ -120,6 +121,7 @@ export class BroadcastUI {
           </div>
 
           <div class="bc-team-cluster bc-team-cluster-b">
+            <div class="bc-history-locks bc-history-locks-b" id="bc-history-b" hidden></div>
             <div class="bc-team-ban-dock bc-team-ban-dock-b" aria-label="Team Red banned heroes">
               <div class="bc-ban-spacer" aria-hidden="true"></div>
               <div class="bc-team-bans bc-team-bans-b" id="bc-team-b-bans"></div>
@@ -478,6 +480,7 @@ export class BroadcastUI {
   }
 
   renderInitialState() {
+    this.renderHistoryLocks();
     this.engine.teamA.picks.forEach(id => this.fillPick(this.engine.getHero(id), 'A'));
     this.engine.teamB.picks.forEach(id => this.fillPick(this.engine.getHero(id), 'B'));
     this.engine.teamA.bans.forEach(id => this.fillBan(this.engine.getHero(id), 'A'));
@@ -544,10 +547,40 @@ export class BroadcastUI {
 
   revealHero(hero, team, action) {
     if (!hero) return;
-    this.revealQueue.push({ hero, team, action });
-    if (!this.revealInProgress) this.revealHoldUntil = Math.min(this.revealHoldUntil, Date.now() + BROADCAST_QUEUED_HOLD_MS);
-    this.scheduleNextHeroReveal();
-    this.prepareQueuedTrailer();
+    // Latest confirmed lock wins: playHeroReveal cancels the old media and
+    // invalidates its asynchronous callbacks, without changing locked slots.
+    this.revealQueue.length = 0;
+    this.clearPreloadedTrailer();
+    this.playHeroReveal({ hero, team, action });
+  }
+
+  historyLocksForTeam(team) {
+    const rule = this.engine.config.seriesRule;
+    if (rule === 'fearless') return [...this.engine.seriesPickedAll];
+    if (['team_no_repeat', 'squadra_blast'].includes(rule)) return [...this.engine.seriesPickedByTeam[team]];
+    return [];
+  }
+
+  renderHistoryLocks() {
+    for (const team of ['A', 'B']) {
+      const root = document.getElementById(`bc-history-${team.toLowerCase()}`);
+      if (!root) continue;
+      const heroes = this.historyLocksForTeam(team).map(id => this.engine.getHero(id)).filter(Boolean);
+      root.replaceChildren();
+      root.hidden = !heroes.length;
+      if (!heroes.length) continue;
+      const label = document.createElement('span');
+      label.className = 'bc-history-label';
+      label.textContent = t('previousGameLocked');
+      root.appendChild(label);
+      for (const hero of heroes) {
+        const img = document.createElement('img');
+        img.src = getHeroImgSp(hero.id);
+        img.alt = heroName(hero.id, hero.name);
+        img.title = t('previousGameLockedHero', { hero: img.alt });
+        root.appendChild(img);
+      }
+    }
   }
 
   clearPreloadedTrailer() {

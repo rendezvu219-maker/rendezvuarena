@@ -27,6 +27,8 @@ const ROLE_KEYS = Object.freeze({ Damage:'damage', Tank:'tank', Technical:'techn
 
 const UI_EXTRA = Object.freeze({
   "en": {
+    "previousGameLocked": "PREVIOUS GAME · LOCKED",
+    "previousGameLockedHero": "{hero} · unavailable from previous games",
     "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: This invitation has no room ID.",
     "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: The received link has no access code. Ask the Host to copy the full Team link, including &access=... . Reloading this incomplete link cannot restore the missing code.",
     "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: This invitation has no valid team role. Ask the Host for the full Team link.",
@@ -154,6 +156,8 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "Reduced"
   },
   "ja": {
+    "previousGameLocked": "前の試合 · 使用不可",
+    "previousGameLockedHero": "{hero} · 前の試合で使用したため選択不可",
     "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: この招待リンクにはルームIDがありません。",
     "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: 受信したリンクにアクセスコードがありません。ホストに &access=... を含むチームリンク全体をコピーしてもらってください。再読み込みでは不足したコードを復元できません。",
     "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: この招待リンクには有効なチーム権限がありません。ホストからチームリンク全体を受け取ってください。",
@@ -281,6 +285,8 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "低減"
   },
   "zh-CN": {
+    "previousGameLocked": "前局已用 · 禁选",
+    "previousGameLockedHero": "{hero} · 因前局已使用而无法选择",
     "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: 此邀请链接缺少房间编号。",
     "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: 收到的链接缺少访问码。请房主复制包含 &access=... 的完整队伍链接。刷新无法恢复缺失的访问码。",
     "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: 此邀请链接没有有效的队伍角色。请向房主索取完整队伍链接。",
@@ -408,6 +414,8 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "减少"
   },
   "ko": {
+    "previousGameLocked": "이전 경기 · 선택 불가",
+    "previousGameLockedHero": "{hero} · 이전 경기에서 사용하여 선택 불가",
     "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: 초대 링크에 방 ID가 없습니다.",
     "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: 받은 링크에 접근 코드가 없습니다. 호스트에게 &access=... 를 포함한 전체 팀 링크를 복사해 달라고 요청하세요. 새로고침으로는 누락된 코드를 복원할 수 없습니다.",
     "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: 초대 링크에 유효한 팀 역할이 없습니다. 호스트에게 전체 팀 링크를 요청하세요.",
@@ -535,6 +543,8 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "줄이기"
   },
   "es": {
+    "previousGameLocked": "PARTIDAS ANTERIORES · BLOQUEADO",
+    "previousGameLockedHero": "{hero} · no disponible por partidas anteriores",
     "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: Esta invitación no contiene el ID de la sala.",
     "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: El enlace recibido no contiene el código de acceso. Pide al anfitrión que copie el enlace completo del equipo, incluido &access=... . Recargar este enlace incompleto no recuperará el código.",
     "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: Esta invitación no contiene un rol de equipo válido. Pide al anfitrión el enlace completo del equipo.",
@@ -662,6 +672,8 @@ const UI_EXTRA = Object.freeze({
     "mobileReduced": "Reducido"
   },
   "vi": {
+    "previousGameLocked": "VÁN TRƯỚC · ĐÃ KHÓA",
+    "previousGameLockedHero": "{hero} · không thể chọn do đã dùng ở ván trước",
     "draftInviteMissingRoom": "DRAFT_LINK_MISSING_ROOM: Link mời này thiếu mã phòng.",
     "draftInviteMissingAccess": "DRAFT_LINK_MISSING_ACCESS: Link nhận được thiếu mã truy cập. Nhờ Host copy toàn bộ link đội, bao gồm &access=... . Tải lại link thiếu mã không thể khôi phục mã đã mất.",
     "draftInviteInvalidRole": "DRAFT_LINK_INVALID_ROLE: Link mời không có vai trò đội hợp lệ. Nhờ Host gửi lại toàn bộ link đội.",

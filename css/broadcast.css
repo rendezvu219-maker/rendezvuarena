@@ -157,7 +157,13 @@ body.broadcast-page { background: transparent; }
 
 /* Bottom dock: left cluster stays left, right cluster stays right. */
 .bc-lineup-dock { position: relative; z-index: 20; display: grid; grid-template-columns: minmax(0, 1fr) clamp(122px, 9vw, 154px) minmax(0, 1fr); align-items: end; gap: 16px; padding: 0 20px 20px; pointer-events: none; }
-.bc-team-cluster { min-width: 0; width: 100%; max-width: 820px; display: grid; grid-template-rows: 68px 128px; gap: 0; }
+.bc-team-cluster { position:relative; min-width: 0; width: 100%; max-width: 820px; display: grid; grid-template-rows: 68px 128px; gap: 0; }
+.bc-history-locks { position:absolute; bottom:calc(100% + 8px); left:0; right:0; display:flex; flex-wrap:wrap; align-items:center; gap:5px; padding:6px 8px; background:rgba(3,6,13,.88); border-radius:8px; }
+.bc-history-locks[hidden] { display:none; }
+.bc-history-locks-b { justify-content:flex-end; }
+.bc-history-label { width:100%; color:#c5cbd6; font:700 .55rem/1.4 var(--font-display); letter-spacing:.08em; }
+.bc-history-locks-b .bc-history-label { text-align:right; }
+.bc-history-locks img { width:30px; height:30px; object-fit:cover; filter:grayscale(1); opacity:.75; border:1px solid #687082; border-radius:4px; }
 .bc-team-cluster-a { justify-self: start; }
 .bc-team-cluster-b { justify-self: end; }
 
@@ -168,7 +174,7 @@ body.broadcast-page { background: transparent; }
 .bc-ban-spacer { min-width: 0; }
 .bc-team-bans { min-width: 0; height: 68px; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.1); border-bottom: 0; background: rgba(3,6,13,.9); box-shadow: 0 -8px 24px rgba(0,0,0,.2); }
 .bc-team-bans-a { justify-content: flex-start; border-left: 4px solid var(--team-left-primary); border-radius: 12px 12px 0 0; background: linear-gradient(90deg, color-mix(in srgb, var(--team-left-primary) 17%, rgba(3,6,13,.94)), rgba(3,6,13,.92)); }
-.bc-team-bans-b { justify-content: flex-end; flex-direction: row-reverse; border-right: 4px solid var(--team-right-primary); border-radius: 12px 12px 0 0; background: linear-gradient(270deg, color-mix(in srgb, var(--team-right-primary) 17%, rgba(3,6,13,.94)), rgba(3,6,13,.92)); }
+.bc-team-bans-b { justify-content: flex-start; flex-direction: row-reverse; border-right: 4px solid var(--team-right-primary); border-radius: 12px 12px 0 0; background: linear-gradient(270deg, color-mix(in srgb, var(--team-right-primary) 17%, rgba(3,6,13,.94)), rgba(3,6,13,.92)); }
 .bc-ban-card { position: relative; width: 52px; height: 52px; flex: 0 0 auto; overflow: hidden; border: 1px solid rgba(255,255,255,.14); border-radius: 7px; background: rgba(255,255,255,.035); }
 .bc-ban-img { position: absolute; inset: 0; background-size: cover; background-position: center top; filter: grayscale(1) contrast(.9); opacity: 0; transform: scale(1); }
 .bc-ban-muted { position: absolute; inset: 0; background: rgba(2,4,9,.58); opacity: 0; }
