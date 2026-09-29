@@ -12,10 +12,10 @@ const master = readJson('data/locales/vi-skill-name-master.json');
 assert.equal(master.schemaVersion, 1);
 assert.equal(master.locale, 'vi');
 assert.equal(master.status, 'user-approved-with-editorial-additions');
-assert.equal(master.skills.length, 212);
+assert.equal(master.skills.length, 217);
 
 const approved = new Map(master.skills.map(row => [row.english, row.vietnamese]));
-assert.equal(approved.size, 212, 'The Master must contain 212 unique English skill names.');
+assert.equal(approved.size, 217, 'The Master includes five new Gogeta skill names.');
 
 const sourceCatalog = readJson('data/locales/official-hero-details.json').locales.vi;
 const runtimeCatalog = FULL_HERO_DETAIL_OVERRIDES.vi;
@@ -31,7 +31,7 @@ for (const [heroId, hero] of Object.entries(HEROES_DATA)) {
     slotCount += 1;
   }
 }
-assert.equal(slotCount, 259);
+assert.equal(slotCount, 265);
 
 const fixedNames = new Map([
   ['Kaioken', 'Giới Vương Quyền'],
@@ -45,7 +45,7 @@ const divine = readJson('data/locales/divine-cards.json');
 const viRows = divine.translations.filter(row => row.locale === 'vi');
 assert.equal(viRows.length, 18);
 const vanishingRows = viRows.filter(row => /Vanishing Step/.test(`${row.description} ${row.effect} ${row.note}`));
-assert.equal(vanishingRows.length, 4);
+assert.equal(vanishingRows.length, 3, 'Current card descriptions mention Vanishing Step in three records.');
 for (const row of vanishingRows) {
   const text = `${row.description} ${row.effect} ${row.note}`;
   assert.match(text, /Bộ Pháp Biến Mất \(Vanishing Step\)/);

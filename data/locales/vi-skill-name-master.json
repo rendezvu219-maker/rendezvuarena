@@ -3,10 +3,15 @@
   "locale": "vi",
   "status": "user-approved-with-editorial-additions",
   "approvedAt": "2026-07-30",
-  "editorialAdditionsAt": "2026-08-12",
+  "editorialAdditionsAt": "2026-09-29",
   "sourceWorkbook": "Master_207_ky_nang_Viet_hoa_da_chot.xlsx",
-  "policy": "The 207 original Vietnamese skill names were approved by the user. Five Jiren (Full Power) names were added as editor-reviewed translations on 2026-08-12. English and Japanese keys are retained for validation and future maintenance.",
+  "policy": "The 207 original names are user-approved. Five Jiren names were added on 2026-08-12; five Super Gogeta names on 2026-09-29 are editorial translations. English and Japanese keys are retained for maintenance.",
   "skills": [
+    { "stt": 213, "english": "Honed Senses", "japanese": "研ぎ澄まされた感覚", "vietnamese": "Cảm Giác Tinh Nhạy" },
+    { "stt": 214, "english": "Soul Strike", "japanese": "ソウルストライク", "vietnamese": "Đột Kích Linh Hồn" },
+    { "stt": 215, "english": "Punisher Drive", "japanese": "パニッシャードライブ", "vietnamese": "Trượt Trừng Phạt" },
+    { "stt": 216, "english": "Spirit Flare", "japanese": "スピリッツフレア", "vietnamese": "Bùng Cháy Đấu Khí" },
+    { "stt": 217, "english": "Soul Punisher", "japanese": "ソウルパニッシャー", "vietnamese": "Trừng Phạt Linh Hồn" },
     {
       "stt": 1,
       "english": "A Hard-Knuckled Fight",

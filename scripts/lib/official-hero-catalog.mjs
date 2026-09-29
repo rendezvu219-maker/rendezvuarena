@@ -28,10 +28,13 @@ export function validateHeroI18nCatalog(catalog, { requireFullOfficial = false, 
         continue;
       }
       const allowedStatuses = OFFICIAL_LOCALES.includes(locale)
-        ? new Set(['official-site-snapshot', 'official-site+in-game-verified'])
+        ? new Set(['official-site-snapshot', 'official-site+in-game-verified', 'official-site-summary'])
         : new Set(['editor-reviewed']);
       if (!allowedStatuses.has(record?.translationStatus)) {
         errors.push(`${locale}.${heroId}: translationStatus must be one of ${[...allowedStatuses].join(', ')}.`);
+      }
+      if (record?.translationStatus === 'official-site-summary' && (!nonEmpty(record.sourcePolicy) || !nonEmpty(record.checkedAt))) {
+        errors.push(`${locale}.${heroId}: editorial summaries require sourcePolicy and checkedAt.`);
       }
       if (record?.translationStatus === 'official-site+in-game-verified' && !record?.inGameVerification?.length) {
         errors.push(`${locale}.${heroId}: in-game-verified records require inGameVerification metadata.`);

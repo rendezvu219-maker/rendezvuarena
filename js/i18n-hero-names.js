@@ -3,6 +3,7 @@
 
 export const LOCALIZED_HERO_NAMES = Object.freeze({
   "ja": {
+    "0041": "超ゴジータ",
     "0039": "ゴクウブラック",
     "0038": "ビルス",
     "0001": "超サイヤ人 孫悟空",
@@ -45,6 +46,7 @@ export const LOCALIZED_HERO_NAMES = Object.freeze({
     "0040": "ジレン：フルパワー"
   },
   "zh-CN": {
+    "0041": "超级悟吉塔",
     "0039": "黑悟空",
     "0038": "比鲁斯",
     "0001": "孙悟空（超级赛亚人）",
@@ -129,6 +131,7 @@ export const LOCALIZED_HERO_NAMES = Object.freeze({
     "0040": "지렌: 풀 파워"
   },
   "es": {
+    "0041": "Súper Gogeta",
     "0039": "Goku Oscuro",
     "0038": "Beerus",
     "0001": "Goku supersaiyajin",
@@ -171,6 +174,7 @@ export const LOCALIZED_HERO_NAMES = Object.freeze({
     "0040": "Jiren (Máximo Poder)"
   },
   "vi": {
+    "0041": "Super Gogeta",
     "0040": "Jiren (Full Power)",
     "0039": "Goku Black",
     "0038": "Beerus",

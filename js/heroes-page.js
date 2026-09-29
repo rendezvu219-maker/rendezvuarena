@@ -1,7 +1,7 @@
 import { api, setToken } from './api.js';
 import { HEROES, ROLES, getHeroImg, getHeroImgSp, getHeroFullImg, getHeroSkillIconUrls, roleIconMarkup, heroMatchesSearch, isNikitaEasterEggSearch, getHeroDisplayImage, getHeroDisplayName, getHeroDisplayDescription, imageWithFallback } from './heroes.js';
 import { HEROES_DATA } from './heroes-data.js';
-import { getLocale, heroName, roleLabel, localizeHeroDetail, t } from './i18n.js';
+import { getLocale, heroName, roleLabel, localizeHeroDetail, t } from './i18n.js?v=0.7.10-gogeta-locales';
 import { loadStaticBuilds, buildsForHero } from './character-builds.js';
 
 const $ = selector => document.querySelector(selector);

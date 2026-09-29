@@ -66,9 +66,17 @@ assert.equal(heroName('0016', '', 'vi'), 'Siêu Saiya Cấp 2 Caulifla');
 assert.equal(heroName('0023', '', 'vi'), 'Siêu Saiya Cấp 3 Son Goku');
 assert.equal(heroName('0033', '', 'vi'), 'Thần Siêu Saiya Vegeta');
 assert.equal(heroName('0040', '', 'vi'), 'Jiren (Full Power)');
-for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) assert.equal(heroName('0041', '', locale), 'Super Gogeta');
+for (const [locale, name] of Object.entries({ja:'超ゴジータ', 'zh-CN':'超级悟吉塔', ko:'Super Gogeta', es:'Súper Gogeta', vi:'Super Gogeta'})) assert.equal(heroName('0041', '', locale), name);
 
 const vietnameseCatalog = JSON.parse(read('data/locales/official-hero-details.json')).locales.vi || {};
+for (const locale of ['ja', 'zh-CN', 'es', 'vi']) {
+  const gogeta = HERO_DETAIL_OVERRIDES[locale]['0041'];
+  assert.ok(gogeta, `${locale}: Gogeta must not fall back to English.`);
+  assert.deepEqual(Object.keys(gogeta.skills).sort(), HEROES_DATA['0041'].skills.map(skill => skill.id).sort());
+}
+assert.equal(vietnameseCatalog['0041'].sourceLocale, 'zh-CN');
+assert.match(vietnameseCatalog['0041'].skills.skill3.desc, /Vẫn hành động được/);
+assert.match(vietnameseCatalog['0041'].skills.super_attack1.desc, /ngưỡng tổng HP/);
 assert.ok(Object.keys(vietnameseCatalog).every(id => heroIds.includes(id)), 'Vietnamese hero-detail catalog contains an unknown hero.');
 let vietnameseSkillCount = 0;
 for (const [heroId, record] of Object.entries(vietnameseCatalog)) {
@@ -78,13 +86,13 @@ for (const [heroId, record] of Object.entries(vietnameseCatalog)) {
   assert.doesNotMatch(JSON.stringify({ description: record.description, skills: record.skills }), /anh hùng|\btướng\b/iu, `Vietnamese ${heroId} must use "chiến binh".`);
   vietnameseSkillCount += Object.keys(record.skills || {}).length;
 }
-assert.equal(vietnameseSkillCount, 259, 'Vietnamese catalog must translate all 259 skills.');
+assert.equal(vietnameseSkillCount, 265, 'Vietnamese catalog must include all six Gogeta skills.');
 const vietnameseSkillMaster = JSON.parse(read('data/locales/vi-skill-name-master.json'));
 assert.equal(vietnameseSkillMaster.schemaVersion, 1);
 assert.equal(vietnameseSkillMaster.status, 'user-approved-with-editorial-additions');
-assert.equal(vietnameseSkillMaster.skills.length, 212, 'Vietnamese skill-name Master must contain 212 unique names.');
+assert.equal(vietnameseSkillMaster.skills.length, 217, 'Vietnamese skill-name Master includes five Gogeta names.');
 const approvedVietnameseSkillNames = new Map(vietnameseSkillMaster.skills.map(row => [row.english, row.vietnamese]));
-assert.equal(approvedVietnameseSkillNames.size, 212, 'Vietnamese skill-name Master contains duplicate English names.');
+assert.equal(approvedVietnameseSkillNames.size, 217, 'Vietnamese skill-name Master contains duplicate English names.');
 let approvedVietnameseSkillSlots = 0;
 for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
   if (!vietnameseCatalog[heroId]) continue;
@@ -95,7 +103,7 @@ for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
     approvedVietnameseSkillSlots += 1;
   }
 }
-assert.equal(approvedVietnameseSkillSlots, 259, 'Vietnamese Master must cover all 259 skill slots.');
+assert.equal(approvedVietnameseSkillSlots, 265, 'Vietnamese Master must cover all 265 skill slots.');
 assert.equal(vietnameseCatalog['0001'].skills.skill1.name, 'Kamehameha');
 assert.equal(vietnameseCatalog['0001'].skills.super_attack1.name, 'Quả Cầu Khinh Khí');
 assert.match(vietnameseCatalog['0015'].skills.rush_attack1.desc, /số lượng khí đạn/i);
@@ -130,7 +138,7 @@ for (const locale of translatedLocales) {
     assert.ok(source, `${locale}.${heroId} references an unknown hero.`);
     const expectedStatuses = locale === 'vi'
       ? new Set(['editor-reviewed'])
-      : new Set(['official-site-snapshot', 'official-site+in-game-verified']);
+      : new Set(['official-site-snapshot', 'official-site+in-game-verified', 'official-site-summary']);
     assert.ok(expectedStatuses.has(translated.translationStatus), `${locale}.${heroId} has an untrusted translation status: ${translated.translationStatus}.`);
     if (locale !== 'vi') assert.equal(Object.hasOwn(translated, 'sourceUrl'), false, `${locale}.${heroId} must not ship a remote source URL in the browser bundle.`);
     assert.deepEqual(Object.keys(translated.skills || {}).sort(), source.skills.map(skill => skill.id).sort(), `${locale}.${heroId} skill ids do not match canonical data.`);

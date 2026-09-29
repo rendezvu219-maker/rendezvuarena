@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "policy": "Verified localized hero records may combine official-site snapshots with exact fields manually checked in the released game client. Temporary verification media is not distributed; only the reviewed fields and source type are retained. Synthetic text is forbidden.",
+  "policy": "Records distinguish official snapshots, in-game verified fields and attributed editorial summaries of official mechanics. Vietnamese translations use the Chinese source. Invented mechanics are forbidden.",
   "routes": {
     "ja": "https://dbg-squadra.bn-ent.net/hero/{id}",
     "zh-CN": "https://dbg-squadra.bn-ent.net/cn/hero/{id}",
@@ -9,6 +9,40 @@
   },
   "locales": {
     "ja": {
+      "0041": {
+        "officialName": "超ゴジータ",
+        "description": "近距離で敵を妨害して攻撃の機会を作るテクニカル型。光のフィニッシュ攻撃を持つ。",
+        "skills": {
+          "passive1": {
+            "name": "研ぎ澄まされた感覚",
+            "desc": "被弾直前のバニシングステップ成功で、ラッシュ攻撃が強化される。"
+          },
+          "rush_attack1": {
+            "name": "ラッシュ攻撃",
+            "desc": "通常は体術。パッシブ発動後は射程とダメージが増した気弾になる。命中時の防御低下は回避した攻撃に対応し、打撃なら打撃防御、気功波なら気功波防御、必中なら全防御を下げる。"
+          },
+          "skill1": {
+            "name": "ソウルストライク",
+            "desc": "指定方向へ最大3段の蹴り。命中すると次段を使え、再使用は2回まで。段ごとに動きが変わり、最初の2段は打撃攻撃力を下げ、最後は打ち上げる。"
+          },
+          "skill2": {
+            "name": "パニッシャードライブ",
+            "desc": "拳圧が当たった敵から1体を選び、背後へ移動して必中の連撃で追撃。移動中の周囲には重圧を与える領域ができ、接触したダッシュ中の敵をのけぞらせる。"
+          },
+          "skill3": {
+            "name": "スピリッツフレア",
+            "desc": "周囲への連続放出で気功波攻撃力を下げ、最後の強い放出で技と攻撃を封じる。発動中も行動できる。"
+          },
+          "super_attack1": {
+            "name": "ソウルパニッシャー",
+            "desc": "指定地点への光弾が衝撃波と光の領域を作る。自身が領域内にいる間はラッシュ・強化攻撃のダメージが増加。敵には周期的にパニッシュが蓄積し、退出後に遅れてダメージを受ける。蓄積数は退出後のダメージとフィニッシュ可能な合計HP上限を上げる。付与中の敵をフィニッシュでKOすると専用演出。"
+          }
+        },
+        "translationStatus": "official-site-summary",
+        "sourceUrl": "https://dbg-squadra.bn-ent.net/hero/0041",
+        "sourcePolicy": "Mechanics summarized from the official release page; not a verbatim transcript.",
+        "checkedAt": "2026-09-29"
+      },
       "0001": {
         "officialName": "超サイヤ人 孫悟空",
         "description": "敵の懐に飛びこんで、粘り強く闘い続けるオールラウンダー。\n『界王拳』の使い時を見極めて『元気玉』や『かめはめ波』で勝負を決めろ！",
@@ -1367,6 +1401,40 @@
       }
     },
     "zh-CN": {
+      "0041": {
+        "officialName": "超级悟吉塔",
+        "description": "近战技术型战士，通过干扰敌方行动创造进攻机会，并拥有光之终结攻击。",
+        "skills": {
+          "passive1": {
+            "name": "澄澈感知",
+            "desc": "在受击前一刻用瞬身步成功闪避，可强化连续攻击。"
+          },
+          "rush_attack1": {
+            "name": "突进攻击",
+            "desc": "平时使用体术；被动触发后改为射程更远、伤害更高的气弹。命中附带的防御削弱取决于闪避对象：打击削弱打击防御，气功波削弱气功波防御，必中招式削弱全部防御。"
+          },
+          "skill1": {
+            "name": "灵魂突击",
+            "desc": "向指定方向踢击，命中可追加下一段，最多再用两次，共三段。每段动作不同：前两段降低打击攻击力，第三段击飞目标。"
+          },
+          "skill2": {
+            "name": "滑行惩戒",
+            "desc": "拳风命中后选择其中一个敌人，绕到其背后进行必中连击，追加伤害。移动时周围的领域施加重压，使接触领域的冲刺敌人后仰。"
+          },
+          "skill3": {
+            "name": "斗魂烈焰",
+            "desc": "连续向周围放气，途中命中降低气功波攻击力；末次强力放气封锁技能与攻击。施放期间仍可行动。"
+          },
+          "super_attack1": {
+            "name": "灵魂惩戒",
+            "desc": "向目标点投光粒，产生冲击波及光域。悟吉塔在域内的连续和强化攻击伤害增加；域内敌方英雄周期性累积惩戒。离域后延迟受伤，层数越多，伤害与可终结的总生命值上限越高。以终结攻击击倒受惩戒者会触发专属演出。"
+          }
+        },
+        "translationStatus": "official-site-summary",
+        "sourceUrl": "https://dbg-squadra.bn-ent.net/cn/hero/0041",
+        "sourcePolicy": "Mechanics summarized from the official release page; not a verbatim transcript.",
+        "checkedAt": "2026-09-29"
+      },
       "0001": {
         "officialName": "孙悟空（超级赛亚人）",
         "description": "突袭至敌人面前，贴身持续打击的全能型战士。\n抓准使用“界王拳”的最佳时机，施展“元气弹”和“龟派神功”来决胜吧！",
@@ -4107,6 +4175,40 @@
       }
     },
     "es": {
+      "0041": {
+        "officialName": "Súper Gogeta",
+        "description": "Especialista técnico cuerpo a cuerpo: interrumpe enemigos y abre oportunidades ofensivas.",
+        "skills": {
+          "passive1": {
+            "name": "Sentidos Agudizados",
+            "desc": "Esquivar justo antes del impacto mediante Evanescencia potencia las arremetidas."
+          },
+          "rush_attack1": {
+            "name": "Arremetida",
+            "desc": "Normalmente física; potenciada, dispara ki con mayor alcance y daño. El ataque esquivado determina la defensa reducida al acertar: impacto, ki o todas si era infalible."
+          },
+          "skill1": {
+            "name": "Estocada del Alma",
+            "desc": "Patada direccional con dos reactivaciones disponibles al acertar, hasta tres golpes distintos. Los primeros reducen ataque de impacto; el último eleva."
+          },
+          "skill2": {
+            "name": "Impulso Castigador",
+            "desc": "Una onda de puñetazo selecciona un enemigo alcanzado. Gogeta pasa detrás y añade golpes infalibles. Durante el movimiento, su zona aplica presión y hace retroceder a enemigos que la toquen corriendo."
+          },
+          "skill3": {
+            "name": "Destello Espiritual",
+            "desc": "Emisiones alrededor reducen ataque de ki; la descarga final impide técnicas y ataques. Permite moverse durante su ejecución."
+          },
+          "super_attack1": {
+            "name": "Castigador de Almas",
+            "desc": "Proyectiles luminosos generan una onda y una zona: dentro, Gogeta aumenta el daño de arremetidas y ataques potenciados. Los enemigos acumulan castigo periódicamente y sufren daño retardado al salir. Más acumulaciones aumentan ese daño y el umbral de vida para rematarlos. Un KO mediante remate contra afectados activa una escena especial."
+          }
+        },
+        "translationStatus": "official-site-summary",
+        "sourceUrl": "https://dbg-squadra.bn-ent.net/es/hero/0041",
+        "sourcePolicy": "Mechanics summarized from the official release page; not a verbatim transcript.",
+        "checkedAt": "2026-09-29"
+      },
       "0039": {
         "officialName": "Goku Oscuro",
         "description": "Un héroe oscuro que combate generando áreas ventajosas para sí mismo.\n¡Debilita al enemigo, restringe su movimiento y toma el control del frente de combate creando tu zona ideal!",
@@ -5490,6 +5592,41 @@
       }
     },
     "vi": {
+      "0041": {
+        "officialName": "Super Gogeta",
+        "description": "Chiến binh kỹ thuật chuyên cận chiến và khống chế.",
+        "skills": {
+          "passive1": {
+            "name": "Cảm Giác Tinh Nhạy",
+            "desc": "Né sát lúc trúng đòn bằng Bộ Pháp Biến Mất sẽ cường hóa Liên Kích."
+          },
+          "rush_attack1": {
+            "name": "Liên Kích",
+            "desc": "Nội tại đổi thể thuật thành khí đạn mạnh, xa hơn. Né đòn đánh/khí/tất trúng khiến khí đạn giảm phòng thủ vật lý/khí/toàn bộ tương ứng."
+          },
+          "skill1": {
+            "name": "Đột Kích Linh Hồn",
+            "desc": "Đá định hướng tối đa ba đợt khác nhau; trúng mới tái dùng, tối đa hai lần. Hai đợt đầu giảm công kích vật lý; cuối hất tung."
+          },
+          "skill2": {
+            "name": "Trượt Trừng Phạt",
+            "desc": "Quyền phong chọn một địch trúng, lướt ra sau tung liên hoàn tất trúng, thêm sát thương. Vùng quanh lúc lướt gây Trọng Áp, khiến địch đang lao khựng lại."
+          },
+          "skill3": {
+            "name": "Bùng Cháy Đấu Khí",
+            "desc": "Phát khí liên tục quanh mình, giảm công kích khí; đợt cuối cấm kỹ năng/tấn công. Vẫn hành động được."
+          },
+          "super_attack1": {
+            "name": "Trừng Phạt Linh Hồn",
+            "desc": "Ném quang tử tạo sóng xung kích và vùng sáng. Đứng trong vùng tăng sát thương Liên Kích/đòn cường hóa. Địch tích Trừng Phạt định kỳ, rời vùng chịu sát thương trễ. Nhiều tầng tăng sát thương này và ngưỡng tổng HP được kết liễu. Kết liễu hạ địch đang chịu hiệu ứng có hoạt cảnh riêng."
+          }
+        },
+        "translationStatus": "editor-reviewed",
+        "sourceUrl": "https://dbg-squadra.bn-ent.net/cn/hero/0041",
+        "sourceLocale": "zh-CN",
+        "sourcePolicy": "Mechanics summarized from the official release page; not a verbatim transcript.",
+        "checkedAt": "2026-09-29"
+      },
       "0001": {
         "officialName": "Siêu Saiya Son Goku",
         "description": "Một chiến binh toàn năng lao thẳng vào áp sát và bền bỉ giao chiến với đối thủ.\nHãy chọn đúng thời điểm dùng “Giới Vương Quyền”, rồi kết thúc trận đấu bằng “Quả Cầu Khinh Khí” hoặc “Kamehameha”!",
