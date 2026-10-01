@@ -26,7 +26,7 @@ if (master?.schemaVersion !== 1 || master?.locale !== 'vi' || !['user-approved',
 }
 
 const rows = Array.isArray(master.skills) ? master.skills : [];
-if (rows.length !== 212) throw new Error(`Expected 212 reviewed names, found ${rows.length}.`);
+if (rows.length !== 222) throw new Error(`Expected 222 reviewed names, found ${rows.length}.`);
 
 const approvedByEnglish = new Map();
 const previousByEnglish = new Map();

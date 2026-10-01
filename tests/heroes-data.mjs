@@ -4,12 +4,15 @@ import { HEROES_DATA } from '../js/heroes-data.js';
 
 const ids = HEROES.map(hero => hero.id);
 assert.equal(new Set(ids).size, ids.length, 'Hero IDs must be unique.');
-assert.equal(HEROES.length, 41, 'Current roster should contain 41 heroes.');
-assert.deepEqual(ids, ['0041', ...Array.from({ length:40 }, (_, index) => String(index + 1).padStart(4, '0'))]);
-assert.deepEqual(HEROES.filter(hero => hero.isNew).map(hero => hero.id), ['0041']);
+assert.equal(HEROES.length, 42, 'Current roster should contain 42 heroes.');
+assert.deepEqual(ids, ['0042', ...Array.from({ length:41 }, (_, index) => String(index + 1).padStart(4, '0'))]);
+assert.deepEqual(HEROES.filter(hero => hero.isNew).map(hero => hero.id), ['0042']);
+assert.equal(HEROES[0].role, 'Damage');
+assert.equal(HEROES_DATA['0042'].difficulty, '40');
+assert.deepEqual(HEROES_DATA['0042'].skills.map(skill => skill.name), ['Indomitable Stance','Rush Attack','Blast Bomb','Final Flash','Blue Spirit Cannon','Galick Gun']);
 
 const superGogeta = HEROES.find(hero => hero.id === '0041');
-assert.deepEqual(superGogeta, { id: '0041', name: 'Super Gogeta', role: 'Technical', isNew: true });
+assert.deepEqual(superGogeta, { id: '0041', name: 'Super Gogeta', role: 'Technical', isNew: false });
 const superGogetaData = HEROES_DATA['0041'];
 assert.equal(superGogetaData.difficulty, '20');
 assert.equal(superGogetaData.skills.length, 6);

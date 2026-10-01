@@ -1,5 +1,5 @@
 // Draft Engine - 4v4 State Management
-import { HEROES, generateDraftSequence } from './heroes.js';
+import { HEROES, generateDraftSequence } from './heroes.js?v=0.7.11-vegeta42';
 import { secureRandomUnit } from './pre-draft.js';
 
 const MIRROR_PICK_MODES = new Set([

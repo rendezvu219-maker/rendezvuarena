@@ -1,7 +1,7 @@
-import { FULL_HERO_DETAIL_OVERRIDES } from './i18n-hero-details.js?v=0.7.10-gogeta-locales';
+import { FULL_HERO_DETAIL_OVERRIDES } from './i18n-hero-details.js?v=0.7.11-vegeta42';
 import { PAGE_UI } from './i18n-ui-pages.js?v=0.6.36-vi-skill-master-1';
-import { LOCALIZED_HERO_NAMES } from './i18n-hero-names.js?v=0.7.10-gogeta-locales';
-import { HEROES } from './heroes.js';
+import { LOCALIZED_HERO_NAMES } from './i18n-hero-names.js?v=0.7.11-vegeta42';
+import { HEROES } from './heroes.js?v=0.7.11-vegeta42';
 
 const STORAGE_KEY = 'gs_locale';
 

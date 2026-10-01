@@ -1,11 +1,11 @@
 import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js';
-import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js?v=0.7.5-fast-trailers';
-import { HEROES_DATA } from './heroes-data.js';
+import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js?v=0.7.11-vegeta42';
+import { HEROES_DATA } from './heroes-data.js?v=0.7.11-vegeta42';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js?v=0.7.8-rejoin-links';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.11-vegeta42';
 import { api, escapeHtml } from './api.js';
-import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.8-rejoin-links';
+import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.11-vegeta42';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
 import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
 

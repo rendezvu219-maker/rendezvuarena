@@ -1,8 +1,8 @@
 import { DraftEngine } from './draft.js';
-import { HEROES, PICKS_PER_TEAM } from './heroes.js';
-import { BroadcastUI } from './broadcast.js?v=0.7.9-live-lock';
-import { loadDraftConfigFromUrl } from './app.js?v=0.7.8-rejoin-links';
-import { readDraftRoomLink } from './draft-links.js?v=0.7.8-rejoin-links';
+import { HEROES, PICKS_PER_TEAM } from './heroes.js?v=0.7.11-vegeta42';
+import { BroadcastUI } from './broadcast.js?v=0.7.11-vegeta42';
+import { loadDraftConfigFromUrl } from './app.js?v=0.7.11-vegeta42';
+import { readDraftRoomLink } from './draft-links.js?v=0.7.11-vegeta42';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';
 

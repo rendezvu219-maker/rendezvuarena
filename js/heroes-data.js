@@ -1,5 +1,49 @@
 // Automatically scraped hero detail database with approved final-state patch-note corrections.
 export const HEROES_DATA = {
+  "0042": {
+    "id": "0042",
+    "difficulty": "40",
+    "description": "A ranged Damage fighter who controls space with ki attacks.",
+    "statsPath": "M 100.0 20.0 L 146.9 62.6 L 197.5 122.3 L 113.0 127.0 L 91.3 118.0 L 70.8 106.7 L 68.7 75.1 L 100.0 20.0",
+    "skills": [
+      {
+        "id": "passive1",
+        "type": "passive",
+        "name": "Indomitable Stance",
+        "desc": "Using a non-Super Skill temporarily raises every defense against attacks from the front."
+      },
+      {
+        "id": "rush_attack1",
+        "type": "rush_attack",
+        "name": "Rush Attack",
+        "desc": "Fires ki blasts. Lower HP at firing increases damage."
+      },
+      {
+        "id": "skill1",
+        "type": "skill",
+        "name": "Blast Bomb",
+        "desc": "Throws ki at a chosen point. Impact explodes, creates smoke, and leaves a temporary damaging zone."
+      },
+      {
+        "id": "skill2",
+        "type": "skill",
+        "name": "Final Flash",
+        "desc": "Fires a directional fan of energy. Charging narrows its angle, raises damage, and progressively shortens activation-to-firing time."
+      },
+      {
+        "id": "skill3",
+        "type": "skill",
+        "name": "Blue Spirit Cannon",
+        "desc": "Starts with a surrounding shockwave, then repeatedly fires at distant targets. Each shot activates the passive and explodes for extra damage; explosion hits shorten this Skill’s cooldown. Other Skills, actions and aiming remain available, but not movement or Rush Attacks. Using a Skill other than Blast Bomb, Vanishing Step, reactivation or the time limit ends firing."
+      },
+      {
+        "id": "super_attack1",
+        "type": "super_attack",
+        "name": "Galick Gun",
+        "desc": "A directional beam deals extra damage to heroes performing Super Attacks. A surrounding field keeps enemies away; movement and redirection remain possible while firing."
+      }
+    ]
+  },
   "0041": {
     "id": "0041",
     "difficulty": "20",

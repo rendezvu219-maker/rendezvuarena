@@ -6,11 +6,11 @@ export const HERO_I18N_METADATA = Object.freeze({
   "schemaVersion": 2,
   "policy": "Verified localized hero records may combine official-site snapshots with exact fields manually checked in the released game client. Temporary verification media is not distributed; only the reviewed fields and source type are retained. Synthetic text is forbidden.",
   "coverage": {
-    "ja": 41,
-    "zh-CN": 41,
+    "ja": 42,
+    "zh-CN": 42,
     "ko": 40,
-    "es": 41,
-    "vi": 41
+    "es": 42,
+    "vi": 42
   },
   "generatedFrom": [
     "data/locales/official-hero-details.json",
@@ -20,6 +20,37 @@ export const HERO_I18N_METADATA = Object.freeze({
 
 export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
   "ja": {
+    "0042": {
+      "description": "遠距離の気弾と技で間合いを管理するダメージ型。",
+      "skills": {
+        "passive1": {
+          "name": "不屈の構え",
+          "desc": "必殺技以外の技を使うと、しばらく正面からの攻撃に対する全防御が上昇。"
+        },
+        "rush_attack1": {
+          "name": "ラッシュ攻撃",
+          "desc": "気弾で攻撃。発射時の合計HPが少ないほど威力が増す。"
+        },
+        "skill1": {
+          "name": "ブラストボム",
+          "desc": "指定地点へ投げた気弾が爆発し、煙と一定時間残るダメージ領域を作る。"
+        },
+        "skill2": {
+          "name": "ファイナルフラッシュ",
+          "desc": "指定方向への扇状の気功波。溜めるほど範囲の角度が狭くなり、威力が増加。発動から発射までの時間も段階的に短くなる。"
+        },
+        "skill3": {
+          "name": "ブルースピリットキャノン",
+          "desc": "周囲への衝撃波の後、近くを除く指定地点へ気弾を連射。毎回パッシブが発動し、爆発で追加ダメージを与える。爆発命中ごとにこの技の再使用時間が減る。移動とラッシュ以外の行動、他の技、照準変更が可能。ブラストボム以外の技、バニシングステップ、再入力、時間切れで終了。"
+        },
+        "super_attack1": {
+          "name": "ギャリック砲",
+          "desc": "方向指定の気功波。必殺技中の敵ヒーローには威力が増す。周囲の気で接近を防ぎ、発射中も向きを変えられる。"
+        }
+      },
+      "translationStatus": "official-site-summary",
+      "checkedAt": "2026-10-01"
+    },
     "0041": {
       "description": "近距離で敵を妨害して攻撃の機会を作るテクニカル型。光のフィニッシュ攻撃を持つ。",
       "skills": {
@@ -1329,6 +1360,37 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
     }
   },
   "zh-CN": {
+    "0042": {
+      "description": "依靠远程气弹和技能控制距离的伤害型战士。",
+      "skills": {
+        "passive1": {
+          "name": "不屈架势",
+          "desc": "使用必杀技之外的技能后，短时间提升抵御正面攻击的全部防御。"
+        },
+        "rush_attack1": {
+          "name": "突进攻击",
+          "desc": "射出气弹；发射时总生命值越少，伤害越大。"
+        },
+        "skill1": {
+          "name": "爆裂炸弹",
+          "desc": "投向指定地点的气弹爆炸，产生烟雾和限时伤害区域。"
+        },
+        "skill2": {
+          "name": "最后的闪光炮",
+          "desc": "向指定方向发出扇形气功波。蓄力越久，夹角越小、伤害越高，启动至发射的时间也逐级缩短。"
+        },
+        "skill3": {
+          "name": "蓝色灵魂加农炮",
+          "desc": "先释放周围冲击波，再向远处指定点连续射弹，不能选自身附近。每发触发被动，爆炸追加伤害；爆炸命中会减少本技能冷却。期间可使用技能及调整目标，但不能移动或连续攻击。除爆裂炸弹外的技能、瞬身步、再次输入或时间结束都会中止。"
+        },
+        "super_attack1": {
+          "name": "伽力克大炮",
+          "desc": "定向气功波对正在施放必杀技的敌方英雄造成更高伤害。周围斗气阻挡敌人靠近，发射时能够调整朝向。"
+        }
+      },
+      "translationStatus": "official-site-summary",
+      "checkedAt": "2026-10-01"
+    },
     "0041": {
       "description": "近战技术型战士，通过干扰敌方行动创造进攻机会，并拥有光之终结攻击。",
       "skills": {
@@ -3923,6 +3985,37 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
     }
   },
   "es": {
+    "0042": {
+      "description": "Atacante de larga distancia que controla el espacio mediante ki.",
+      "skills": {
+        "passive1": {
+          "name": "Postura indomable",
+          "desc": "Activar una técnica no especial refuerza temporalmente todas las defensas frente al daño frontal."
+        },
+        "rush_attack1": {
+          "name": "Arremetida",
+          "desc": "Proyectiles de ki: menos vida total al disparar significa más daño."
+        },
+        "skill1": {
+          "name": "Ráfaga Explosiva",
+          "desc": "Lanza ki al punto elegido; la explosión produce humo y deja una zona dañina temporal."
+        },
+        "skill2": {
+          "name": "Destello Final",
+          "desc": "Onda en abanico direccional. Cargarla reduce su ángulo y aumenta el daño; también acorta gradualmente el intervalo entre activación y disparo."
+        },
+        "skill3": {
+          "name": "Cañón de Espíritu Azul",
+          "desc": "Una onda alrededor precede a disparos continuos hacia puntos lejanos. Cada proyectil activa la pasiva y explota con daño adicional; acertar explosiones reduce su recarga. Permite otras técnicas, acciones y apuntar, pero no desplazarse ni usar arremetidas. Termina con otra técnica salvo Ráfaga Explosiva, Evanescencia, una nueva pulsación o el límite temporal."
+        },
+        "super_attack1": {
+          "name": "Cañón Galick",
+          "desc": "Rayo orientable que impide aproximaciones mediante ki circundante. La descripción española indica daño aumentado al alcanzar héroes durante la técnica especial; las versiones japonesa y china especifican enemigos que estén ejecutando su propia técnica especial."
+        }
+      },
+      "translationStatus": "official-site-summary",
+      "checkedAt": "2026-10-01"
+    },
     "0041": {
       "description": "Especialista técnico cuerpo a cuerpo: interrumpe enemigos y abre oportunidades ofensivas.",
       "skills": {
@@ -5240,6 +5333,37 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
     }
   },
   "vi": {
+    "0042": {
+      "description": "Chiến binh Damage kiểm soát khoảng cách bằng khí đạn.",
+      "skills": {
+        "passive1": {
+          "name": "Thế Đứng Bất Khuất",
+          "desc": "Dùng kỹ năng thường tạm tăng mọi phòng thủ trước đòn từ phía trước."
+        },
+        "rush_attack1": {
+          "name": "Liên Kích",
+          "desc": "Bắn khí đạn; tổng HP lúc bắn càng thấp, sát thương càng cao."
+        },
+        "skill1": {
+          "name": "Bom Bộc Phá",
+          "desc": "Ném khí đạn tới điểm chọn, nổ tạo khói và vùng sát thương tồn tại tạm thời."
+        },
+        "skill2": {
+          "name": "Ánh Chớp Cuối Cùng",
+          "desc": "Sóng khí hình quạt theo hướng chọn. Tích lực lâu thu hẹp góc, tăng sát thương, rút ngắn dần thời gian từ kích hoạt tới bắn."
+        },
+        "skill3": {
+          "name": "Pháo Linh Hồn Xanh",
+          "desc": "Phát sóng quanh mình rồi bắn liên tục tới điểm xa; không chọn sát mình. Mỗi phát kích hoạt nội tại, nổ gây thêm sát thương. Nổ trúng giảm hồi chiêu. Có thể đổi điểm ngắm, dùng kỹ năng và hành động, trừ di chuyển/Liên Kích. Dùng kỹ năng khác Bom Bộc Phá, Bộ Pháp Biến Mất, nhấn lại hoặc hết thời gian sẽ dừng."
+        },
+        "super_attack1": {
+          "name": "Pháo Galick",
+          "desc": "Sóng khí định hướng gây thêm sát thương lên chiến binh đang dùng tuyệt kỹ. Khí quanh mình ngăn địch áp sát; có thể đổi hướng khi bắn."
+        }
+      },
+      "translationStatus": "editor-reviewed",
+      "checkedAt": "2026-10-01"
+    },
     "0041": {
       "description": "Chiến binh kỹ thuật chuyên cận chiến và khống chế.",
       "skills": {

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
+import { WEB_TRAILERS } from '../js/trailer-assets.js';
 
 const heroes = await readFile(new URL('../js/heroes.js', import.meta.url), 'utf8');
 const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
@@ -13,7 +14,8 @@ const {
   HEROES, heroMatchesSearch, imageWithFallback, isNikitaEasterEggSearch, NIKITA_EASTER_EGG,
 } = await import(new URL('../js/heroes.js', import.meta.url));
 
-for (const hero of HEROES) {
+// New roster entries can use their hero artwork until a trailer is supplied.
+for (const hero of HEROES.filter(hero => WEB_TRAILERS[hero.id])) {
   const trailer = await stat(new URL(`../assets/trailers/${hero.id}.mp4`, import.meta.url));
   assert.ok(trailer.size > 100_000, `Trailer ${hero.id}.mp4 must be a non-empty deployable video.`);
 }

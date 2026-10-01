@@ -45,14 +45,14 @@ const vietnameseUiText = JSON.stringify({ base: UI.vi, pages: PAGE_UI.vi });
 assert.doesNotMatch(vietnameseUiText, /anh hùng|\btướng\b/iu, 'Vietnamese UI must consistently use “chiến binh”.');
 assert.match(PAGE_UI.vi.pageTitleHeroes, /Chiến binh/);
 assert.equal(UI.vi.heroes, 'Chiến binh');
-assert.equal(t('heroRoster', {}, 'en'), '41-HERO ROSTER');
-assert.equal(t('heroRoster', {}, 'vi'), 'DANH SÁCH 41 CHIẾN BINH');
-assert.equal(t('heroesShown', {}, 'ja'), '41体を表示');
+assert.equal(t('heroRoster', {}, 'en'), '42-HERO ROSTER');
+assert.equal(t('heroRoster', {}, 'vi'), 'DANH SÁCH 42 CHIẾN BINH');
+assert.equal(t('heroesShown', {}, 'ja'), '42体を表示');
 
 // Hero names + source-authenticated hero details -----------------------------
 const heroIds = HEROES.map(hero => hero.id).sort();
 const sourceHeroNames = JSON.parse(read('data/locales/hero-names.json'));
-assert.equal(heroIds.length, 41, 'Expected the full 41-hero roster.');
+assert.equal(heroIds.length, 42, 'Expected the full 42-hero roster.');
 assert.deepEqual(Object.keys(EN_HERO_NAMES).sort(), heroIds, 'English hero-name catalog is incomplete.');
 for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) {
   assert.ok(Object.keys(HERO_NAMES[locale] || {}).every(id => heroIds.includes(id)), `${locale} hero-name catalog contains an unknown hero.`);
@@ -86,13 +86,13 @@ for (const [heroId, record] of Object.entries(vietnameseCatalog)) {
   assert.doesNotMatch(JSON.stringify({ description: record.description, skills: record.skills }), /anh hùng|\btướng\b/iu, `Vietnamese ${heroId} must use "chiến binh".`);
   vietnameseSkillCount += Object.keys(record.skills || {}).length;
 }
-assert.equal(vietnameseSkillCount, 265, 'Vietnamese catalog must include all six Gogeta skills.');
+assert.equal(vietnameseSkillCount, 271, 'Vietnamese catalog must include all six Gogeta skills.');
 const vietnameseSkillMaster = JSON.parse(read('data/locales/vi-skill-name-master.json'));
 assert.equal(vietnameseSkillMaster.schemaVersion, 1);
 assert.equal(vietnameseSkillMaster.status, 'user-approved-with-editorial-additions');
-assert.equal(vietnameseSkillMaster.skills.length, 217, 'Vietnamese skill-name Master includes five Gogeta names.');
+assert.equal(vietnameseSkillMaster.skills.length, 222, 'Vietnamese skill-name Master includes five Gogeta names.');
 const approvedVietnameseSkillNames = new Map(vietnameseSkillMaster.skills.map(row => [row.english, row.vietnamese]));
-assert.equal(approvedVietnameseSkillNames.size, 217, 'Vietnamese skill-name Master contains duplicate English names.');
+assert.equal(approvedVietnameseSkillNames.size, 222, 'Vietnamese skill-name Master contains duplicate English names.');
 let approvedVietnameseSkillSlots = 0;
 for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
   if (!vietnameseCatalog[heroId]) continue;
@@ -103,7 +103,7 @@ for (const [heroId, sourceHero] of Object.entries(HEROES_DATA)) {
     approvedVietnameseSkillSlots += 1;
   }
 }
-assert.equal(approvedVietnameseSkillSlots, 265, 'Vietnamese Master must cover all 265 skill slots.');
+assert.equal(approvedVietnameseSkillSlots, 271, 'Vietnamese Master must cover all 271 skill slots.');
 assert.equal(vietnameseCatalog['0001'].skills.skill1.name, 'Kamehameha');
 assert.equal(vietnameseCatalog['0001'].skills.super_attack1.name, 'Quả Cầu Khinh Khí');
 assert.match(vietnameseCatalog['0015'].skills.rush_attack1.desc, /số lượng khí đạn/i);

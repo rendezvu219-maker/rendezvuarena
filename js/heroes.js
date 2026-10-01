@@ -184,7 +184,7 @@ export function getHeroSkillIconUrls(heroId, skillId) {
 
 // Full roster (scraped from the official site)
 export const HEROES = [
-  { id: '0041', name: 'Super Gogeta',                   role: 'Technical', isNew: true  },
+  { id: '0042', name: 'Super Saiyan God SS Vegeta',    role: 'Damage',    isNew: true  },
   { id: '0001', name: 'Super Saiyan Son Goku',         role: 'Damage',    isNew: false },
   { id: '0002', name: 'Super Saiyan Vegeta',           role: 'Tank',      isNew: false },
   { id: '0003', name: 'Krillin',                       role: 'Technical', isNew: false },
@@ -225,6 +225,7 @@ export const HEROES = [
   { id: '0038', name: 'Beerus',                        role: 'Damage',    isNew: false },
   { id: '0039', name: 'Goku Black',                     role: 'Technical', isNew: false },
   { id: '0040', name: 'Jiren (Full Power)',             role: 'Tank',      isNew: false },
+  { id: '0041', name: 'Super Gogeta',                   role: 'Technical', isNew: false },
 ];
 
 // 4 generic slots per team (no forced role order)

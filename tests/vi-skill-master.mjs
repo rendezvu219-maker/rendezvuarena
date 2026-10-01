@@ -12,10 +12,10 @@ const master = readJson('data/locales/vi-skill-name-master.json');
 assert.equal(master.schemaVersion, 1);
 assert.equal(master.locale, 'vi');
 assert.equal(master.status, 'user-approved-with-editorial-additions');
-assert.equal(master.skills.length, 217);
+assert.equal(master.skills.length, 222);
 
 const approved = new Map(master.skills.map(row => [row.english, row.vietnamese]));
-assert.equal(approved.size, 217, 'The Master includes five new Gogeta skill names.');
+assert.equal(approved.size, 222, 'The Master includes five new Gogeta skill names.');
 
 const sourceCatalog = readJson('data/locales/official-hero-details.json').locales.vi;
 const runtimeCatalog = FULL_HERO_DETAIL_OVERRIDES.vi;
@@ -31,7 +31,7 @@ for (const [heroId, hero] of Object.entries(HEROES_DATA)) {
     slotCount += 1;
   }
 }
-assert.equal(slotCount, 265);
+assert.equal(slotCount, 271);
 
 const fixedNames = new Map([
   ['Kaioken', 'Giới Vương Quyền'],

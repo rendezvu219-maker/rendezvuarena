@@ -1,9 +1,9 @@
 // Host Setup - Tab Content Renderer
-import { HEROES, STAGE_PRESETS, THEMES, applyTheme } from './heroes.js';
+import { HEROES, STAGE_PRESETS, THEMES, applyTheme } from './heroes.js?v=0.7.11-vegeta42';
 import { bindDraftRulesForm, renderDraftRulesForm } from './draft-rules-form.js';
 import { t } from './i18n.js';
 import { api } from './api.js';
-import { p2pDraftLinks, copyDraftLink } from './draft-links.js?v=0.7.8-rejoin-links';
+import { p2pDraftLinks, copyDraftLink } from './draft-links.js?v=0.7.11-vegeta42';
 
 function escapeAttribute(value) {
   return String(value ?? '').replace(/[&<>\"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' }[char]));
