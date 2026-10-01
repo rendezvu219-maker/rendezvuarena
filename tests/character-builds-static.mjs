@@ -38,8 +38,14 @@ try {
   }));
   assert.deepEqual(buildsForHero(unassignedFixture, '0038'), [], 'An unassigned hero must have an empty, safe build list.');
   assert.equal(bundle.presets.length, source.presets.length, 'All current complete presets, including unassigned builds, must survive export.');
-  for (const [presetId, heroId] of [[45,'0007'], [46,'0011'], [47,'0001'], [48,'0041']]) {
+  for (const [presetId, heroId] of [[45,'0007'], [46,'0011'], [47,'0001'], [48,'0041'], [52,'0042'], [53,'0042']]) {
     assert.ok(buildsForHero(bundle.presets, heroId).some(preset => preset.id === presetId), `Preset ${presetId} must be visible on its named hero ${heroId}.`);
+  }
+
+  for (const locale of ['en', 'ja', 'zh-CN', 'ko', 'es', 'vi']) {
+    const blueVegeta = buildsForHero(resolveBuildBundle(source, { locale }).presets, '0042');
+    assert.deepEqual(blueVegeta.map(preset => preset.id), [52, 53], 'Both new Vegeta sets must be available in every language, Set 1 first.');
+    assert.equal(blueVegeta[0].heroAssignments.find(item => item.heroId === '0042').isDefault, true);
   }
 
   const saved = store.savePreset(goku.id, { ...goku, name:'Goku persistence check', locale:'en',
