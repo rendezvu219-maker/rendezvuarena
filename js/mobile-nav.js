@@ -41,6 +41,7 @@ function navigationSources() {
     '#ops-tabs [data-tab]',
     '.home-nav > nav a',
     '.content-nav > nav a',
+    '.static-nav > nav a',
     '.ops-top-actions a',
     '.setup-actions a',
     '.gs-standalone-nav > a',
@@ -55,7 +56,7 @@ function navigationSources() {
 function sourceKey(source) {
   if (source.dataset.tab) return `tab:${source.dataset.tab}`;
   const href = source.getAttribute('href') || '';
-  return `href:${href}`;
+  return `href:${new URL(href || './', window.location.href).href}`;
 }
 
 function copyTranslationMetadata(source, target) {
@@ -119,11 +120,12 @@ function createMobileNav() {
     });
 
     const fallbacks = [
-      ['href:/', '/', text.home, 'home'],
-      ['href:/portal.html', '/portal.html', text.portal, 'playerPortalLink'],
-      ['href:/dashboard.html', '/dashboard.html', text.ops, 'tournamentOps'],
+      ['./', text.home, 'home'],
+      ['portal.html', text.portal, 'playerPortalLink'],
+      ['tournament.html', text.ops, 'tournamentOps'],
     ];
-    fallbacks.forEach(([key, href, label, i18nKey]) => {
+    fallbacks.forEach(([href, label, i18nKey]) => {
+      const key = `href:${new URL(href, window.location.href).href}`;
       if (seen.has(key)) return;
       const item = i18nAttribute(document.createElement('a'), i18nKey);
       item.className = 'mobile-nav-item';

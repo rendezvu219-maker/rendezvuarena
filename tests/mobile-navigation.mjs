@@ -15,7 +15,8 @@ keyPages.forEach(file=>assert.ok(entryPages.includes(file),`${file} must remain 
 
 const preferences=read('js/preferences.js');
 assert.match(preferences,/mobile-nav\.css/);
-assert.match(preferences,/import\('\/js\/mobile-nav\.js/);
+assert.match(preferences,/import\(new URL\('\.\/mobile-nav\.js/);
+assert.match(preferences,/new URL\('\.\.\/css\/mobile-nav\.css/);
 
 const component=read('js/mobile-nav.js');
 for(const selector of ['#ops-tabs [data-tab]','.home-nav > nav a','.content-nav > nav a','.ops-top-actions a','.setup-actions a','#series-open-ops']){

@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  const preferencesUrl = document.currentScript?.src || new URL('js/preferences.js', location.href).href;
+
   const root = document.documentElement;
   const storage = {
     get(key, fallback) {
@@ -314,7 +316,7 @@
 
     function accountMount() {
       return document.querySelector('#ops-user, #portal-user, #home-account, #heroes-account, [data-global-account-slot]')
-        || document.querySelector('.ops-top-actions, .setup-actions, .content-account, .home-account, .gs-standalone-nav, .draft-header-tools, .legal-top');
+        || document.querySelector('.ops-top-actions, .setup-actions, .content-account, .home-account, .gs-standalone-nav, .draft-header-tools, .legal-top, .static-nav');
     }
 
     function mountMenu(preferredMount = null) {
@@ -435,8 +437,8 @@
 
   const mobileNavStyles = document.createElement('link');
   mobileNavStyles.rel = 'stylesheet';
-  mobileNavStyles.href = '/css/mobile-nav.css?v=0.7.0-mobile-nav';
+  mobileNavStyles.href = new URL('../css/mobile-nav.css?v=0.7.13-tournament-entry', preferencesUrl).href;
   mobileNavStyles.dataset.mobileNavAsset = 'true';
   document.head.appendChild(mobileNavStyles);
-  import('/js/mobile-nav.js?v=0.7.0-mobile-nav').catch(() => { /* Keep the page usable if the optional mobile controls fail to load. */ });
+  import(new URL('./mobile-nav.js?v=0.7.13-tournament-entry', preferencesUrl).href).catch(() => { /* Keep the page usable if the optional mobile controls fail to load. */ });
 })();

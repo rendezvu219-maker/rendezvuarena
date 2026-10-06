@@ -197,7 +197,7 @@ function renderBroadcastSelector(matches) {
     </section>
     <div class="bc-selector-legend"><span class="is-ready">READY NOW</span><span class="is-waiting">WAITING FOR ROOM</span><em>Tip: open this page in an incognito window or OBS Browser Source while teams use their own links.</em></div>
     <section class="bc-selector-grid">${cards || '<div class="bc-selector-empty"><b>No assigned matches yet.</b><span>Assign this Broadcast account to a match in Match Operations, then refresh this page.</span></div>'}</section>
-    <div class="bc-selector-footer-actions"><button type="button" class="bc-selector-secondary" id="broadcast-selector-refresh">↻ REFRESH MATCHES</button><a class="bc-selector-secondary" href="/dashboard.html">TOURNAMENT OPERATIONS</a></div>
+    <div class="bc-selector-footer-actions"><button type="button" class="bc-selector-secondary" id="broadcast-selector-refresh">↻ REFRESH MATCHES</button><a class="bc-selector-secondary" href="tournament.html">TOURNAMENT OPERATIONS</a></div>
   </main>`;
   document.getElementById('broadcast-selector-refresh')?.addEventListener('click', () => openBroadcastSelector().catch(renderError));
   root.querySelectorAll('[data-watch-match]').forEach(button => button.addEventListener('click', () => {

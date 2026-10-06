@@ -2822,7 +2822,7 @@ function showBootstrapError(error) {
       <div class="route-error-actions">
         <button class="btn btn-primary" id="retry-draft-connection">RETRY CONNECTION</button>
         <a class="btn btn-ghost" href="quick-draft.html?v=${DRAFT_LINK_VERSION}">OPEN QUICK DRAFT</a>
-        <a class="btn btn-ghost" href="dashboard.html">TOURNAMENT OPERATIONS</a>
+        <a class="btn btn-ghost" href="tournament.html">TOURNAMENT OPERATIONS</a>
       </div>
     </div>
   </div>`;
