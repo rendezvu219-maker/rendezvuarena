@@ -1,8 +1,8 @@
-import { DraftEngine } from './draft.js';
+import { DraftEngine } from './draft.js?v=0.7.12-season-rooms';
 import { HEROES, PICKS_PER_TEAM } from './heroes.js?v=0.7.11-vegeta42';
 import { BroadcastUI } from './broadcast.js?v=0.7.11-vegeta42';
-import { loadDraftConfigFromUrl } from './app.js?v=0.7.11-vegeta42';
-import { readDraftRoomLink } from './draft-links.js?v=0.7.11-vegeta42';
+import { loadDraftConfigFromUrl } from './app.js?v=0.7.12-season-rooms';
+import { readDraftRoomLink } from './draft-links.js?v=0.7.12-season-rooms';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';
 
@@ -62,6 +62,8 @@ function createEngine(config) {
     teamA: config.teamA,
     teamB: config.teamB,
     heroBans: config.heroBans,
+    customBanOrder: config.customBanOrder,
+    customPickOrder: config.customPickOrder,
     divineBans: config.divineBans || 0,
     picksPerTeam: PICKS_PER_TEAM,
     timerSeconds: config.timerSeconds,
@@ -70,6 +72,9 @@ function createEngine(config) {
     gameNumber: Number(config.gameNumber || 1),
     previousPicksA: config.previousPicksA || [],
     previousPicksB: config.previousPicksB || [],
+    previousBansA: config.previousBansA || [],
+    previousBansB: config.previousBansB || [],
+    squadraBlastCarryBans: config.squadraBlastCarryBans !== false,
     protectList: config.enableProtect
       ? [
           ...(config.protectList || []),

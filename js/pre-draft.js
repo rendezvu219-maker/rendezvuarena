@@ -3,10 +3,17 @@ export const DIVINE_RULES = Object.freeze([
   { name: 'Super Start', file: 'Super Start.png', desc: 'Ultimate cooldown reduced by 50% at match start.' },
   { name: 'Spirited Away', file: 'Spirited Away.png', desc: 'Each team can perform one extra ban.' },
   { name: 'Team Rush GO', file: 'Team Rush GO.png', desc: 'Picking timer reduced to 15 seconds. Rapid picks!' },
-  { name: 'Super DMG Boost', file: 'Super DMG Boost.png', desc: 'All Damage heroes gain +10% DMG dealt.' },
-  { name: 'Mystery HP', file: 'Mystery HP.png', desc: 'Base health stats are hidden from opponents.' },
+  { name: 'Super CD Vanishing Step', file: 'Super CD Vanishing Step.png', desc: '' },
+  { name: 'Sparkly Stardust', file: 'Sparkly Stardust.png', desc: '' },
   { name: 'Healing Attack', file: 'Healing Attack.png', desc: 'Attacks restore 2% of damage dealt as health.' },
   { name: 'Burst Step', file: 'Burst Step.png', desc: 'Dashes and vanishing steps consume 20% less energy.' },
+]);
+
+// Retain retired Draws and their artwork for historical matches. Only
+// DIVINE_RULES participates in this season's roulette, picks and bans.
+export const DISABLED_DIVINE_RULES = Object.freeze([
+  { name: 'Super DMG Boost', file: 'Super DMG Boost.png', desc: 'All Damage heroes gain +10% DMG dealt.' },
+  { name: 'Mystery HP', file: 'Mystery HP.png', desc: 'Base health stats are hidden from opponents.' },
 ]);
 
 export function secureRandomUnit() {

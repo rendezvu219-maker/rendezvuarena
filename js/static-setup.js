@@ -1,6 +1,7 @@
-import { firebaseConfigured, writeMany, connectionMessage } from './firebase.js';
+import { connectionMessage } from './firebase.js';
 import { normalizeRules, generateBanOrder, randomCode, randomSecret, pageUrl } from './static-core.js';
 import { HEROES } from './heroes.js';
+import { createTournamentRecord } from './tournament-draft.js?v=0.7.12-season-rooms';
 
 const notice = document.querySelector('#firebase-notice');
 function show(message, kind = '') { if (!notice) return; notice.textContent = message; notice.className = `notice ${kind}`; }
@@ -31,20 +32,15 @@ if (banCountSelect && banOrderInput) {
 
 document.querySelector('#tournament-form')?.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!firebaseConfigured()) return show('Configure Firebase first in js/firebase-config.js.', 'error');
   const form = new FormData(event.currentTarget); const tournamentId = randomCode(10); const organizerToken = randomSecret();
   const teams = Array.from({ length: 8 }, (_, i) => String(form.get(`team${i + 1}`)).trim());
-  const rules = normalizeRules(Object.fromEntries(form)); const roomIds = {}; const writes = {};
+  const rules = { ...normalizeRules({ ...Object.fromEntries(form), squadraBlastCarryBans: form.has('squadraBlastCarryBans') }), enableDivineDraw: true }; const roomIds = {};
   for (let i = 1; i <= 7; i += 1) {
-    const matchId = `M${i}`; const roomId = randomCode(); const tokens = { A: randomSecret(), B: randomSecret(), O: organizerToken };
+    const matchId = `M${i}`; const roomId = randomCode(); const tokens = { A: randomSecret(), B: randomSecret(), O: randomSecret(), S: randomSecret() };
     roomIds[matchId] = { roomId, tokens };
-    writes[`roomConfigs/${roomId}`] = { id: roomId, type: 'tournament', tournamentId, matchId, rules, createdAt: Date.now() };
-    writes[`roomSecrets/${roomId}`] = tokens;
-    writes[`roomAccess/${roomId}/${tokens.A}`] = 'A'; writes[`roomAccess/${roomId}/${tokens.B}`] = 'B'; writes[`roomAccess/${roomId}/${tokens.O}`] = 'O';
   }
-  writes[`tournamentConfigs/${tournamentId}`] = { id: tournamentId, name: String(form.get('name')).trim(), teams, rules, roomIds: Object.fromEntries(Object.entries(roomIds).map(([id, value]) => [id, value.roomId])), createdAt: Date.now() };
-  writes[`tournamentSecrets/${tournamentId}`] = { O: organizerToken, matches: Object.fromEntries(Object.entries(roomIds).map(([id, value]) => [id, value.tokens])) };
-  writes[`tournamentLinks/${tournamentId}/${organizerToken}`] = Object.fromEntries(Object.entries(roomIds).map(([id, value]) => [id, value.tokens]));
-  try { event.submitter.disabled = true; show('Creating bracket and seven realtime rooms…'); await writeMany(writes); location.href = pageUrl('bracket.html', { tournament: tournamentId, token: organizerToken }); }
+  const config = { id: tournamentId, name: String(form.get('name')).trim(), teams, rules, roomIds: Object.fromEntries(Object.entries(roomIds).map(([id, value]) => [id, value.roomId])), createdAt: Date.now() };
+  const secrets = { O: organizerToken, matches: Object.fromEntries(Object.entries(roomIds).map(([id, value]) => [id, value.tokens])) };
+  try { event.submitter.disabled = true; show('Creating bracket and seven independent match rooms…'); await createTournamentRecord(config, secrets); location.href = pageUrl('bracket.html', { tournament: tournamentId, token: organizerToken }); }
   catch (error) { show(connectionMessage(error), 'error'); event.submitter.disabled = false; }
 });

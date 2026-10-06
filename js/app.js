@@ -1,13 +1,13 @@
-import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js';
+import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js?v=0.7.12-season-rooms';
 import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js?v=0.7.11-vegeta42';
 import { HEROES_DATA } from './heroes-data.js?v=0.7.11-vegeta42';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js?v=0.7.11-vegeta42';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.12-season-rooms';
 import { api, escapeHtml } from './api.js';
-import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.11-vegeta42';
+import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.12-season-rooms';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
-import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js';
+import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js?v=0.7.12-season-rooms';
 
 export class DraftUI {
   constructor(config) {
@@ -722,6 +722,8 @@ export class DraftUI {
       teamA: initialBlue.name,
       teamB: initialRed.name,
       heroBans: this.config.heroBans,
+      customBanOrder: this.config.customBanOrder,
+      customPickOrder: this.config.customPickOrder,
       divineBans: this.config.divineBans || 0,
       picksPerTeam: PICKS_PER_TEAM,
       timerSeconds: this.config.timerSeconds,
@@ -2372,6 +2374,16 @@ if (this.engine.selectedHero === h.id) {
       openOps.textContent = isHost ? 'OPEN TOURNAMENT OPS' : 'RETURN TO PLAYER PORTAL';
       openOps.className = 'btn btn-primary btn-sm';
       openOps.classList.remove('hidden');
+      if (this.config.tournamentRoom) {
+        const url = new URL('bracket.html', window.location.href);
+        url.searchParams.set('tournament', this.config.tournamentId);
+        if (this.roomRole === 'host') {
+          const context = JSON.parse(localStorage.getItem(`rv_tournament_room_${this.sync.roomCode}`) || '{}');
+          if (context.organizerToken) url.searchParams.set('token', context.organizerToken);
+        }
+        openOps.href = url.href;
+        openOps.textContent = 'RETURN TO BRACKET';
+      }
     }
   }
 
@@ -2534,6 +2546,13 @@ if (this.engine.selectedHero === h.id) {
 
       // Quick Draft local series flow. Scores and reuse history stay attached
       // to the original entrant even when that entrant chose Red side.
+      if (this.config.tournamentRoom) {
+        const { saveTournamentDraftGame } = await import('./tournament-draft.js?v=0.7.12-season-rooms');
+        const saved = await saveTournamentDraftGame({ config: this.config, roomCode: this.sync.roomCode,
+          hostToken: this.sync.accessToken, winnerSide: winnerSideForApi,
+          engine: this.engine.exportState(), sideAssignment: this.sideAssignment, chosenDivineRules: this.chosenDivineRules });
+        if (saved.alreadyRecorded) { window.location.reload(); return; }
+      }
       if (winnerEntrantKey === 'teamA') this.config.seriesScoreA = Number(this.config.seriesScoreA || 0) + 1;
       else this.config.seriesScoreB = Number(this.config.seriesScoreB || 0) + 1;
       const bestOf = Math.max(1, Number(String(this.config.format || 'BO3').replace(/\D/g, '')) || 3);
@@ -2541,6 +2560,7 @@ if (this.engine.selectedHero === h.id) {
       const seriesComplete = this.config.seriesScoreA >= winsNeeded || this.config.seriesScoreB >= winsNeeded;
       this.updateSeriesScoreDisplay();
       if (seriesComplete) {
+        if (this.sync instanceof P2PDraftSync) localStorage.setItem(`rv_config_${this.sync.roomCode}`, JSON.stringify(serializableDraftConfig(this.config)));
         this.sync?.publishState({
           status: 'series_complete',
           seriesComplete: true,

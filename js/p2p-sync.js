@@ -2,7 +2,7 @@
 // Uses the same WebRTC handshake for same-browser tabs and remote browsers.
 // Zero-backend: 100% client-side, runs entirely on GitHub Pages without server or accounts.
 
-import { p2pDraftLinks } from './draft-links.js?v=0.7.11-vegeta42';
+import { p2pDraftLinks } from './draft-links.js?v=0.7.12-season-rooms';
 // Keep the bundled PeerJS ICE defaults, including TURN relay support.
 
 export class P2PDraftSync {
@@ -86,12 +86,27 @@ export class P2PDraftSync {
     if (!this.config) throw new Error('Host configuration is missing. Open the Host link in the browser that created this Quick Draft.');
     const access = JSON.parse(localStorage.getItem(`rv_secrets_${this.roomCode}`) || '{}');
     if (!access.host || access.host !== this.accessToken) throw new Error('Invalid Host link. Open the original Host link from Quick Draft.');
+    if (this.config.tournamentRoom) {
+      const { restoreTournamentRoom } = await import('./tournament-draft.js?v=0.7.12-season-rooms');
+      this.config = restoreTournamentRoom(this.config);
+      localStorage.setItem(`rv_config_${this.roomCode}`, JSON.stringify(this.config));
+    }
     this.shareLinks = p2pDraftLinks(window.location.href, this.roomCode, this.hostPeerId, access);
     try {
       this.initialState = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
     } catch {
       this.initialState = null;
     }
+    if (this.config.tournamentRoom && this.initialState
+      && Number(this.initialState.gameNumber || this.initialState.engine?.gameNumber || 1) !== Number(this.config.gameNumber || 1)) {
+      this.initialState = { status: 'waiting', gameNumber: this.config.gameNumber,
+        seriesScoreA: this.config.seriesScoreA, seriesScoreB: this.config.seriesScoreB };
+      localStorage.setItem(this.storageKey, JSON.stringify(this.initialState));
+    }
+    if (this.config.tournamentRoom && this.config.seriesComplete) this.initialState = {
+      status: 'series_complete', seriesComplete: true, gameNumber: this.config.gameNumber,
+      seriesScoreA: this.config.seriesScoreA, seriesScoreB: this.config.seriesScoreB,
+    };
     try {
       this.initialMessages = JSON.parse(localStorage.getItem(this.messagesKey) || '[]');
     } catch {
@@ -306,6 +321,7 @@ export class P2PDraftSync {
   }
 
   sendCommand(action, data = {}) {
+    if (!['host', 'teamA', 'teamB'].includes(this.role)) return false;
     if (this.isAuthority) {
       this.emitLocal('command', { action, data, fromRole: this.role });
       return true;

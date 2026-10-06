@@ -208,12 +208,21 @@ export function deriveBracket(config, events) {
     }
   };
   for (const event of orderedEvents(events)) {
-    if (event.type !== 'winner' || !['A', 'B'].includes(event.side)) continue;
+    if (!['winner', 'game_result'].includes(event.type) || !['A', 'B'].includes(event.side)) continue;
     const match = byId[event.matchId];
     if (!match || !match.teamA || !match.teamB || /^Winner /.test(match.teamA) || /^Winner /.test(match.teamB)) continue;
+    const needed = Math.floor(match.bestOf / 2) + 1;
+    if (event.type === 'game_result') {
+      if (match.winner || Number(event.game) !== Number(match.gamesPlayed || 0) + 1) continue;
+      match.gamesPlayed = Number(match.gamesPlayed || 0) + 1;
+      match.scoreA = Number(match.scoreA || 0) + (event.side === 'A' ? 1 : 0);
+      match.scoreB = Number(match.scoreB || 0) + (event.side === 'B' ? 1 : 0);
+      if (match.scoreA < needed && match.scoreB < needed) continue;
+    } else {
+      match.scoreA = Number.isInteger(event.scoreA) ? event.scoreA : event.side === 'A' ? needed : 0;
+      match.scoreB = Number.isInteger(event.scoreB) ? event.scoreB : event.side === 'B' ? needed : 0;
+    }
     match.winner = event.side === 'A' ? match.teamA : match.teamB;
-    match.scoreA = event.side === 'A' ? Math.floor(match.bestOf / 2) + 1 : 0;
-    match.scoreB = event.side === 'B' ? Math.floor(match.bestOf / 2) + 1 : 0;
     clearAfter(match.id);
     for (const next of matches) {
       if (next.sourceA === match.id) next.teamA = match.winner;

@@ -1,4 +1,4 @@
-import { HostSetup } from './host-setup.js?v=0.7.11-vegeta42';
+import { HostSetup } from './host-setup.js?v=0.7.12-season-rooms';
 import { t } from './i18n.js';
 
 document.addEventListener('DOMContentLoaded', () => {

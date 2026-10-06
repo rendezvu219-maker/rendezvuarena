@@ -146,6 +146,16 @@ export class DraftEngine {
       this.config.divineBans,
       this.config.picksPerTeam
     );
+    // Static brackets keep their configurable turn order in the Quick Draft
+    // room. Squadra Game 2 uses the carried bans instead of a fresh ban phase.
+    const validOrder = order => Array.isArray(order) && order.every(side => ['A','B'].includes(side));
+    if (validOrder(config.customBanOrder) && validOrder(config.customPickOrder)
+      && ['A','B'].every(side => config.customPickOrder.filter(value => value === side).length === picksPerTeam)) {
+      this.sequence = [
+        ...(this.config.heroBans > 0 ? config.customBanOrder : []).map(team => ({ type: 'ban', team })),
+        ...config.customPickOrder.map(team => ({ type: 'pick', team })),
+      ];
+    }
 
     this.currentStep = 0;
     this.timer = this.config.timerSeconds;
