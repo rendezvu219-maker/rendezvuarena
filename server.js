@@ -3424,10 +3424,13 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
 
   let room = db.prepare('SELECT * FROM draft_rooms WHERE match_id=?').get(match.id);
   let access;
+  // The existing Operations button can delegate draft participation by private
+  // link. Creating/administering the room still requires the authorized Host.
+  const linkAccess = req.body?.linkAccess === true;
   if (!room) {
     const tournament = db.prepare('SELECT source_platform FROM tournaments WHERE id=?').get(match.tournament_id);
     const isMockTournament = tournamentHasMockPlayers(match.tournament_id);
-    if (tournament?.source_platform !== 'quick_draft' && !isMockTournament) {
+    if (!linkAccess && tournament?.source_platform !== 'quick_draft' && !isMockTournament) {
       const checkins = db.prepare(`SELECT actor_id FROM match_checkins WHERE match_id=? AND actor_type='team' AND status='ready'`).all(match.id);
       const checkedTeamIds = new Set(checkins.map(item => Number(item.actor_id)));
       if (!checkedTeamIds.has(Number(match.team_a_id)) || !checkedTeamIds.has(Number(match.team_b_id))) {
@@ -3453,6 +3456,7 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
       teamB: match.team_b_name,
       teamAId: match.team_a_id,
       teamBId: match.team_b_id,
+      linkAccess,
       teamALogoUrl: match.team_a_logo || '',
       teamBLogoUrl: match.team_b_logo || '',
       format: `BO${match.best_of}`,
@@ -3503,6 +3507,7 @@ app.post('/api/matches/:matchId/draft-room', authRequired, requireMatchAccess, (
   } else {
     access = jsonParse(room.access_json);
     const config = refreshedDraftConfig(match, room);
+    if (linkAccess) config.linkAccess = true;
     db.prepare('UPDATE draft_rooms SET config_json=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(JSON.stringify(config), room.id);
     room = ensureDraftRoomRollIdentity(db.prepare('SELECT * FROM draft_rooms WHERE id=?').get(room.id));
   }
@@ -3613,7 +3618,9 @@ app.post('/api/public/draft-rooms/:roomCode/access',(req,res)=>{
     return res.status(403).json({error:'Invalid draft-room access link.'});
   }
   let userId=null;
-  if(room.source_platform!=='quick_draft'){
+  const participantLink = jsonParse(room.config_json).linkAccess === true
+    && ['teamA','teamB','broadcaster'].includes(role);
+  if(room.source_platform!=='quick_draft' && !participantLink){
     let auth=null;
     try{auth=authenticateAccessToken(accessTokenFromRequest(req));}catch{}
     if(!auth)return res.status(401).json({error:'Sign in with the account assigned to this tournament Draft role.'});

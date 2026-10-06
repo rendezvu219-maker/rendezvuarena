@@ -1,5 +1,5 @@
 import { normalizeRules, randomSecret, orderedEvents } from './static-core.js';
-import { p2pDraftLinks } from './draft-links.js?v=0.7.12-season-rooms';
+import { p2pDraftLinks } from './draft-links.js?v=0.7.14-original-tournament';
 import { firebaseConfigured, readValue, writeMany, appendProtectedEvent } from './firebase.js';
 
 const configKey = id => `rv_tournament_config_${id}`;

@@ -1,8 +1,8 @@
 import { subscribeValue, appendProtectedEvent, connectionMessage, firebaseConfigured } from './firebase.js';
-import { deriveBracket } from './static-core.js?v=0.7.12-season-rooms';
+import { deriveBracket } from './static-core.js?v=0.7.14-original-tournament';
 import { loadTournament, tournamentEvents, prepareTournamentRoom, appendLocalTournamentEvent,
-  tournamentRoomAccess } from './tournament-draft.js?v=0.7.12-season-rooms';
-import { p2pDraftLinks, copyDraftLink } from './draft-links.js?v=0.7.12-season-rooms';
+  tournamentRoomAccess } from './tournament-draft.js?v=0.7.14-original-tournament';
+import { p2pDraftLinks, copyDraftLink } from './draft-links.js?v=0.7.14-original-tournament';
 import { TournamentBracketSync } from './tournament-bracket-sync.js';
 
 const params = new URLSearchParams(location.search);

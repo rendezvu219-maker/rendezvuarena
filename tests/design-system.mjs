@@ -40,7 +40,7 @@ assert.match(preferences, /data-no-i18n/);
 assert.match(components, /\.gs-global-menu-panel/);
 assert.match(components, /\.gs-ops-home-brand/);
 assert.match(components, /\.gs-password-toggle/);
-assert.match(home, /data-i18n="tournamentOps" href="tournament\.html">Tournament Ops<\/a>/);
+assert.match(home, /data-i18n="tournamentOps" href="dashboard\.html">Tournament Ops<\/a>/);
 assert.match(homeCss, /grid-template-columns:minmax\(0,1fr\) minmax\(420px,520px\)/);
 assert.doesNotMatch(components, /\.btn:active\s*\{[^}]*translateY/s, 'Button activation must not shift the UI vertically.');
 assert.match(components, /draft-rule-hero-grid[^}]*overflow-anchor:\s*none/s);

@@ -122,7 +122,7 @@ function createMobileNav() {
     const fallbacks = [
       ['./', text.home, 'home'],
       ['portal.html', text.portal, 'playerPortalLink'],
-      ['tournament.html', text.ops, 'tournamentOps'],
+      ['dashboard.html', text.ops, 'tournamentOps'],
     ];
     fallbacks.forEach(([href, label, i18nKey]) => {
       const key = `href:${new URL(href, window.location.href).href}`;

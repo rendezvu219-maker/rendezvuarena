@@ -1,7 +1,7 @@
 import { connectionMessage } from './firebase.js';
 import { normalizeRules, generateBanOrder, randomCode, randomSecret, pageUrl } from './static-core.js';
 import { HEROES } from './heroes.js';
-import { createTournamentRecord } from './tournament-draft.js?v=0.7.12-season-rooms';
+import { createTournamentRecord } from './tournament-draft.js?v=0.7.14-original-tournament';
 
 const notice = document.querySelector('#firebase-notice');
 function show(message, kind = '') { if (!notice) return; notice.textContent = message; notice.className = `notice ${kind}`; }

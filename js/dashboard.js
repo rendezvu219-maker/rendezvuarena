@@ -2,6 +2,9 @@ import { api, getToken, setToken, connectSocket, escapeHtml } from './api.js';
 import { HEROES, ROLES, getHeroImg, roleIconMarkup } from './heroes.js';
 import { bindDraftRulesForm, renderDraftRulesForm } from './draft-rules-form.js';
 import { t } from './i18n.js';
+import { copyDraftLink } from './draft-links.js?v=0.7.14-original-tournament';
+
+const draftRoomWindows = new Map();
 
 const state = {
   user: null,
@@ -416,8 +419,29 @@ function bindResultPanel(match,data){
 }
 
 async function checkIn(match,type){try{const actorId=type==='team_a'?match.team_a_id:type==='team_b'?match.team_b_id:type;await api(`/api/matches/${match.id}/checkin`,{method:'POST',body:{actorType:type.startsWith('team_')?'team':type,actorId}});toast('Check-in saved.');openMatchModal(match.id);}catch(error){const ownTeam=state.active?.teams?.find(team=>Number(team.captain_user_id)===Number(state.user?.id));const otherTeam=ownTeam&&Number(actorId)!==Number(ownTeam.id);toast(otherTeam?'You can only check in your own team. For the 32-player demo, use “AUTO CHECK-IN OTHER TEAMS” in Teams & Seeding for every bot team.':error.message,true);}}
-async function openDraftRoom(matchId){try{const payload=await api(`/api/matches/${matchId}/draft-room`,{method:'POST'});const container=$('#modal-draft-links');container.innerHTML=Object.entries(payload.room.links).map(([role,url])=>{const teamRole=role==='teamA'||role==='teamB';return `<div class="ops-link-row"><b>${escapeHtml(teamRole?`${role} Captain`:role)}</b><input readonly value="${escapeHtml(url)}">${teamRole?'<span class="ops-result-lock">CAPTAIN ACCOUNT REQUIRED</span>':`<a class="btn btn-ghost btn-xs" href="${escapeHtml(url)}" target="_blank" rel="noopener">OPEN</a>`}<button class="btn btn-ghost btn-xs copy-draft-link" data-copy="${escapeHtml(url)}">COPY</button></div>`;}).join('');$$('.copy-draft-link').forEach(btn=>btn.addEventListener('click',()=>copyText(btn.dataset.copy,'Draft link copied.')));toast(`Draft Room ${payload.room.roomCode} ready for both Captains.`);}catch(error){toast(error.message,true);}}
-async function watchDraftRoom(matchId){try{await api(`/api/matches/${matchId}/draft-room`,{method:'POST'});const payload=await api(`/api/matches/${matchId}/draft-room/access?as=broadcaster`);openExternal(payload.url);}catch(error){toast(error.message,true);}}
+async function openDraftRoom(matchId) {
+  let hostWindow = draftRoomWindows.get(matchId);
+  const newlyOpened = !hostWindow || hostWindow.closed;
+  if (newlyOpened) {
+    hostWindow = window.open('about:blank', '_blank');
+    if (hostWindow) { hostWindow.opener = null; draftRoomWindows.set(matchId, hostWindow); }
+  }
+  try {
+    const payload = await api(`/api/matches/${matchId}/draft-room`, { method: 'POST', body: { linkAccess: true } });
+    const container = state.openMatchId === matchId ? $('#modal-draft-links') : null;
+    const labels = { teamA: t('teamALink'), teamB: t('teamBLink'), broadcaster: t('broadcastPreviewLink') };
+    if (container) {
+      container.innerHTML = Object.entries(payload.room.links).map(([role, url]) => `<div class="ops-link-row"><b>${escapeHtml(labels[role] || role)}</b><input readonly value="${escapeHtml(url)}"><a class="btn btn-ghost btn-xs" href="${escapeHtml(url)}" target="_blank" rel="noopener">OPEN</a><button class="btn btn-ghost btn-xs copy-draft-link">${escapeHtml(t('copy'))}</button></div>`).join('');
+      container.querySelectorAll('.copy-draft-link').forEach(button => button.addEventListener('click', () => copyDraftLink(button.parentElement.querySelector('input'), button)));
+    }
+    if (hostWindow) { if (newlyOpened) hostWindow.location.href = payload.room.links.host; else hostWindow.focus(); }
+    toast(t('shareLinksDesc'));
+  } catch (error) {
+    if (newlyOpened && hostWindow) { hostWindow.close(); draftRoomWindows.delete(matchId); }
+    toast(error.message, true);
+  }
+}
+async function watchDraftRoom(matchId){try{await api(`/api/matches/${matchId}/draft-room`,{method:'POST',body:{linkAccess:true}});const payload=await api(`/api/matches/${matchId}/draft-room/access?as=broadcaster`);openExternal(payload.url);}catch(error){toast(error.message,true);}}
 function renderSeriesGamePanel(match,gameData={}){
   const games=Array.isArray(gameData.games)?gameData.games:[];
   const scoreA=Number(gameData.scoreA||0),scoreB=Number(gameData.scoreB||0);
