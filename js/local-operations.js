@@ -1,6 +1,6 @@
 // Account-free storage adapter for the existing Operations UI, not a second UI.
 import { randomCode, randomSecret, generateBanOrder, orderedEvents } from './static-core.js';
-import { saveLocalTournament, prepareTournamentRoom, saveTournamentDraftGame } from './tournament-draft.js?v=0.7.15-guest-organizer';
+import { saveLocalTournament, prepareTournamentRoom, saveTournamentDraftGame } from './tournament-draft.js?v=0.7.16-dashboard-polish';
 import { t } from './i18n.js';
 
 export const OPERATIONS_STORAGE_KEY = 'rv_local_operations_v1';
@@ -183,7 +183,7 @@ export class LocalOperations {
     const method = String(options.method || 'GET').toUpperCase(), body = options.body || {};
     const finish = (event, payload) => { if (event && method !== 'GET') this.audit(event, parts.slice(2).join('.'), body); this.save(store); return clone(payload); };
     if (parts[1] === 'tournaments' && parts.length === 2) {
-      if (method === 'GET') return { tournaments: store.tournaments.map(event => clone(event.tournament)) };
+      if (method === 'GET') return { tournaments: store.tournaments.filter(event => !event.deletedAt).map(event => clone(event.tournament)), trash: store.tournaments.filter(event=>event.deletedAt).map(event=>({...clone(event.tournament),deletedAt:event.deletedAt})) };
       const name = String(body.name || '').trim(); if (!name) fail('OPS_NAME_REQUIRED');
       const id = this.id(store), rules = { seriesRule: 'normal', heroBans: 2, timerSeconds: 30, enableCoinFlip: true, enableDivineDraw: true, playoffBestOf: 3, grandFinalBestOf: 3, ...body.rules };
       const tournament = { id, name, slug: `local-${id}`, description: '', status: 'preparing', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', default_server: 'Asia',
@@ -192,7 +192,31 @@ export class LocalOperations {
       store.tournaments.push(event); return finish(event, { tournament });
     }
     const event = parts[1] === 'matches' ? store.tournaments.find(item => item.matches.some(match => match.id === Number(parts[2]))) : store.tournaments.find(item => item.tournament.id === Number(parts[2]));
-    if (!event) fail('OPS_NOT_FOUND'); this.refresh(event);
+    if (!event) fail('OPS_NOT_FOUND');
+    if (parts[1] === 'tournaments' && parts.length === 3 && method === 'DELETE') {
+      if (!event.deletedAt) {
+        event.deletedAt = now();
+        for (const {roomId} of Object.values(event.rooms)) {
+          const key = `rv_tournament_room_${roomId}`, context = read(this.storage,key);
+          this.storage.setItem(key,JSON.stringify({...context,revokedBeforeDelete:Boolean(context.revoked),revoked:true,deletedTournament:true}));
+        }
+      }
+      return finish(event,{deleted:true,recoverable:true});
+    }
+    if (parts[1] === 'tournaments' && parts[3] === 'restore' && parts.length === 4 && method === 'POST') {
+      delete event.deletedAt;
+      for (const {roomId} of Object.values(event.rooms)) {
+        const key = `rv_tournament_room_${roomId}`, context = read(this.storage,key);
+        if (context.deletedTournament) {
+          context.revoked = Boolean(context.revokedBeforeDelete);
+          delete context.deletedTournament; delete context.revokedBeforeDelete;
+          this.storage.setItem(key,JSON.stringify(context));
+        }
+      }
+      return finish(event,{restored:true,tournament:event.tournament});
+    }
+    if (event.deletedAt) fail('OPS_NOT_FOUND');
+    this.refresh(event);
     if (parts[1] === 'matches') {
       const match = event.matches.find(item => item.id === Number(parts[2])), tail = parts.slice(3).join('/');
       if (!tail) {

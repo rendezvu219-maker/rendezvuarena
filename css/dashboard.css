@@ -29,6 +29,10 @@ body { min-height: 100vh; overflow: auto; background: radial-gradient(circle at 
 .ops-list-item:hover,.ops-list-item.active { border-color:rgba(255,215,0,.35); background:rgba(255,215,0,.07); }
 .ops-list-name { font-weight:800; font-size:.8rem; }
 .ops-list-meta { color:var(--text-muted); font-size:.62rem; margin-top:4px; }
+.ops-delete-tournament { margin-top:10px; }
+.ops-tournament-trash { margin-top:16px; padding:10px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); }
+.ops-tournament-trash summary { cursor:pointer; color:var(--text-muted); font-size:.72rem; }
+.ops-trash-item { display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:12px; font-size:.72rem; }
 .ops-workspace { min-height:680px; padding:22px; }
 .ops-empty { height:600px; display:grid; place-items:center; color:var(--text-muted); font-family:var(--font-display); letter-spacing:2px; }
 .ops-title-row { display:flex; justify-content:space-between; align-items:center; }

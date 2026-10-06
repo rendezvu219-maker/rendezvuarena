@@ -655,6 +655,10 @@ select.form-control, select.premium-select {
   top: max(var(--space-4), env(safe-area-inset-top));
   right: max(var(--space-4), env(safe-area-inset-right));
 }
+.gs-theme-control { display:flex; align-items:center; gap:8px; padding:4px 8px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--surface-base); color:var(--text-primary); }
+.gs-theme-control > span { color:var(--interactive-primary); white-space:nowrap; }
+.gs-theme-control select { min-height:36px; min-width:76px; margin:0; border:0; background:var(--surface-base); color:var(--text-primary); font:inherit; cursor:pointer; }
+.gs-theme-control select:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 .gs-global-menu-trigger {
   min-width: 176px;
   max-width: min(260px, 42vw);

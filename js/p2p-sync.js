@@ -2,7 +2,8 @@
 // Uses the same WebRTC handshake for same-browser tabs and remote browsers.
 // Zero-backend: 100% client-side, runs entirely on GitHub Pages without server or accounts.
 
-import { p2pDraftLinks } from './draft-links.js?v=0.7.15-guest-organizer';
+import { p2pDraftLinks } from './draft-links.js?v=0.7.16-dashboard-polish';
+import { t } from './i18n.js';
 // Keep the bundled PeerJS ICE defaults, including TURN relay support.
 
 export class P2PDraftSync {
@@ -86,8 +87,12 @@ export class P2PDraftSync {
     if (!this.config) throw new Error('Host configuration is missing. Open the Host link in the browser that created this Quick Draft.');
     const access = JSON.parse(localStorage.getItem(`rv_secrets_${this.roomCode}`) || '{}');
     if (!access.host || access.host !== this.accessToken) throw new Error('Invalid Host link. Open the original Host link from Quick Draft.');
+    if (this.config.operationsRoom) {
+      const context = JSON.parse(localStorage.getItem(`rv_tournament_room_${this.roomCode}`) || '{}');
+      if (context.revoked) throw new Error(t('guestOpsDeletedRoom'));
+    }
     if (this.config.tournamentRoom) {
-      const { restoreTournamentRoom } = await import('./tournament-draft.js?v=0.7.15-guest-organizer');
+      const { restoreTournamentRoom } = await import('./tournament-draft.js?v=0.7.16-dashboard-polish');
       this.config = restoreTournamentRoom(this.config);
       localStorage.setItem(`rv_config_${this.roomCode}`, JSON.stringify(this.config));
     }

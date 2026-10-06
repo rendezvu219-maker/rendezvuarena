@@ -96,7 +96,7 @@
 
   function localeKey() {
     const saved = storage.get('gs_locale', '');
-    const raw = saved || root.lang || navigator.language || 'en';
+    const raw = new URLSearchParams(location.search).get('lang') || saved || root.lang || navigator.language || 'en';
     if (String(raw).toLowerCase().startsWith('vi')) return 'vi';
     if (String(raw).toLowerCase().startsWith('ja')) return 'ja';
     if (String(raw).toLowerCase().startsWith('zh')) return 'zh-CN';
@@ -293,26 +293,9 @@
 
     const menu = document.createElement('div');
     menu.className = 'gs-global-menu';
-    menu.innerHTML = `
-      <button class="gs-global-menu-trigger" type="button" aria-expanded="false" aria-haspopup="menu" aria-label="${escapeHtml(copy.accountMenu)}" title="${escapeHtml(copy.accountMenu)}">
-        <span class="gs-global-menu-avatar" aria-hidden="true">RA</span>
-        <span class="gs-global-menu-trigger-copy"><b data-trigger-name>${escapeHtml(copy.guest)}</b><small data-trigger-meta>RENDEZVU ARENA</small></span>
-        <span class="gs-global-menu-chevron" aria-hidden="true">⌄</span>
-      </button>
-      <div class="gs-global-menu-panel" role="menu" hidden>
-        <div class="gs-global-menu-user"><span class="gs-global-menu-user-avatar">RA</span><div><b>${escapeHtml(copy.guest)}</b><small>RENDEZVU ARENA</small></div></div>
-        <div class="gs-global-menu-links">
-          <a data-public-profile href="/auth.html" role="menuitem"><span aria-hidden="true">◉</span>${escapeHtml(copy.publicProfile)}</a>
-          <a data-account-settings href="/portal.html#profile-settings" role="menuitem"><span aria-hidden="true">⚙</span>${escapeHtml(copy.portal)}</a>
-          <button data-open-preferences type="button" role="menuitem"><span aria-hidden="true">Aa</span>${escapeHtml(copy.appearance)}</button>
-          <a href="/" role="menuitem"><span aria-hidden="true">⌂</span>${escapeHtml(copy.home)}</a>
-        </div>
-        <div class="gs-global-menu-auth">
-          <a data-login href="/auth.html" role="menuitem">${escapeHtml(copy.login)}</a>
-          <a data-register class="is-primary" href="/auth.html?mode=register" role="menuitem">${escapeHtml(copy.register)}</a>
-          <button data-logout type="button" role="menuitem" hidden>${escapeHtml(copy.logout)}</button>
-        </div>
-      </div>`;
+    menu.classList.add('gs-theme-switcher');
+    menu.setAttribute('data-no-i18n', 'true');
+    menu.innerHTML = `<label class="gs-theme-control"><span>☀ / ☾</span><select data-theme-select aria-label="${escapeHtml(copy.theme)}"><option value="light">${escapeHtml(copy.light)}</option><option value="dark">${escapeHtml(copy.dark)}</option></select></label>`;
 
     function accountMount() {
       return document.querySelector('#ops-user, #portal-user, #home-account, #heroes-account, [data-global-account-slot]')
@@ -339,75 +322,24 @@
     document.body.append(dialog);
     mountMenu();
     document.querySelectorAll('#btn-logout, #portal-logout').forEach(button => button.classList.add('gs-legacy-account-action'));
-    const trigger = menu.querySelector('.gs-global-menu-trigger');
-    const panel = menu.querySelector('.gs-global-menu-panel');
-    const appearanceButton = menu.querySelector('[data-open-preferences]');
-    let currentUser = null;
-    let loadingAccount = false;
-
-    function closeMenu() {
-      panel.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
-    }
-
-    function renderUser(user, failed = false) {
-      currentUser = user;
-      const avatarText = user ? initials(user) : 'RA';
-      const displayName = user?.displayName || user?.username || copy.guest;
-      const accountMeta = failed ? copy.accountUnavailable : (user ? String(user.username || '') : 'RENDEZVU ARENA');
-      menu.querySelector('.gs-global-menu-avatar').textContent = avatarText;
-      menu.querySelector('.gs-global-menu-user-avatar').textContent = avatarText;
-      menu.querySelector('[data-trigger-name]').textContent = displayName;
-      menu.querySelector('[data-trigger-meta]').textContent = accountMeta;
-      menu.querySelector('.gs-global-menu-user b').textContent = displayName;
-      menu.querySelector('.gs-global-menu-user small').textContent = accountMeta;
-      menu.querySelector('[data-public-profile]').href = user ? `/profile.html?user=${encodeURIComponent(user.username)}` : '/auth.html';
-      menu.querySelector('[data-account-settings]').href = user ? '/portal.html#profile-settings' : '/auth.html?return=/portal.html%23profile-settings';
-      menu.querySelector('[data-login]').hidden = Boolean(user);
-      menu.querySelector('[data-register]').hidden = Boolean(user);
-      menu.querySelector('[data-logout]').hidden = !user;
-    }
-
+    const themeSelect = menu.querySelector('[data-theme-select]');
+    function syncTheme() { themeSelect.value = root.dataset.theme; }
+    themeSelect.addEventListener('change', () => setPreference('theme', themeSelect.value));
+    window.addEventListener('gs:preferences-changed', syncTheme);
+    window.addEventListener('gs:locale-change', () => {
+      const currentCopy = text();
+      themeSelect.setAttribute('aria-label', currentCopy.theme);
+      themeSelect.querySelector('[value="light"]').textContent = currentCopy.light;
+      themeSelect.querySelector('[value="dark"]').textContent = currentCopy.dark;
+    });
+    // Retain the mobile account adapter; the header itself is appearance-only.
     async function refreshAccount() {
-      if (loadingAccount) return currentUser;
-      loadingAccount = true;
-      try {
-        const user = await fetchCurrentUser();
-        renderUser(user);
-        return user;
-      } catch {
-        renderUser(null, true);
-        return null;
-      } finally {
-        loadingAccount = false;
-      }
+      mountMenu();
+      syncTheme();
+      if (location.hostname.endsWith('.github.io') || !storage.get('gs_has_session', '')) return null;
+      try { return await fetchCurrentUser(); } catch { return null; }
     }
-
-    trigger.addEventListener('click', async () => {
-      const willOpen = panel.hidden;
-      if (!willOpen) { closeMenu(); return; }
-      panel.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-      await refreshAccount();
-    });
-    appearanceButton.addEventListener('click', () => {
-      closeMenu();
-      dialog.showModal();
-    });
-    menu.querySelector('[data-logout]').addEventListener('click', async () => {
-      try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-Token': '1' } }); } catch { /* Continue local logout. */ }
-      storage.remove('gs_has_session');
-      try { sessionStorage.removeItem('gs_dev_auth_token'); } catch { /* Ignore unavailable storage. */ }
-      window.location.href = '/';
-    });
-    document.addEventListener('click', event => {
-      if (!menu.contains(event.target)) closeMenu();
-    });
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && !panel.hidden) closeMenu();
-    });
-    window.addEventListener('focus', () => { if (!panel.hidden) refreshAccount(); });
-    window.addEventListener('gs:auth-changed', refreshAccount);
+    function closeMenu() { if (dialog.open) dialog.close(); }
 
     dialog.querySelector('.ui-preferences-close').addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
@@ -416,8 +348,7 @@
       button.addEventListener('click', () => setPreference(button.dataset.preferenceKey, button.dataset.preferenceValue));
     });
 
-    renderUser(null);
-    refreshAccount();
+    syncTheme();
     syncButtons();
 
     window.GSGlobalMenu = Object.freeze({ refresh: refreshAccount, close: closeMenu, mount: mountMenu });
@@ -437,8 +368,8 @@
 
   const mobileNavStyles = document.createElement('link');
   mobileNavStyles.rel = 'stylesheet';
-  mobileNavStyles.href = new URL('../css/mobile-nav.css?v=0.7.15-guest-organizer', preferencesUrl).href;
+  mobileNavStyles.href = new URL('../css/mobile-nav.css?v=0.7.16-dashboard-polish', preferencesUrl).href;
   mobileNavStyles.dataset.mobileNavAsset = 'true';
   document.head.appendChild(mobileNavStyles);
-  import(new URL('./mobile-nav.js?v=0.7.15-guest-organizer', preferencesUrl).href).catch(() => { /* Keep the page usable if the optional mobile controls fail to load. */ });
+  import(new URL('./mobile-nav.js?v=0.7.16-dashboard-polish', preferencesUrl).href).catch(() => { /* Keep the page usable if the optional mobile controls fail to load. */ });
 })();

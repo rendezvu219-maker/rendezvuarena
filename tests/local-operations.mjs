@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { LocalOperations } from '../js/local-operations.js';
 import { saveTournamentDraftGame } from '../js/tournament-draft.js';
+import { P2PDraftSync } from '../js/p2p-sync.js';
 class MemoryStorage { constructor() { this.data = new Map(); } getItem(key) { return this.data.get(key) || null; } setItem(key,value) { this.data.set(key,String(value)); } removeItem(key) { this.data.delete(key); } }
 const storage = new MemoryStorage();
 const base = 'https://rendezvu219-maker.github.io/rendezvuarena/dashboard.html';
@@ -60,4 +61,29 @@ assert.equal(groups.matches.length,12);
 for (const match of groups.matches) await request(`/api/matches/${match.id}/results/submit`,{scoreA:1,scoreB:0});
 assert.equal((await request(`/api/tournaments/${randomCup.id}`)).groupStandings.every(group=>group.complete),true);
 assert.equal((await request(`/api/tournaments/${randomCup.id}/bracket/generate-playoffs`,{topPerGroup:2,bestOf:3})).matches.filter(match=>match.stage==='playoff').length,3);
-console.log('Original dashboard guest creation/reload, seeding, randomizer, groups, four rooms, scoped history, result advancement and browser ownership passed.');
+const beforeDelete = await request(`/api/tournaments/${id}`);
+assert.equal((await ops.request(`/api/tournaments/${id}`,{method:'DELETE'})).recoverable,true);
+let list = await request('/api/tournaments');
+assert.ok(!list.tournaments.some(item=>item.id===id));
+assert.equal(list.trash.find(item=>item.id===id).name,'Account-free cup');
+assert.equal(list.tournaments.find(item=>item.id===randomCup.id).name,'Manual randomizer');
+await assert.rejects(()=>request(`/api/tournaments/${id}`),/OPS_NOT_FOUND/);
+await assert.rejects(()=>request(`/api/matches/${matches[0].id}/draft-room`,{}),/OPS_NOT_FOUND/);
+assert.equal(JSON.parse(storage.getItem(`rv_tournament_room_${room.roomCode}`)).revoked,true);
+const originalStorage = globalThis.localStorage;
+globalThis.localStorage = storage;
+try {
+  const token = new URLSearchParams(new URL(room.links.host).hash.slice(1)).get('access');
+  await assert.rejects(()=>new P2PDraftSync({roomCode:room.roomCode,accessToken:token,config:room.config}).connectAsHost(),/deleted|replaced/);
+} finally {
+  if (originalStorage === undefined) delete globalThis.localStorage;
+  else globalThis.localStorage = originalStorage;
+}
+await request(`/api/tournaments/${id}/restore`,{});
+const restored = await request(`/api/tournaments/${id}`);
+assert.deepEqual(restored.teams,beforeDelete.teams);
+assert.deepEqual(restored.matches,beforeDelete.matches);
+assert.equal(JSON.parse(storage.getItem(`rv_tournament_room_${room.roomCode}`)).revoked,false);
+assert.deepEqual((await request(`/api/matches/${matches[0].id}/draft-room`,{})).room.links,room.links);
+assert.equal((await request('/api/tournaments')).trash.length,0);
+console.log('Guest creation/reload, seeding, four isolated rooms, history, advancement, and recoverable delete/restore passed.');

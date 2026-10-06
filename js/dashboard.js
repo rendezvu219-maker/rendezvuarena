@@ -2,13 +2,14 @@ import { api, getToken, setToken, connectSocket, escapeHtml } from './api.js';
 import { HEROES, ROLES, getHeroImg, roleIconMarkup } from './heroes.js';
 import { bindDraftRulesForm, renderDraftRulesForm } from './draft-rules-form.js';
 import { t } from './i18n.js';
-import { copyDraftLink } from './draft-links.js?v=0.7.15-guest-organizer';
+import { copyDraftLink } from './draft-links.js?v=0.7.16-dashboard-polish';
 
 const draftRoomWindows = new Map();
 
 const state = {
   user: null,
   tournaments: [],
+  tournamentTrash: [],
   activeId: Number(new URLSearchParams(location.search).get('tournamentId')) || Number(localStorage.getItem('gs_active_tournament_id')) || null,
   active: null,
   socket: null,
@@ -51,7 +52,7 @@ function applyGuestOrganizerCopy() {
   }
   const publish = $('#toggle-tournament-public');
   if (publish) { publish.disabled = true; publish.title = 'Public event listing requires backend hosting; match spectator links work without an account.'; }
-  $$('#tab-teams .stat-item').forEach(item => { if (item.textContent.includes('Cơ chế đội trưởng')) item.classList.add('hidden'); });
+  $('#manual-captain-selection')?.classList.add('hidden');
 }
 function copyText(text,label='Copied.'){navigator.clipboard.writeText(text).then(()=>toast(label)).catch(()=>toast('Copy failed.',true));}
 function openExternal(url){if(url)window.open(url,'_blank','noopener,noreferrer');}
@@ -78,7 +79,7 @@ async function bootstrap() {
   await loadTournaments();
 }
 async function activateGuestOperations() {
-  const { enableLocalOperations } = await import('./local-operations.js?v=0.7.15-guest-organizer');
+  const { enableLocalOperations } = await import('./local-operations.js?v=0.7.16-dashboard-polish');
   state.socket?.disconnect(); state.user = enableLocalOperations().user;
   if (!activateGuestOperations.listening) {
     window.addEventListener('storage', event => {
@@ -128,8 +129,40 @@ function bindStaticEvents(){
   $('#ops-tabs').addEventListener('click',event=>{const button=event.target.closest('[data-tab]');if(!button)return;$$('#ops-tabs button').forEach(item=>item.classList.toggle('active',item===button));$$('.ops-tab-panel').forEach(item=>item.classList.add('hidden'));$(`#tab-${button.dataset.tab}`).classList.remove('hidden');});
 }
 
-async function loadTournaments(){const payload=await api('/api/tournaments');state.tournaments=payload.tournaments;renderTournamentList();if(state.activeId&&state.tournaments.some(item=>item.id===state.activeId))await loadActiveTournament();else if(state.tournaments[0]){state.activeId=state.tournaments[0].id;await loadActiveTournament();}else{state.activeId=null;state.active=null;localStorage.removeItem('gs_active_tournament_id');$('#no-tournament').classList.remove('hidden');$('#tournament-workspace').classList.add('hidden');}}
-function renderTournamentList(){$('#tournament-list').innerHTML=state.tournaments.length?state.tournaments.map(t=>`<div class="ops-list-item ${t.id===state.activeId?'active':''}" data-id="${t.id}"><div class="ops-list-name">${escapeHtml(t.name)}</div><div class="ops-list-meta">${escapeHtml(t.source_platform||'manual')} · ${escapeHtml(t.status)} · ${escapeHtml(t.timezone)}${t.unverified?' · SOURCE UNVERIFIED':''}</div></div>`).join(''):(window.GSLocalOperations ? '<div class="ops-list-meta" style="padding:12px;line-height:1.6">No tournaments yet. Click NEW TOURNAMENT to create one without an account.</div>' : '<div class="ops-list-meta" style="padding:12px;line-height:1.6">No tournaments yet.<br><a href="/host-apply.html">Import one from start.gg, Tonamel or Challonge.</a></div>');$$('.ops-list-item').forEach(item=>item.addEventListener('click',async()=>{state.activeId=Number(item.dataset.id);localStorage.setItem('gs_active_tournament_id',state.activeId);renderTournamentList();await loadActiveTournament();}));}
+async function loadTournaments(){const payload=await api('/api/tournaments');state.tournaments=payload.tournaments;state.tournamentTrash=payload.trash||[];renderTournamentList();if(state.activeId&&state.tournaments.some(item=>item.id===state.activeId))await loadActiveTournament();else if(state.tournaments[0]){state.activeId=state.tournaments[0].id;await loadActiveTournament();}else{state.activeId=null;state.active=null;localStorage.removeItem('gs_active_tournament_id');$('#no-tournament').classList.remove('hidden');$('#tournament-workspace').classList.add('hidden');}}
+function renderTournamentList() {
+  const local = Boolean(window.GSLocalOperations);
+  $('#tournament-list').innerHTML = state.tournaments.length
+    ? state.tournaments.map(tournament => `<div class="ops-list-item ${tournament.id===state.activeId?'active':''}" data-id="${tournament.id}"><div class="ops-list-name">${escapeHtml(tournament.name)}</div><div class="ops-list-meta">${escapeHtml(tournament.source_platform||'manual')} · ${escapeHtml(tournament.status)} · ${escapeHtml(tournament.timezone)}${tournament.unverified?' · SOURCE UNVERIFIED':''}</div>${local?`<button type="button" class="btn btn-danger btn-xs ops-delete-tournament" data-delete-tournament="${tournament.id}">${escapeHtml(t('opsDeleteTournament'))}</button>`:''}</div>`).join('')
+    : `<div class="ops-list-meta" style="padding:12px;line-height:1.6">${local?'No tournaments yet. Click NEW TOURNAMENT to create one without an account.':'No tournaments yet.<br><a href="/host-apply.html">Import one from start.gg, Tonamel or Challonge.</a>'}</div>`;
+  if (local && state.tournamentTrash.length) {
+    $('#tournament-list').insertAdjacentHTML('beforeend', `<details class="ops-tournament-trash"><summary>${escapeHtml(t('opsTournamentTrash',{count:state.tournamentTrash.length}))}</summary>${state.tournamentTrash.map(tournament=>`<div class="ops-trash-item"><b>${escapeHtml(tournament.name)}</b><button type="button" class="btn btn-ghost btn-xs" data-restore-tournament="${tournament.id}">${escapeHtml(t('opsRestoreTournament'))}</button></div>`).join('')}</details>`);
+  }
+  $$('.ops-list-item').forEach(item=>item.addEventListener('click',async event=>{
+    if(event.target.closest('button'))return;
+    state.activeId=Number(item.dataset.id);localStorage.setItem('gs_active_tournament_id',state.activeId);
+    renderTournamentList();await loadActiveTournament();
+  }));
+  $$('[data-delete-tournament]').forEach(button=>button.addEventListener('click',()=>deleteTournament(Number(button.dataset.deleteTournament))));
+  $$('[data-restore-tournament]').forEach(button=>button.addEventListener('click',async()=>{
+    try { await api(`/api/tournaments/${Number(button.dataset.restoreTournament)}/restore`,{method:'POST'});await loadTournaments();toast(t('opsTournamentRestored')); }
+    catch(error){toast(error.message,true);}
+  }));
+}
+async function deleteTournament(id) {
+  const tournament = state.tournaments.find(item=>item.id===id);
+  if (!tournament || !confirm(t('opsDeleteTournamentConfirm',{name:tournament.name}))) return;
+  try {
+    const {matches} = await api(`/api/tournaments/${id}`);
+    await api(`/api/tournaments/${id}`,{method:'DELETE'});
+    for(const match of matches) { draftRoomWindows.get(match.id)?.close();draftRoomWindows.delete(match.id); }
+    if (state.active?.tournament.id===id) {
+      closeMatchModal();closeTeamModal();
+    }
+    await loadTournaments();
+    toast(t('opsTournamentDeleted'));
+  } catch(error) { toast(error.message,true); }
+}
 async function loadActiveTournament({quiet=false}={}){if(!state.activeId)return;try{state.active=await api(`/api/tournaments/${state.activeId}`);localStorage.setItem('gs_active_tournament_id',state.activeId);$('#no-tournament').classList.add('hidden');$('#tournament-workspace').classList.remove('hidden');$('#tournament-name').textContent=state.active.tournament.name;$('#tournament-status').textContent=state.active.tournament.status;state.socket?.emit('tournament:join',{tournamentId:state.activeId});renderAll();}catch(error){if(!quiet)toast(error.message,true);}}
 function renderAll(){renderOverview();renderTeams();renderBracket();renderRules();renderStaff();renderStartgg();renderAudit();applyRoleView();applyGuestOrganizerCopy();}
 function applyRoleView(){
@@ -156,7 +189,7 @@ function renderTeams(){const teams=state.active.teams;const allJoinRequests=stat
   ${can('team.randomize_solo')?renderManualRandomizer(soloPool,teams):''}
   ${!window.GSLocalOperations && can('team.randomize_solo')?renderSoloRandomizer(soloPool,teams):''}
   <div class="ops-section"><h3>Add Manual Team</h3><form id="add-team-form" class="ops-form-card"><label>Team name<input id="team-name" required></label><label>Tag <span class="ops-field-hint">optional</span><input id="team-tag" maxlength="8" placeholder="Auto-generated"></label><label>Region<input id="team-region" placeholder="Asia / Japan / SEA"></label><button class="btn btn-primary" type="submit">ADD TEAM</button></form></div>
-  <div class="ops-section"><div class="ops-panel-header ops-section-header"><div><h3>Teams & Drag-and-Drop Seeding</h3><div class="ops-list-meta">Kéo bằng tay cầm ⋮⋮ hoặc dùng nút ↑ ↓. Click vào thẻ đội để mở cửa sổ chi tiết và chỉnh sửa.</div></div><div class="ops-toolbar"><button class="btn btn-ghost btn-sm" id="randomize-seeds">🎲 RANDOMIZE UNLOCKED</button><button class="btn btn-ghost btn-sm" id="undo-seeds">↶ UNDO</button><button class="btn btn-primary btn-sm" id="save-seeds">SAVE SEED ORDER</button></div></div>
+  <div class="ops-section"><div class="ops-panel-header ops-section-header"><div><h3>Teams & Drag-and-Drop Seeding</h3><div class="ops-list-meta">${escapeHtml(t('manualGeneratorSeedHelp'))}</div></div><div class="ops-toolbar"><button class="btn btn-ghost btn-sm" id="randomize-seeds">🎲 RANDOMIZE UNLOCKED</button><button class="btn btn-ghost btn-sm" id="undo-seeds">↶ UNDO</button><button class="btn btn-primary btn-sm" id="save-seeds">SAVE SEED ORDER</button></div></div>
   <div class="ops-seed-list" id="ops-seed-list">${teams.length?teams.map(team=>seedRow(team)).join(''):'<div class="ops-list-meta">No teams imported or created.</div>'}</div></div>`;
   $('#add-team-form').addEventListener('submit',async event=>{event.preventDefault();try{await api(`/api/tournaments/${state.activeId}/teams`,{method:'POST',body:{name:$('#team-name').value,tag:$('#team-tag').value,region:$('#team-region').value}});toast(window.GSLocalOperations ? 'Team created. No Captain account is required.' : 'Team created. Link a Captain account before generating the bracket.');await loadActiveTournament();}catch(error){toast(error.message,true);}});
   bindJoinRequestActions();
@@ -804,25 +837,25 @@ bootstrap();
 function renderManualRandomizer(pool, teams = []) {
   const poolCount = pool.length;
   return `
-    <div class="ops-section ops-manual-randomizer">
+    <div class="ops-section ops-manual-randomizer" data-no-i18n="true">
       <div class="ops-section-header">
         <div>
-          <h3>🎲 RANDOM POOL & TEAM GENERATOR (32 PLAYERS → 8 TEAMS)</h3>
-          <div class="ops-list-meta">Nhập danh sách người chơi (mỗi dòng 1 tên) HOẶC kết hợp với Solo Pool để random thành các đội 4v4.</div>
+          <h3>🎲 ${escapeHtml(t('manualGeneratorTitle'))}</h3>
+          <div class="ops-list-meta">${escapeHtml(t('manualGeneratorDescription'))}</div>
         </div>
-        <span class="ops-status-pill status-ready" id="manual-mode-badge">MANUAL INPUT</span>
+        <span class="ops-status-pill status-ready" id="manual-mode-badge">${escapeHtml(t('manualGeneratorMode'))}</span>
       </div>
 
       <div class="ops-manual-mode-tabs">
-        <button type="button" class="btn btn-primary btn-xs manual-mode-tab active" data-source-mode="manual">📝 CHỈ NHẬP TAY (MANUAL)</button>
-        <button type="button" class="btn btn-ghost btn-xs manual-mode-tab" data-source-mode="mixed">🔀 KẾT HỢP (SOLO POOL + NHẬP TAY)</button>
+        <button type="button" class="btn btn-primary btn-xs manual-mode-tab active" data-source-mode="manual">📝 ${escapeHtml(t('manualGeneratorManualOnly'))}</button>
+        <button type="button" class="btn btn-ghost btn-xs manual-mode-tab" data-source-mode="mixed">🔀 ${escapeHtml(t('manualGeneratorMixedSource'))}</button>
       </div>
 
       <div id="manual-mixed-pool-selector" class="ops-mixed-pool-box hidden">
         <div class="ops-mixed-pool-header">
-          <strong>CHỌN NGƯỜI CHƠI TỪ SOLO POOL ĐÃ DUYỆT (${poolCount} người có sẵn):</strong>
-          <button type="button" class="btn btn-ghost btn-xs" id="btn-select-all-pool">Chọn tất cả</button>
-          <button type="button" class="btn btn-ghost btn-xs" id="btn-deselect-all-pool">Bỏ chọn</button>
+          <strong>${escapeHtml(t('manualGeneratorPoolSelect',{count:poolCount}))}</strong>
+          <button type="button" class="btn btn-ghost btn-xs" id="btn-select-all-pool">${escapeHtml(t('manualGeneratorSelectAll'))}</button>
+          <button type="button" class="btn btn-ghost btn-xs" id="btn-deselect-all-pool">${escapeHtml(t('manualGeneratorDeselectAll'))}</button>
         </div>
         <div class="ops-mixed-pool-grid">
           ${poolCount ? pool.map(req => `
@@ -830,46 +863,46 @@ function renderManualRandomizer(pool, teams = []) {
               <input type="checkbox" class="manual-pool-checkbox" value="${req.id}">
               <span>${escapeHtml(req.display_name)} <small>@${escapeHtml(req.username)}</small></span>
             </label>
-          `).join('') : '<div class="ops-list-meta">Chưa có ai trong Solo Pool. Bạn có thể nhập tay toàn bộ 32 tên bên dưới.</div>'}
+          `).join('') : `<div class="ops-list-meta">${escapeHtml(t('manualGeneratorPoolEmpty'))}</div>`}
         </div>
       </div>
 
       <div class="ops-manual-controls">
         <div class="ops-manual-input-col">
           <div class="ops-input-header-row">
-            <label for="manual-players-input"><strong>DANH SÁCH NGƯỜI CHƠI (MỖI DÒNG 1 TÊN):</strong></label>
+            <label for="manual-players-input"><strong>${escapeHtml(t('manualGeneratorPlayersLabel'))}</strong></label>
             <div class="ops-manual-quick-actions">
-              <button type="button" class="btn btn-ghost btn-xs" id="btn-paste-mock-32">⚡ Điền mẫu 32 tên</button>
-              <button type="button" class="btn btn-ghost btn-xs" id="btn-clear-manual-input">Xóa trắng</button>
+              <button type="button" class="btn btn-ghost btn-xs" id="btn-paste-mock-32">⚡ ${escapeHtml(t('manualGeneratorFillSample'))}</button>
+              <button type="button" class="btn btn-ghost btn-xs" id="btn-clear-manual-input">${escapeHtml(t('manualGeneratorClear'))}</button>
             </div>
           </div>
-          <textarea id="manual-players-input" class="ops-manual-textarea" rows="8" placeholder="Nhập hoặc dán danh sách 32 người chơi ở đây, mỗi người một dòng:&#10;Player 1&#10;Player 2&#10;Player 3&#10;..."></textarea>
+          <textarea id="manual-players-input" class="ops-manual-textarea" rows="8" placeholder="${escapeHtml(t('manualGeneratorPlaceholder'))}"></textarea>
           <div class="ops-player-counter" id="manual-player-counter">
-            <span class="count-badge" id="manual-count-badge">0 người chơi</span>
-            <span class="count-hint" id="manual-count-hint">Cần 32 người chơi cho 8 đội 4v4</span>
+            <span class="count-badge" id="manual-count-badge">${escapeHtml(t('manualGeneratorPlayerCount',{count:0}))}</span>
+            <span class="count-hint" id="manual-count-hint">${escapeHtml(t('manualGeneratorCountEmpty',{size:4}))}</span>
           </div>
         </div>
 
         <div class="ops-manual-settings-col">
-          <label>Số người mỗi đội (Team Size)
+          <label>${escapeHtml(t('manualGeneratorTeamSize'))}
             <input id="manual-team-size" type="number" min="2" max="16" value="4">
           </label>
           <div class="ops-manual-stats-card">
             <div class="stat-item">
-              <span class="stat-label">Số đội dự kiến:</span>
-              <strong class="stat-value" id="manual-calc-teams">8 teams</strong>
+              <span class="stat-label">${escapeHtml(t('manualGeneratorExpectedTeams'))}</span>
+              <strong class="stat-value" id="manual-calc-teams">—</strong>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Cơ chế đội trưởng:</span>
-              <span class="stat-value">Ngẫu nhiên 1 người / đội (★)</span>
+            <div class="stat-item" id="manual-captain-selection">
+              <span class="stat-label">${escapeHtml(t('manualGeneratorCaptainLabel'))}</span>
+              <span class="stat-value">${escapeHtml(t('manualGeneratorCaptainRandom'))}</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="ops-toolbar" style="margin-top:12px;">
-        <button class="btn btn-primary btn-sm" id="btn-preview-manual-teams">🎲 PREVIEW RANDOM TEAMS</button>
-        <button class="btn btn-ghost btn-sm" id="btn-undo-manual-teams">↶ UNDO TEAMS</button>
+        <button class="btn btn-primary btn-sm" id="btn-preview-manual-teams">🎲 ${escapeHtml(t('manualGeneratorPreview'))}</button>
+        <button class="btn btn-ghost btn-sm" id="btn-undo-manual-teams">↶ ${escapeHtml(t('manualGeneratorUndo'))}</button>
       </div>
 
       <div id="manual-randomizer-preview"></div>
@@ -899,9 +932,9 @@ function updateManualPlayerCount() {
 
   if (countBadge) {
     if (selectedPool.length > 0) {
-      countBadge.textContent = `${total} người (${manualList.length} nhập tay + ${selectedPool.length} từ pool)`;
+      countBadge.textContent = t('manualGeneratorMixedCount',{count:total,manual:manualList.length,pool:selectedPool.length});
     } else {
-      countBadge.textContent = `${total} người chơi`;
+      countBadge.textContent = t('manualGeneratorPlayerCount',{count:total});
     }
     countBadge.classList.toggle('is-ready', total === 32 || (total > 0 && remainder === 0));
     countBadge.classList.toggle('is-warning', total > 0 && remainder !== 0);
@@ -909,23 +942,23 @@ function updateManualPlayerCount() {
 
   if (countHint) {
     if (total === 32 && teamSize === 4) {
-      countHint.textContent = '✓ Đủ 32 người — chuẩn 8 đội 4v4!';
+      countHint.textContent = t('manualGeneratorCountReady32');
       countHint.style.color = 'var(--status-ready)';
     } else if (total === 0) {
-      countHint.textContent = `Cần chia hết cho ${teamSize} (VD: 32 người cho 8 đội 4v4)`;
+      countHint.textContent = t('manualGeneratorCountEmpty',{size:teamSize});
       countHint.style.color = 'var(--text-muted)';
     } else if (remainder === 0) {
-      countHint.textContent = `✓ Hợp lệ: chia đều thành ${teamCount} đội ${teamSize} người`;
+      countHint.textContent = t('manualGeneratorCountValid',{count:teamCount,size:teamSize});
       countHint.style.color = 'var(--status-ready)';
     } else {
       const needed = teamSize - remainder;
-      countHint.textContent = `⚠ Cần thêm ${needed} người nữa để chia đều đội ${teamSize} người`;
+      countHint.textContent = t('manualGeneratorCountNeeded',{count:needed,size:teamSize});
       countHint.style.color = 'var(--status-disputed)';
     }
   }
 
   if (calcTeams) {
-    calcTeams.textContent = remainder === 0 && total > 0 ? `${teamCount} teams` : '—';
+    calcTeams.textContent = remainder === 0 && total > 0 ? t('manualGeneratorTeamCount',{count:teamCount}) : '—';
   }
 }
 
@@ -936,10 +969,10 @@ function renderManualPreview(preview) {
     <section class="ops-solo-preview ops-manual-preview-section">
       <div class="ops-section-header">
         <div>
-          <h4>🎲 KẾT QUẢ RANDOM TEAMS (${preview.assignments.length} ĐỘI)</h4>
-          <div class="ops-list-meta">Xem trước kết quả xếp đội. Nhấn REROLL để random lại, hoặc CONFIRM để lưu vào giải đấu.</div>
+          <h4>🎲 ${escapeHtml(t('manualGeneratorPreviewTitle',{count:preview.assignments.length}))}</h4>
+          <div class="ops-list-meta">${escapeHtml(t('manualGeneratorPreviewDescription'))}</div>
         </div>
-        <span class="ops-status-pill status-ready">${preview.totalSlots} NGƯỜI CHƠI</span>
+        <span class="ops-status-pill status-ready">${escapeHtml(t('manualGeneratorPlayerCount',{count:preview.totalSlots}))}</span>
       </div>
       <div class="ops-solo-preview-grid">
         ${preview.assignments.map(team => `
@@ -948,15 +981,15 @@ function renderManualPreview(preview) {
             ${team.members.map(member => `
               <span class="${member.isCaptain ? 'is-captain' : ''}">
                 ${member.isCaptain ? '★ ' : ''}${escapeHtml(member.display_name)}
-                ${member.type === 'solo_pool' ? '<small style="color:var(--interactive-primary);display:inline;"> [Pool]</small>' : ''}
+                ${member.type === 'solo_pool' ? `<small style="color:var(--interactive-primary);display:inline;"> ${escapeHtml(t('manualGeneratorPoolMember'))}</small>` : ''}
               </span>
             `).join('')}
           </article>
         `).join('')}
       </div>
       <div class="ops-toolbar">
-        <button class="btn btn-ghost btn-sm" id="btn-reroll-manual-teams">🔄 REROLL (RANDOM LẠI)</button>
-        <button class="btn btn-primary btn-sm" id="btn-confirm-manual-teams">✅ CONFIRM TEAMS (LƯU ĐỘI)</button>
+        <button class="btn btn-ghost btn-sm" id="btn-reroll-manual-teams">🔄 ${escapeHtml(t('manualGeneratorReroll'))}</button>
+        <button class="btn btn-primary btn-sm" id="btn-confirm-manual-teams">✅ ${escapeHtml(t('manualGeneratorConfirm'))}</button>
       </div>
     </section>
   `;
@@ -972,10 +1005,10 @@ async function previewManualTeams() {
   const total = manualNames.length + soloPoolRequestIds.length;
 
   if (total < teamSize) {
-    return toast(`Cần ít nhất ${teamSize} người chơi. Hiện có ${total} người.`, true);
+    return toast(t('manualGeneratorTooFew',{size:teamSize,count:total}), true);
   }
   if (total % teamSize !== 0) {
-    return toast(`Tổng ${total} người không chia đều được cho ${teamSize} người/đội.`, true);
+    return toast(t('manualGeneratorNotDivisible',{count:total,size:teamSize}), true);
   }
 
   try {
@@ -985,7 +1018,7 @@ async function previewManualTeams() {
     });
     state.manualPreview = payload.preview;
     renderManualPreview(payload.preview);
-    toast(`Đã random thành công ${payload.preview.assignments.length} đội!`);
+    toast(t('manualGeneratorPreviewSuccess',{count:payload.preview.assignments.length}));
   } catch (error) {
     toast(error.message, true);
   }
@@ -993,13 +1026,13 @@ async function previewManualTeams() {
 
 async function confirmManualTeams() {
   if (!state.manualPreview) return;
-  if (!confirm('Xác nhận lưu các đội này vào danh sách đội của giải đấu?')) return;
+  if (!confirm(t('manualGeneratorConfirmPrompt'))) return;
   try {
     await api(`/api/tournaments/${state.activeId}/manual-randomizer/confirm`, {
       method: 'POST',
       body: { previewId: state.manualPreview.id },
     });
-    toast('Đã lưu các đội vào giải đấu!');
+    toast(t('manualGeneratorSaved'));
     state.manualPreview = null;
     await loadActiveTournament();
   } catch (error) {
@@ -1045,7 +1078,7 @@ function bindManualRandomizer() {
         $$('.manual-pool-checkbox').forEach(checkbox => { checkbox.checked = false; });
       }
       const badge = $('#manual-mode-badge');
-      if (badge) badge.textContent = isMixed ? 'MIXED POOL + MANUAL' : 'MANUAL INPUT';
+      if (badge) badge.textContent = t(isMixed ? 'manualGeneratorMixedMode' : 'manualGeneratorMode');
       updateManualPlayerCount();
     });
   });
@@ -1055,7 +1088,7 @@ function bindManualRandomizer() {
     if (textarea) {
       textarea.value = mock32;
       updateManualPlayerCount();
-      toast('Đã điền danh sách mẫu 32 người chơi.');
+      toast(t('manualGeneratorSampleFilled'));
     }
   });
 
@@ -1069,13 +1102,13 @@ function bindManualRandomizer() {
   $('#btn-preview-manual-teams')?.addEventListener('click', previewManualTeams);
 
   $('#btn-undo-manual-teams')?.addEventListener('click', async () => {
-    if (!confirm('Hoàn tác (xóa) các đội vừa được tạo bởi randomizer?')) return;
+    if (!confirm(t('manualGeneratorUndoPrompt'))) return;
     try {
       await api(`/api/tournaments/${state.activeId}/manual-randomizer/undo`, {
         method: 'POST',
         body: {},
       });
-      toast('Đã hoàn tác các đội vừa random.');
+      toast(t('manualGeneratorUndone'));
       state.manualPreview = null;
       await loadActiveTournament();
     } catch (error) {
