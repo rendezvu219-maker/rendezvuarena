@@ -2,6 +2,8 @@
   "schemaVersion": 1,
   "locales": {
     "en": {
+      "guestOpsBackendRequired": "This account/server feature requires backend hosting. Manual teams, brackets and private draft links do not require an account.",
+      "guestOpsBracketRequired": "Add two teams, generate a bracket, then start the tournament.",
       "backHomeArrow": "← BACK TO HOME",
       "createAccount": "CREATE ACCOUNT",
       "loginAction": "LOGIN",
@@ -1052,6 +1054,8 @@
       "obsOverlay": "OBS Stream Overlay"
     },
     "ja": {
+      "guestOpsBackendRequired": "このアカウント・サーバー機能にはバックエンドが必要です。手動チーム、トーナメント表、専用ドラフトリンクにはアカウントは不要です。",
+      "guestOpsBracketRequired": "2チームを追加してトーナメント表を作成し、大会を開始してください。",
       "backHomeArrow": "← ホームへ戻る",
       "createAccount": "アカウント作成",
       "loginAction": "ログイン",
@@ -2102,6 +2106,8 @@
       "obsOverlay": "OBSストリームオーバーレイ"
     },
     "zh-CN": {
+      "guestOpsBackendRequired": "此账号或服务器功能需要后端托管。手动队伍、对阵表和专属选人链接不需要账号。",
+      "guestOpsBracketRequired": "添加两支队伍，生成对阵表，然后开始比赛。",
       "backHomeArrow": "← 返回首页",
       "createAccount": "创建账号",
       "loginAction": "登录",
@@ -3152,6 +3158,8 @@
       "obsOverlay": "OBS 直播推流浮层"
     },
     "ko": {
+      "guestOpsBackendRequired": "이 계정 또는 서버 기능에는 백엔드 호스팅이 필요합니다. 수동 팀, 대진표 및 비공개 드래프트 링크에는 계정이 필요하지 않습니다.",
+      "guestOpsBracketRequired": "두 팀을 추가하고 대진표를 생성한 다음 대회를 시작하세요.",
       "backHomeArrow": "← 홈으로",
       "createAccount": "계정 만들기",
       "loginAction": "로그인",
@@ -4202,6 +4210,8 @@
       "obsOverlay": "OBS 스트림 오버레이"
     },
     "es": {
+      "guestOpsBackendRequired": "Esta función de cuenta o servidor requiere alojamiento con backend. Los equipos manuales, el cuadro y los enlaces privados de draft no requieren una cuenta.",
+      "guestOpsBracketRequired": "Añade dos equipos, genera el cuadro y después inicia el torneo.",
       "backHomeArrow": "← VOLVER AL INICIO",
       "createAccount": "CREAR CUENTA",
       "loginAction": "INICIAR SESIÓN",
@@ -5252,6 +5262,8 @@
       "obsOverlay": "Superposición de transmisión OBS"
     },
     "vi": {
+      "guestOpsBackendRequired": "Chức năng tài khoản hoặc máy chủ này cần backend. Đội nhập tay, sơ đồ đấu và link draft riêng không cần tài khoản.",
+      "guestOpsBracketRequired": "Thêm hai đội, tạo sơ đồ đấu rồi bắt đầu giải.",
       "backHomeArrow": "← VỀ TRANG CHỦ",
       "createAccount": "TẠO TÀI KHOẢN",
       "loginAction": "ĐĂNG NHẬP",

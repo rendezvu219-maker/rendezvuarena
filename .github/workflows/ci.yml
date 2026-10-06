@@ -21,3 +21,4 @@ jobs:
       - run: npm run test:bracket-rooms
       - run: node tests/tournament-entry.mjs
       - run: node tests/tournament-link-access.mjs
+      - run: node tests/local-operations.mjs

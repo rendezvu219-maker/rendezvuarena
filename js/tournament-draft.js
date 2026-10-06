@@ -1,5 +1,5 @@
 import { normalizeRules, randomSecret, orderedEvents } from './static-core.js';
-import { p2pDraftLinks } from './draft-links.js?v=0.7.14-original-tournament';
+import { p2pDraftLinks } from './draft-links.js?v=0.7.15-guest-organizer';
 import { firebaseConfigured, readValue, writeMany, appendProtectedEvent } from './firebase.js';
 
 const configKey = id => `rv_tournament_config_${id}`;
@@ -118,7 +118,7 @@ export function appendLocalTournamentEvent(config, token, event, storage = local
 
 export async function saveTournamentDraftGame({ config, roomCode, hostToken, winnerSide, engine, sideAssignment, chosenDivineRules }, storage = localStorage) {
   const context = read(storage, `rv_tournament_room_${roomCode}`);
-  if (!context || context.hostToken !== hostToken || context.tournamentId !== config.tournamentId || context.matchId !== config.tournamentMatchId) throw new Error('This Host link does not belong to the tournament match.');
+  if (!context || context.revoked || context.hostToken !== hostToken || context.tournamentId !== config.tournamentId || context.matchId !== config.tournamentMatchId) throw new Error('This Host link does not belong to the tournament match.');
   const tournament = read(storage, configKey(context.tournamentId));
   const key = eventKey(context.tournamentId, context.matchId);
   const events = read(storage, key, {});
@@ -144,7 +144,7 @@ export async function saveTournamentDraftGame({ config, roomCode, hostToken, win
     bansA: (swap ? engine.teamB : engine.teamA).bans || [], bansB: (swap ? engine.teamA : engine.teamB).bans || [],
     sideAssignment, chosenDivineRules: chosenDivineRules || [],
   };
-  if (firebaseConfigured()) {
+  if (firebaseConfigured() && !config.operationsRoom) {
     await appendProtectedEvent('rooms', roomCode, hostToken, entry);
     if (entry.seriesComplete) await appendProtectedEvent('tournaments', context.tournamentId, context.organizerToken, {
       type: 'winner', matchId: context.matchId, side: score.A > score.B ? 'A' : 'B', scoreA: score.A, scoreB: score.B, actor: 'O',

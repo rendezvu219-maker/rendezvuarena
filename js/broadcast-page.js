@@ -1,8 +1,8 @@
-import { DraftEngine } from './draft.js?v=0.7.14-original-tournament';
+import { DraftEngine } from './draft.js?v=0.7.15-guest-organizer';
 import { HEROES, PICKS_PER_TEAM } from './heroes.js?v=0.7.11-vegeta42';
 import { BroadcastUI } from './broadcast.js?v=0.7.11-vegeta42';
-import { loadDraftConfigFromUrl } from './app.js?v=0.7.14-original-tournament';
-import { readDraftRoomLink } from './draft-links.js?v=0.7.14-original-tournament';
+import { loadDraftConfigFromUrl } from './app.js?v=0.7.15-guest-organizer';
+import { readDraftRoomLink } from './draft-links.js?v=0.7.15-guest-organizer';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';
 

@@ -3,7 +3,7 @@ import { HEROES, STAGE_PRESETS, THEMES, applyTheme } from './heroes.js?v=0.7.11-
 import { bindDraftRulesForm, renderDraftRulesForm } from './draft-rules-form.js';
 import { t } from './i18n.js';
 import { api } from './api.js';
-import { p2pDraftLinks, copyDraftLink } from './draft-links.js?v=0.7.14-original-tournament';
+import { p2pDraftLinks, copyDraftLink } from './draft-links.js?v=0.7.15-guest-organizer';
 
 function escapeAttribute(value) {
   return String(value ?? '').replace(/[&<>\"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' }[char]));

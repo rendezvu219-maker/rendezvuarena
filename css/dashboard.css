@@ -1,3 +1,7 @@
+#create-tournament-dialog { width:min(560px,calc(100vw - 32px)); margin:auto; padding:24px; border:1px solid var(--border-strong); border-radius:var(--radius-lg); background:var(--surface-base); color:var(--text-primary); }
+#create-tournament-dialog:not([open]) { display:none; }
+#create-tournament-dialog::backdrop { background:var(--surface-scrim); }
+#create-tournament-form { display:grid; grid-template-columns:1fr; gap:18px; }
 body { min-height: 100vh; overflow: auto; background: radial-gradient(circle at 50% 0%, #171738 0%, #070711 58%, #030307 100%); }
 .ops-shell { min-height: 100vh; }
 .ops-topbar { position: sticky; top: 0; z-index: 20; min-height: 78px; padding: 14px 28px; display:flex; justify-content:space-between; align-items:center; background:rgba(5,5,14,.94); border-bottom:1px solid rgba(255,255,255,.08); backdrop-filter:blur(16px); }

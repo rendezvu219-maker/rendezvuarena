@@ -1,4 +1,4 @@
-import { HostSetup } from './host-setup.js?v=0.7.14-original-tournament';
+import { HostSetup } from './host-setup.js?v=0.7.15-guest-organizer';
 import { t } from './i18n.js';
 
 document.addEventListener('DOMContentLoaded', () => {

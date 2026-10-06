@@ -40,6 +40,9 @@ async function rawRequest(path, options = {}) {
 }
 
 export async function api(path, options = {}) {
+  if (typeof window !== 'undefined' && window.GSLocalOperations && /^\/api\/(tournaments|matches)(?:\/|$)/.test(path)) {
+    return window.GSLocalOperations.request(path, options);
+  }
   let response = await rawRequest(path, options);
   const mayRefresh = response.status === 401
     && !String(path).startsWith('/api/auth/login')
@@ -63,6 +66,7 @@ export async function api(path, options = {}) {
 }
 
 export function connectSocket(options = {}) {
+  if (window.GSLocalOperations) return null;
   if (!window.io) return null;
   const token = devToken();
   return window.io({

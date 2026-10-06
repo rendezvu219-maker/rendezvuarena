@@ -1,13 +1,13 @@
-import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js?v=0.7.14-original-tournament';
+import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js?v=0.7.15-guest-organizer';
 import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js?v=0.7.11-vegeta42';
 import { HEROES_DATA } from './heroes-data.js?v=0.7.11-vegeta42';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
-import { P2PDraftSync } from './p2p-sync.js?v=0.7.14-original-tournament';
+import { P2PDraftSync } from './p2p-sync.js?v=0.7.15-guest-organizer';
 import { api, escapeHtml } from './api.js';
-import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.14-original-tournament';
+import { DRAFT_LINK_VERSION, readDraftRoomLink, validateDraftRoomLink, copyDraftLink } from './draft-links.js?v=0.7.15-guest-organizer';
 import { heroName, roleLabel, localizeHeroDetail, localizeDraftReason, t } from './i18n.js';
-import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js?v=0.7.14-original-tournament';
+import { DIVINE_RULES, buildDivineBanSequence, buildDivinePickBanSequence, drawRandomDivineIndices, entrantForSide, isValidDivineIndex, normalizeSideAssignment, resolveSideAssignment, secureRandomUnit, sideForEntrant } from './pre-draft.js?v=0.7.15-guest-organizer';
 
 export class DraftUI {
   constructor(config) {
@@ -2384,6 +2384,12 @@ if (this.engine.selectedHero === h.id) {
         }
         openOps.href = url.href;
         openOps.textContent = 'RETURN TO BRACKET';
+        if (this.config.operationsRoom) {
+          const operationsUrl = new URL('dashboard.html', window.location.href);
+          operationsUrl.searchParams.set('tournamentId', this.config.tournamentId);
+          openOps.href = operationsUrl.href;
+          openOps.textContent = 'OPEN TOURNAMENT OPS';
+        }
       }
     }
   }
@@ -2548,7 +2554,7 @@ if (this.engine.selectedHero === h.id) {
       // Quick Draft local series flow. Scores and reuse history stay attached
       // to the original entrant even when that entrant chose Red side.
       if (this.config.tournamentRoom) {
-        const { saveTournamentDraftGame } = await import('./tournament-draft.js?v=0.7.14-original-tournament');
+        const { saveTournamentDraftGame } = await import('./tournament-draft.js?v=0.7.15-guest-organizer');
         const saved = await saveTournamentDraftGame({ config: this.config, roomCode: this.sync.roomCode,
           hostToken: this.sync.accessToken, winnerSide: winnerSideForApi,
           engine: this.engine.exportState(), sideAssignment: this.sideAssignment, chosenDivineRules: this.chosenDivineRules });

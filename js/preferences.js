@@ -437,8 +437,8 @@
 
   const mobileNavStyles = document.createElement('link');
   mobileNavStyles.rel = 'stylesheet';
-  mobileNavStyles.href = new URL('../css/mobile-nav.css?v=0.7.14-original-tournament', preferencesUrl).href;
+  mobileNavStyles.href = new URL('../css/mobile-nav.css?v=0.7.15-guest-organizer', preferencesUrl).href;
   mobileNavStyles.dataset.mobileNavAsset = 'true';
   document.head.appendChild(mobileNavStyles);
-  import(new URL('./mobile-nav.js?v=0.7.14-original-tournament', preferencesUrl).href).catch(() => { /* Keep the page usable if the optional mobile controls fail to load. */ });
+  import(new URL('./mobile-nav.js?v=0.7.15-guest-organizer', preferencesUrl).href).catch(() => { /* Keep the page usable if the optional mobile controls fail to load. */ });
 })();

@@ -42,6 +42,7 @@ const ALLOWED_PATTERNS = [
   /^⚠️ ERROR REPORT:/i,
   /^https?:\/\//i,
   /^\.?\/?(?:assets|css|js|divine|trailers|api)\//i,
+  /^(?:draft-room|bracket|matches|manual-randomizer)\/[a-z0-9\/-]+$/i, // API route fragments, not UI copy
   /\.(?:png|webp|jpe?g|gif|svg|mp4|webm|mov|json|html|css|js|mjs)$/i,
   /^[.#\[]?[a-z0-9_-]+(?:[.#:[\]="'()\s>+~-][a-z0-9_="'()\s.#:[\]>+~-]*)?$/i,
   /^(?:GET|POST|PUT|PATCH|DELETE|OPTIONS)$/,
