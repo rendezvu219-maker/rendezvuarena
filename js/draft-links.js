@@ -1,5 +1,5 @@
 // Keep repository prefixes and never mix server-backed and P2P room links.
-import { t } from './i18n.js?v=0.7.5-fast-trailers';
+import { t } from './i18n.js?v=0.7.17-goku43';
 export const DRAFT_LINK_VERSION = '0.7.16-dashboard-polish';
 
 export function readDraftRoomLink(value) {

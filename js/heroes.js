@@ -55,9 +55,10 @@ export function getHeroImgSp(id) {
 export function getHeroImgHover(id) {
   return `assets/heroes/${id}/btn_character_hover.webp`;
 }
-const HERO_FULL_IMAGE_VERSIONS = {
+export const HERO_FULL_IMAGE_VERSIONS = Object.freeze({
+  '0043': '2',
   '0039': '2',
-};
+});
 
 export function getHeroFullImg(id) {
   const version = HERO_FULL_IMAGE_VERSIONS[id];
@@ -184,6 +185,7 @@ export function getHeroSkillIconUrls(heroId, skillId) {
 
 // Full roster (scraped from the official site)
 export const HEROES = [
+  { id: '0043', name: 'Super Saiyan God SS Son Goku', role: 'Damage', isNew: true },
   { id: '0042', name: 'Super Saiyan God SS Vegeta',    role: 'Damage',    isNew: true  },
   { id: '0041', name: 'Super Gogeta',                   role: 'Technical', isNew: true  },
   { id: '0001', name: 'Super Saiyan Son Goku',         role: 'Damage',    isNew: false },

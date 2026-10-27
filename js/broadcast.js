@@ -1,9 +1,9 @@
 // OBS-first pick/ban overlay.
 // Layout: center reveal stage, with each team's ban strip attached directly above its own bottom pick row.
 // Trailer playback uses local /assets/trailers/{heroId}.* files and falls back to full hero art.
-import { getHeroImgSp, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls } from './heroes.js?v=0.7.11-vegeta42';
+import { getHeroImgSp, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls } from './heroes.js?v=0.7.17-goku43';
 import { playBroadcastTrailer } from './broadcast-media.js?v=0.7.5-fast-trailers';
-import { heroName, roleLabel, t } from './i18n.js?v=0.7.9-live-lock';
+import { heroName, roleLabel, t } from './i18n.js?v=0.7.17-goku43';
 import { normalizeSideAssignment, sideForEntrant } from './pre-draft.js';
 
 const BROADCAST_SIDE_ORBIT_LOOPS = 4;

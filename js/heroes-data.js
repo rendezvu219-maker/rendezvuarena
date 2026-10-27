@@ -1,5 +1,20 @@
 // Automatically scraped hero detail database with approved final-state patch-note corrections.
 export const HEROES_DATA = {
+  "0043": {
+    "id": "0043",
+    "difficulty": "not rated",
+    "description": "A divine Super Saiyan who dominates skirmishes with decisive punches.\nRack up a Combo of powerful attacks and use No Hard Feelings to send enemies flying!",
+    "statsPath": "M 100.0 50.0 L 178.2 37.7 L 148.7 111.1 L 108.7 118.0 L 69.6 163.1 L 22.0 117.8 L 37.4 50.2 L 100.0 50.0",
+    "skills": [
+      { "id": "passive1", "type": "passive", "name": "Decisive Fists", "desc": "Activate a powerful attack when at max Combo. The Combo counter increases each time a Rush Attack or Skill hits an enemy. Failing to hit enemies for a set amount of time will reset the counter to 0. Maxing out the Combo counter grants extra HP and the ability to activate No Hard Feelings." },
+      { "id": "rush_attack1", "type": "rush_attack", "name": "Rush Attack", "desc": "A physical attack. After hitting an enemy with a Skill, becomes a powered-up attack for a set amount of time, increasing attack speed, with movement speed also increased while performing Rush Attacks." },
+      { "id": "skill1", "type": "skill", "name": "Dragon Claw Barrage", "desc": "Unleash a flurry of fists in a set direction. Can move during the barrage. Finishes with a powerful hit that deals extra DMG. Hitting an enemy at a far enough distance deals major DMG and grants Movement Speed Up to self." },
+      { "id": "skill2", "type": "skill", "name": "Fierce Flash Blast", "desc": "Pummel enemies in range with an energy blast. The blast then explodes, dealing extra DMG." },
+      { "id": "skill3", "type": "skill", "name": "Blue Spirit Surge", "desc": "Generate a surrounding field. DMG is dealt whenever an enemy touches the field, causing it to expand. Explodes after a set duration, dealing extra DMG and applying Movement Speed Down to enemies. Can perform other actions while active." },
+      { "id": "super_attack1", "type": "super_attack", "name": "God Speed Kamehameha", "desc": "Unleash an energy wave in a set direction, ending with an explosion that deals extra DMG. Hitting an enemy grants extra HP, with the amount gained increasing based on the number of enemies hit. Can move/redirect while in stance." },
+      { "id": "super_attack2", "type": "super_attack", "name": "Kamehameha & Galick Gun", "desc": "Unleash a tandem energy wave in a set direction. While the initiator is readying their Super Attack, the second person can interact with the initiator nearby to prepare a Team Attack. When the initiator fires the Super Attack, the second will warp to the initiator's side, activating a Team Attack with the properties of God Speed Kamehameha & Galick Gun. When combined, increases range and expands AoE. Only usable with Super Saiyan God SS Son Goku and Super Saiyan God SS Vegeta. Can be activated once both heroes' Super Attacks are usable." }
+    ]
+  },
   "0042": {
     "id": "0042",
     "difficulty": "40",

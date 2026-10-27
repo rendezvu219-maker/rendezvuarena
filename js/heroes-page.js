@@ -1,7 +1,7 @@
 import { api, setToken } from './api.js';
-import { HEROES, ROLES, getHeroImg, getHeroImgSp, getHeroFullImg, getHeroSkillIconUrls, roleIconMarkup, heroMatchesSearch, isNikitaEasterEggSearch, getHeroDisplayImage, getHeroDisplayName, getHeroDisplayDescription, imageWithFallback } from './heroes.js?v=0.7.11-vegeta42';
-import { HEROES_DATA } from './heroes-data.js?v=0.7.11-vegeta42';
-import { getLocale, heroName, roleLabel, localizeHeroDetail, t } from './i18n.js?v=0.7.11-vegeta42';
+import { HEROES, ROLES, getHeroImg, getHeroImgSp, getHeroFullImg, getHeroSkillIconUrls, roleIconMarkup, heroMatchesSearch, isNikitaEasterEggSearch, getHeroDisplayImage, getHeroDisplayName, getHeroDisplayDescription, imageWithFallback } from './heroes.js?v=0.7.17-goku43';
+import { HEROES_DATA } from './heroes-data.js?v=0.7.17-goku43';
+import { getLocale, heroName, roleLabel, localizeHeroDetail, t } from './i18n.js?v=0.7.17-goku43';
 import { loadStaticBuilds, buildsForHero } from './character-builds.js';
 
 const $ = selector => document.querySelector(selector);

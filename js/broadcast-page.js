@@ -1,7 +1,7 @@
-import { DraftEngine } from './draft.js?v=0.7.16-dashboard-polish';
-import { HEROES, PICKS_PER_TEAM } from './heroes.js?v=0.7.11-vegeta42';
-import { BroadcastUI } from './broadcast.js?v=0.7.11-vegeta42';
-import { loadDraftConfigFromUrl } from './app.js?v=0.7.16-dashboard-polish';
+import { DraftEngine } from './draft.js?v=0.7.17-goku43';
+import { HEROES, PICKS_PER_TEAM } from './heroes.js?v=0.7.17-goku43';
+import { BroadcastUI } from './broadcast.js?v=0.7.17-goku43';
+import { loadDraftConfigFromUrl } from './app.js?v=0.7.17-goku43';
 import { readDraftRoomLink } from './draft-links.js?v=0.7.16-dashboard-polish';
 import { api, escapeHtml } from './api.js';
 import { entrantForSide, normalizeSideAssignment } from './pre-draft.js';

@@ -45,14 +45,14 @@ const vietnameseUiText = JSON.stringify({ base: UI.vi, pages: PAGE_UI.vi });
 assert.doesNotMatch(vietnameseUiText, /anh hùng|\btướng\b/iu, 'Vietnamese UI must consistently use “chiến binh”.');
 assert.match(PAGE_UI.vi.pageTitleHeroes, /Chiến binh/);
 assert.equal(UI.vi.heroes, 'Chiến binh');
-assert.equal(t('heroRoster', {}, 'en'), '42-HERO ROSTER');
-assert.equal(t('heroRoster', {}, 'vi'), 'DANH SÁCH 42 CHIẾN BINH');
-assert.equal(t('heroesShown', {}, 'ja'), '42体を表示');
+assert.equal(t('heroRoster', {}, 'en'), '43-HERO ROSTER');
+assert.equal(t('heroRoster', {}, 'vi'), 'DANH SÁCH 43 CHIẾN BINH');
+assert.equal(t('heroesShown', {}, 'ja'), '43体を表示');
 
 // Hero names + source-authenticated hero details -----------------------------
 const heroIds = HEROES.map(hero => hero.id).sort();
 const sourceHeroNames = JSON.parse(read('data/locales/hero-names.json'));
-assert.equal(heroIds.length, 42, 'Expected the full 42-hero roster.');
+assert.equal(heroIds.length, 43, 'Expected the full 43-hero roster.');
 assert.deepEqual(Object.keys(EN_HERO_NAMES).sort(), heroIds, 'English hero-name catalog is incomplete.');
 for (const locale of ['ja', 'zh-CN', 'ko', 'es', 'vi']) {
   assert.ok(Object.keys(HERO_NAMES[locale] || {}).every(id => heroIds.includes(id)), `${locale} hero-name catalog contains an unknown hero.`);

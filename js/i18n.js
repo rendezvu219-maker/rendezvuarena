@@ -1,7 +1,7 @@
-import { FULL_HERO_DETAIL_OVERRIDES } from './i18n-hero-details.js?v=0.7.11-vegeta42';
+import { FULL_HERO_DETAIL_OVERRIDES } from './i18n-hero-details.js?v=0.7.17-goku43';
 import { PAGE_UI } from './i18n-ui-pages.js?v=0.7.16-dashboard-polish';
-import { LOCALIZED_HERO_NAMES } from './i18n-hero-names.js?v=0.7.11-vegeta42';
-import { HEROES } from './heroes.js?v=0.7.11-vegeta42';
+import { LOCALIZED_HERO_NAMES } from './i18n-hero-names.js?v=0.7.17-goku43';
+import { HEROES } from './heroes.js?v=0.7.17-goku43';
 
 const STORAGE_KEY = 'gs_locale';
 
@@ -871,10 +871,12 @@ export function setLocale(next, { reload = true } = {}) {
 export function t(key, params = {}, explicitLocale = locale) {
   const table = UI[explicitLocale] || UI.en;
   let value = PAGE_UI[explicitLocale]?.[key] ?? UI_EXTRA[explicitLocale]?.[key] ?? table[key] ?? PAGE_UI.en[key] ?? UI_EXTRA.en[key] ?? UI.en[key] ?? key;
-  const replacements = ['heroRoster', 'heroesShown', 'search39Roster'].includes(key) && params.count == null
+  const usesHeroCount = ['heroRoster', 'heroesShown', 'search39Roster'].includes(key);
+  const replacements = usesHeroCount && params.count == null
     ? { ...params, count: HEROES.length }
     : params;
   for (const [name, replacement] of Object.entries(replacements)) value = String(value).replaceAll(`{${name}}`, String(replacement));
+  if (usesHeroCount && replacements.count != null) value = String(value).replaceAll('39', String(replacements.count));
   return value;
 }
 

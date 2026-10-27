@@ -6,11 +6,11 @@ export const HERO_I18N_METADATA = Object.freeze({
   "schemaVersion": 2,
   "policy": "Verified localized hero records may combine official-site snapshots with exact fields manually checked in the released game client. Temporary verification media is not distributed; only the reviewed fields and source type are retained. Synthetic text is forbidden.",
   "coverage": {
-    "ja": 42,
-    "zh-CN": 42,
-    "ko": 40,
-    "es": 42,
-    "vi": 42
+    "ja": 43,
+    "zh-CN": 43,
+    "ko": 41,
+    "es": 43,
+    "vi": 43
   },
   "generatedFrom": [
     "data/locales/official-hero-details.json",
@@ -20,6 +20,41 @@ export const HERO_I18N_METADATA = Object.freeze({
 
 export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
   "ja": {
+    "0043": {
+      "description": "極めた拳で殴り合いを制する、神域の超サイヤ人。力強い攻撃でCOMBOを重ねて、『恨みっこなしの一撃』で敵をぶっ飛ばせ！",
+      "skills": {
+        "passive1": {
+          "name": "極まる拳",
+          "desc": "COMBO最大時に強力な攻撃を発動。ラッシュ攻撃または技を敵に当てるたびCOMBOが増加し、一定時間攻撃を当てないと0にリセットされる。最大まで溜めると追加HPを獲得し、『恨みっこなしの一撃』を発動できる。"
+        },
+        "rush_attack1": {
+          "name": "ラッシュ攻撃",
+          "desc": "体術による攻撃。技を敵に当てると一定時間強化され、攻撃速度が上昇。ラッシュ攻撃中は移動速度も上昇する。"
+        },
+        "skill1": {
+          "name": "龍爪乱撃",
+          "desc": "指定方向へ拳の連打を繰り出す。連打中は移動可能。最後に追加ダメージを与える強力な一撃を放ち、十分離れた敵に当てると大ダメージを与えて自身の移動速度が上昇する。"
+        },
+        "skill2": {
+          "name": "閃光烈気弾",
+          "desc": "範囲内の敵を気弾で押し込み、爆発で追加ダメージを与える。"
+        },
+        "skill3": {
+          "name": "ブルースピリットサージ",
+          "desc": "周囲に領域を発生させる。敵が触れるたびダメージを与えて領域が拡大し、一定時間後に爆発して追加ダメージと移動速度ダウンを与える。発動中も他の行動が可能。"
+        },
+        "super_attack1": {
+          "name": "神速かめはめ波",
+          "desc": "指定方向へ気功波を放ち、最後の爆発で追加ダメージを与える。敵に当てると追加HPを獲得し、命中した敵の数が多いほど回復量が増える。構え中は移動と照準変更が可能。"
+        },
+        "super_attack2": {
+          "name": "かめはめ波＆ギャリック砲",
+          "desc": "指定方向へ二人で気功波を放つ。発動者が必殺技を構えている間、近くのもう一人が操作すると連携攻撃を準備。発射時にもう一人が横へワープし、神速かめはめ波＆ギャリック砲の連携攻撃を行う。連携時は射程が伸び、範囲が拡大する。超サイヤ人ゴッドSS孫悟空と超サイヤ人ゴッドSSベジータのみ使用可能。両者の必殺技が使用可能なときに発動できる。"
+        }
+      },
+      "translationStatus": "official-site-summary",
+      "checkedAt": "2026-10-26"
+    },
     "0042": {
       "description": "遠距離の気弾と技で間合いを管理するダメージ型。",
       "skills": {
@@ -1360,6 +1395,41 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
     }
   },
   "zh-CN": {
+    "0043": {
+      "description": "凭借磨炼精进的铁拳制霸肉搏战，抵达神域的超级赛亚人。以强力的攻击叠加COMBO，用“不留遗憾的攻击”将敌人打飞吧！",
+      "skills": {
+        "passive1": {
+          "name": "究极之拳",
+          "desc": "COMBO达到最大时发动强力攻击。每次以连续攻击或技能命中敌人都会增加COMBO；一段时间未命中敌人时COMBO会归零。COMBO达到最大后获得额外HP，并可发动“不留遗憾的攻击”。"
+        },
+        "rush_attack1": {
+          "name": "连续攻击",
+          "desc": "以体术攻击。技能命中敌人后，会在一段时间内强化为攻击速度提升的攻击；进行连续攻击时移动速度也会提升。"
+        },
+        "skill1": {
+          "name": "龙爪乱击",
+          "desc": "朝指定方向连续挥拳，期间可以移动。最后以强力一击收尾并造成额外伤害；若在足够远的距离命中敌人，则造成大量伤害并使自身移动速度提升。"
+        },
+        "skill2": {
+          "name": "闪光烈气弹",
+          "desc": "用气弹压制范围内敌人，随后爆炸并造成额外伤害。"
+        },
+        "skill3": {
+          "name": "蓝色灵魂爆发",
+          "desc": "在自身周围生成领域。敌人触碰领域时会受到伤害，且领域扩大；经过一段时间后领域爆炸，造成额外伤害并使敌人移动速度下降。发动期间可以进行其他行动。"
+        },
+        "super_attack1": {
+          "name": "神速龟派神功",
+          "desc": "朝指定方向发射气功波，并以爆炸造成额外伤害。命中敌人时获得额外HP，命中的敌人越多，回复量越高。蓄势期间可以移动并调整方向。"
+        },
+        "super_attack2": {
+          "name": "龟派神功&伽力克大炮",
+          "desc": "朝指定方向与另一名角色共同发射气功波。发动者准备必杀技时，附近的另一人可以互动准备协同攻击；发射时另一人会移动至发动者身旁并共同攻击，增加射程并扩大范围。仅限超级赛亚人之神SS孙悟空与超级赛亚人之神SS贝吉塔使用。双方必杀技均可用时才能发动。"
+        }
+      },
+      "translationStatus": "official-site-summary",
+      "checkedAt": "2026-10-26"
+    },
     "0042": {
       "description": "依靠远程气弹和技能控制距离的伤害型战士。",
       "skills": {
@@ -2700,6 +2770,41 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
     }
   },
   "ko": {
+    "0043": {
+      "description": "극에 달한 주먹으로 싸움을 제압하는, 신의 영역의 초사이어인. 강력한 공격으로 콤보를 쌓아 ‘원망 없는 일격’으로 적을 날려버려라!",
+      "skills": {
+        "passive1": {
+          "name": "극에 달한 주먹",
+          "desc": "콤보가 최대일 때 강력한 공격을 발동한다. 러시 공격 또는 스킬이 적에게 명중할 때마다 콤보가 증가하며, 일정 시간 적을 맞히지 못하면 0으로 초기화된다. 최대 콤보에 도달하면 추가 HP를 얻고 ‘원망 없는 일격’을 사용할 수 있다."
+        },
+        "rush_attack1": {
+          "name": "러시 공격",
+          "desc": "물리 공격. 스킬을 적중시키면 일정 시간 강화되어 공격 속도가 증가하고, 러시 공격 중에는 이동 속도도 증가한다."
+        },
+        "skill1": {
+          "name": "용조란격",
+          "desc": "지정한 방향으로 연속해서 주먹을 날린다. 연타 중 이동할 수 있다. 마지막에 추가 피해를 주는 강력한 일격을 가하며, 충분히 먼 거리의 적에게 명중하면 큰 피해를 주고 자신의 이동 속도가 증가한다."
+        },
+        "skill2": {
+          "name": "섬광열기탄",
+          "desc": "범위 안의 적을 기탄으로 몰아붙인 뒤 폭발시켜 추가 피해를 준다."
+        },
+        "skill3": {
+          "name": "블루 스피릿 서지",
+          "desc": "주변에 영역을 생성한다. 적이 닿을 때마다 피해를 주고 영역이 커지며, 일정 시간 후 폭발해 추가 피해와 이동 속도 감소를 부여한다. 지속 중 다른 행동을 할 수 있다."
+        },
+        "super_attack1": {
+          "name": "신의 속도 에네르기파",
+          "desc": "지정한 방향으로 기공파를 발사하고 마지막 폭발로 추가 피해를 준다. 적중 시 추가 HP를 얻으며, 맞힌 적이 많을수록 회복량이 증가한다. 자세를 취한 동안 이동하고 방향을 조정할 수 있다."
+        },
+        "super_attack2": {
+          "name": "에네르기파 & 갤릭포",
+          "desc": "지정한 방향으로 두 사람이 함께 기공파를 발사한다. 발동자가 필살기를 준비하는 동안 가까운 다른 사람이 상호작용하면 합동 공격을 준비한다. 발사 시 두 번째 인물이 발동자 곁으로 이동해 함께 공격하며, 사거리와 범위가 증가한다. 초사이어인 갓 SS 손오공과 초사이어인 갓 SS 베지터만 사용할 수 있으며, 두 영웅의 필살기가 모두 사용 가능할 때 발동할 수 있다."
+        }
+      },
+      "translationStatus": "official-site-summary",
+      "checkedAt": "2026-10-26"
+    },
     "0015": {
       "description": "강력한 기탄과 폭격으로 전장을 제압하는 집단 전투 특화형 히어로.\n네 명의 부하를 이끌고 집중포화를 퍼부으면 은하계에 더 이상 적은 없을 겁니다!",
       "skills": {
@@ -3985,6 +4090,41 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
     }
   },
   "es": {
+    "0043": {
+      "description": "Supersaiyajin divino que domina el combate cuerpo a cuerpo con sus puños decisivos. ¡Realiza combos con poderosos ataques y manda a volar al enemigo con «Golpe sin Rencor»!",
+      "skills": {
+        "passive1": {
+          "name": "Puño Decisivo",
+          "desc": "Activa un poderoso ataque al alcanzar el Combo máximo. El contador aumenta cada vez que un Ataque Rush o una habilidad golpea a un enemigo; si pasa cierto tiempo sin acertar, vuelve a cero. Al máximo, otorga HP adicional y permite activar Golpe sin Rencor."
+        },
+        "rush_attack1": {
+          "name": "Arremetida",
+          "desc": "Ataque físico. Tras acertar con una habilidad, se potencia durante un tiempo: aumenta la velocidad de ataque y también la velocidad de movimiento mientras realiza Ataques Rush."
+        },
+        "skill1": {
+          "name": "Frenesí de Garras de Dragón",
+          "desc": "Lanza una ráfaga de puñetazos en una dirección determinada. Puede moverse durante la ráfaga. Termina con un golpe poderoso que inflige daño adicional; si alcanza a un enemigo desde suficiente distancia, inflige mucho daño y aumenta la velocidad de movimiento propia."
+        },
+        "skill2": {
+          "name": "Bala de Ki Deslumbrante",
+          "desc": "Golpea a los enemigos al alcance con una descarga de energía que luego explota e inflige daño adicional."
+        },
+        "skill3": {
+          "name": "Oleada de Espíritu Azul",
+          "desc": "Crea un campo a su alrededor. Cada enemigo que lo toca recibe daño y hace que el campo se expanda. Tras un tiempo, explota, inflige daño adicional y reduce la velocidad de movimiento de los enemigos. Puede realizar otras acciones mientras está activo."
+        },
+        "super_attack1": {
+          "name": "Kamehameha de Velocidad Extrema",
+          "desc": "Lanza una onda de energía en una dirección y termina con una explosión que inflige daño adicional. Al golpear a un enemigo, obtiene HP adicional; la cantidad aumenta según el número de enemigos alcanzados. Puede moverse y cambiar la dirección mientras mantiene la postura."
+        },
+        "super_attack2": {
+          "name": "Kamehameha & Cañón Galick",
+          "desc": "Lanza una onda de energía conjunta en una dirección. Mientras quien inicia prepara su Superataque, la otra persona cercana puede interactuar para preparar un ataque en equipo. Al disparar, la segunda persona se desplaza junto al iniciador y ejecuta el ataque conjunto, que aumenta el alcance y el área. Solo pueden usarlo Son Goku Supersaiyajin Dios SS y Vegeta Supersaiyajin Dios SS. Se activa cuando ambos tienen disponible su Superataque."
+        }
+      },
+      "translationStatus": "official-site-summary",
+      "checkedAt": "2026-10-26"
+    },
     "0042": {
       "description": "Atacante de larga distancia que controla el espacio mediante ki.",
       "skills": {
@@ -5333,6 +5473,40 @@ export const FULL_HERO_DETAIL_OVERRIDES = Object.freeze({
     }
   },
   "vi": {
+    "0043": {
+      "description": "Siêu Saiyan chạm đến thần vực, dùng nắm đấm tinh luyện để áp đảo những pha giao tranh. Tích lũy COMBO bằng các đòn đánh mạnh và dùng ‘Đòn đánh không oán trách’ để hất văng kẻ địch!",
+      "skills": {
+        "passive1": {
+          "name": "Nắm đấm tối thượng",
+          "desc": "Khi COMBO đạt tối đa, tung ra một đòn đánh mạnh. Mỗi lần đòn Rush hoặc kỹ năng trúng địch sẽ tăng COMBO; nếu không đánh trúng trong một khoảng thời gian, COMBO trở về 0. Đạt tối đa sẽ nhận thêm HP và có thể dùng ‘Đòn đánh không oán trách’."
+        },
+        "rush_attack1": {
+          "name": "Đòn Rush",
+          "desc": "Tấn công vật lý. Sau khi kỹ năng trúng địch, đòn này được cường hóa trong một khoảng thời gian, tăng tốc độ tấn công; tốc độ di chuyển cũng tăng khi thực hiện Rush."
+        },
+        "skill1": {
+          "name": "Long Trảo Loạn Kích",
+          "desc": "Liên tục tung quyền về hướng chỉ định và có thể di chuyển trong lúc ra đòn. Kết thúc bằng cú đánh mạnh gây thêm sát thương; nếu đánh trúng địch ở đủ xa, gây sát thương lớn và tăng tốc độ di chuyển cho bản thân."
+        },
+        "skill2": {
+          "name": "Thiểm Quang Liệt Khí Đạn",
+          "desc": "Dùng khí đạn dồn ép kẻ địch trong phạm vi rồi làm nổ để gây thêm sát thương."
+        },
+        "skill3": {
+          "name": "Blue Spirit Surge",
+          "desc": "Tạo một vùng năng lượng quanh bản thân. Địch chạm vào sẽ chịu sát thương và khiến vùng này mở rộng. Sau một khoảng thời gian, vùng phát nổ, gây thêm sát thương và giảm tốc độ di chuyển của địch. Có thể thực hiện hành động khác trong thời gian hiệu lực."
+        },
+        "super_attack1": {
+          "name": "Thần Tốc Kamehameha",
+          "desc": "Phóng sóng năng lượng theo hướng chỉ định, kết thúc bằng vụ nổ gây thêm sát thương. Đánh trúng địch sẽ hồi thêm HP; số địch trúng càng nhiều thì lượng hồi càng lớn. Có thể di chuyển và đổi hướng khi đang vào thế."
+        },
+        "super_attack2": {
+          "name": "Kamehameha & Galick Gun",
+          "desc": "Hai người cùng phóng sóng năng lượng theo hướng chỉ định. Khi người khởi động đang chuẩn bị Tuyệt Chiêu, người còn lại ở gần có thể tương tác để chuẩn bị đòn phối hợp. Khi phát bắn, người thứ hai dịch chuyển đến bên cạnh và cùng tấn công; đòn phối hợp tăng tầm và mở rộng phạm vi. Chỉ Son Goku Super Saiyan God SS và Vegeta Super Saiyan God SS sử dụng được. Cả hai phải sẵn sàng Tuyệt Chiêu mới có thể kích hoạt."
+        }
+      },
+      "translationStatus": "editor-reviewed"
+    },
     "0042": {
       "description": "Chiến binh Damage kiểm soát khoảng cách bằng khí đạn.",
       "skills": {

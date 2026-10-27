@@ -1,4 +1,4 @@
-import { HostSetup } from './host-setup.js?v=0.7.16-dashboard-polish';
+import { HostSetup } from './host-setup.js?v=0.7.17-goku43';
 import { t } from './i18n.js';
 
 document.addEventListener('DOMContentLoaded', () => {

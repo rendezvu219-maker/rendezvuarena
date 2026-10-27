@@ -1,6 +1,6 @@
-import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js?v=0.7.16-dashboard-polish';
-import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js?v=0.7.11-vegeta42';
-import { HEROES_DATA } from './heroes-data.js?v=0.7.11-vegeta42';
+import { DraftEngine, draftActionPresentation, shouldRestartDraftFlowOnAuthorityGain, squadraBlastPhase } from './draft.js?v=0.7.17-goku43';
+import { HEROES, ROLES, PICKS_PER_TEAM, THEMES, getHeroImg, getHeroImgSp, getHeroImgHover, getHeroFullImg, getHeroTrailerUrls, getHeroTrailerPosterUrls, getHeroSkillIconUrls, applyTheme, roleIconMarkup } from './heroes.js?v=0.7.17-goku43';
+import { HEROES_DATA } from './heroes-data.js?v=0.7.17-goku43';
 import { DraftRoomSync } from './realtime.js?v=0.7.3-cross-browser';
 import { LocalDraftSync } from './local-draft-sync.js';
 import { P2PDraftSync } from './p2p-sync.js?v=0.7.16-dashboard-polish';

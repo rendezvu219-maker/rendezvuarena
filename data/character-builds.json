@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-01T12:02:03.887Z",
+  "updatedAt": "2026-10-27T07:05:58.108Z",
   "migration": {
     "source": "rendezvu-arena.sqlite",
     "cards": 18,
@@ -5422,6 +5422,116 @@
           "slot": 3,
           "priority": 1,
           "cardId": "00019887_0000000072DACC9A",
+          "note": ""
+        }
+      ],
+      "energyThreshold": 100,
+      "energyRate": 1
+    },
+    {
+      "id": 54,
+      "name": "Super Saiyan God SS Son Goku Recommended Build - Set 1",
+      "description": "",
+      "scenario": "Recommended general build",
+      "sourceKey": "",
+      "createdAt": "2026-10-27T07:02:38.911Z",
+      "heroAssignments": [
+        {
+          "heroId": "0043",
+          "isDefault": true,
+          "assignedAt": "2026-10-27T07:05:58.108Z"
+        }
+      ],
+      "translations": {
+        "en": {
+          "name": "Super Saiyan God SS Son Goku Recommended Build - Set 1",
+          "description": "",
+          "scenario": "Recommended general build",
+          "translationStatus": "source",
+          "updatedAt": "2026-10-27T07:02:38.911Z"
+        }
+      },
+      "updatedAt": "2026-10-27T07:05:58.108Z",
+      "slots": [
+        {
+          "slot": 1,
+          "cardId": "00019802_00000000B3D0DCEA"
+        },
+        {
+          "slot": 2,
+          "cardId": "00019824_0000000095B2EC4D"
+        },
+        {
+          "slot": 3,
+          "cardId": "00019873_00000000B4BD18F3"
+        }
+      ],
+      "swapOptions": [
+        {
+          "slot": 2,
+          "priority": 1,
+          "cardId": "00019836_000000002AD98D50",
+          "note": ""
+        },
+        {
+          "slot": 2,
+          "priority": 2,
+          "cardId": "00019860_000000009BB969AF",
+          "note": ""
+        }
+      ],
+      "energyThreshold": 100,
+      "energyRate": 1
+    },
+    {
+      "id": 55,
+      "name": "Super Saiyan God SS Son Goku Recommended Build - Set 2",
+      "description": "With Baby and/or Majin Buu (Good)",
+      "scenario": "Recommended general build",
+      "sourceKey": "",
+      "createdAt": "2026-10-27T07:03:15.635Z",
+      "heroAssignments": [
+        {
+          "heroId": "0043",
+          "isDefault": false,
+          "assignedAt": "2026-10-27T07:05:58.108Z"
+        }
+      ],
+      "translations": {
+        "en": {
+          "name": "Super Saiyan God SS Son Goku Recommended Build - Set 2",
+          "description": "With Baby and/or Majin Buu (Good)",
+          "scenario": "Recommended general build",
+          "translationStatus": "source",
+          "updatedAt": "2026-10-27T07:03:15.635Z"
+        }
+      },
+      "updatedAt": "2026-10-27T07:05:58.108Z",
+      "slots": [
+        {
+          "slot": 1,
+          "cardId": "00019802_00000000B3D0DCEA"
+        },
+        {
+          "slot": 2,
+          "cardId": "00019836_000000002AD98D50"
+        },
+        {
+          "slot": 3,
+          "cardId": "00019864_000000007CD14978"
+        }
+      ],
+      "swapOptions": [
+        {
+          "slot": 3,
+          "priority": 1,
+          "cardId": "00019879_00000000C3BA2865",
+          "note": ""
+        },
+        {
+          "slot": 3,
+          "priority": 2,
+          "cardId": "00019873_00000000B4BD18F3",
           "note": ""
         }
       ],

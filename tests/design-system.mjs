@@ -70,7 +70,7 @@ assert.match(html, /data-rule-section="core"/);
 assert.match(html, /data-rule-section="bans"/);
 assert.match(html, /data-rule-section="protection"/);
 assert.match(html, /data-rule-section="presentation"/);
-assert.match(html, /42-hero roster/);
+assert.match(html, /43-hero roster/i);
 assert.match(html, /draft-rule-choice-icon/);
 assert.match(html, /assets\/roles\/damage\.png/);
 assert.match(html, /assets\/roles\/tank\.png/);

@@ -1,9 +1,119 @@
 {
-  "generatedAt": "2026-10-01T11:37:34.036Z",
+  "generatedAt": "2026-10-27T06:38:13.777Z",
   "sourceOrigin": "https://dbg-squadra.bn-ent.net",
-  "heroCount": 42,
-  "assetCount": 439,
+  "heroCount": 43,
+  "assetCount": 450,
   "files": [
+    {
+      "heroId": "0043",
+      "kind": "portrait",
+      "skillId": null,
+      "file": "assets/heroes/0043/btn_character.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/btn_character.webp",
+      "bytes": 15502,
+      "sha256": "d8a129a3d1fadcb5bef7240769035ad43ad372b76acd5770758c006266d01fb9",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "portrait_sp",
+      "skillId": null,
+      "file": "assets/heroes/0043/btn_character_sp.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/btn_character_sp.webp",
+      "bytes": 23498,
+      "sha256": "35c4356090e06e4b828d39eafd1baf1d45fab3da308836b3acefbc8d39a54ee5",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "portrait_hover",
+      "skillId": null,
+      "file": "assets/heroes/0043/btn_character_hover.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/btn_character_hover.webp",
+      "bytes": 19044,
+      "sha256": "19ea902e1aee51d0bdfe48862633b32c6c5215071d2c36fccc3d15346434f829",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "full",
+      "skillId": null,
+      "file": "assets/heroes/0043/image_character.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/image_character.webp?v=2",
+      "bytes": 180776,
+      "sha256": "783e6a9d98f051afe5166a710dcf446afe0742fd405a4e9ad833ccfec25fa2ab",
+      "reused": false
+    },
+    {
+      "heroId": "0043",
+      "kind": "skill",
+      "skillId": "passive1",
+      "file": "assets/heroes/0043/skill/icon_passive1.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/skill/icon_passive1.webp",
+      "bytes": 28420,
+      "sha256": "cef4a03668c65e1a600164ab371398f958ca7966d6f997aa2e59cf6f1a0d75e6",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "skill",
+      "skillId": "rush_attack1",
+      "file": "assets/heroes/0043/skill/icon_rush_attack1.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/skill/icon_rush_attack1.webp",
+      "bytes": 14130,
+      "sha256": "68756e38cba51c2dea2dc609989ff728a5756c7f0c0766fa8874024929fe762d",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "skill",
+      "skillId": "skill1",
+      "file": "assets/heroes/0043/skill/icon_skill1.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/skill/icon_skill1.webp",
+      "bytes": 26492,
+      "sha256": "208d1243fe257ce819864d72021690f7f738a4b80a3b2122e7f652b988da34a5",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "skill",
+      "skillId": "skill2",
+      "file": "assets/heroes/0043/skill/icon_skill2.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/skill/icon_skill2.webp",
+      "bytes": 24372,
+      "sha256": "eb76446d9abd4a744a6bc7c221aa5f1b46c216b9ed73cac86cc49e8977f897aa",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "skill",
+      "skillId": "skill3",
+      "file": "assets/heroes/0043/skill/icon_skill3.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/skill/icon_skill3.webp",
+      "bytes": 24854,
+      "sha256": "0b2d81d1cfa7b1f6c1f621e1390cd8bff5cdad716d6d04659f86d499d8d7391e",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "skill",
+      "skillId": "super_attack1",
+      "file": "assets/heroes/0043/skill/icon_super_attack1.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/skill/icon_super_attack1.webp",
+      "bytes": 31696,
+      "sha256": "eb79ec7e6cc3e5afe92877863e5572daa1b431a66c4a55f0e96b9411f6b7bf46",
+      "reused": true
+    },
+    {
+      "heroId": "0043",
+      "kind": "skill",
+      "skillId": "super_attack2",
+      "file": "assets/heroes/0043/skill/icon_super_attack2.webp",
+      "source": "https://dbg-squadra.bn-ent.net/assets/images/hero/0043/skill/icon_super_attack2.webp",
+      "bytes": 33096,
+      "sha256": "d9720f00552d90c23f275b507e71513993886b54ca51b8c2888ac10654300126",
+      "reused": true
+    },
     {
       "heroId": "0042",
       "kind": "portrait",

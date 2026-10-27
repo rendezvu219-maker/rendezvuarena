@@ -1,5 +1,5 @@
 // Host Setup - Tab Content Renderer
-import { HEROES, STAGE_PRESETS, THEMES, applyTheme } from './heroes.js?v=0.7.11-vegeta42';
+import { HEROES, STAGE_PRESETS, THEMES, applyTheme } from './heroes.js?v=0.7.17-goku43';
 import { bindDraftRulesForm, renderDraftRulesForm } from './draft-rules-form.js';
 import { t } from './i18n.js';
 import { api } from './api.js';

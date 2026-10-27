@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { HEROES } from '../js/heroes.js';
+import { HEROES, HERO_FULL_IMAGE_VERSIONS } from '../js/heroes.js';
 import { HEROES_DATA } from '../js/heroes-data.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -93,7 +93,7 @@ function heroJobs(hero) {
     { heroId: hero.id, kind: 'portrait', url: `${base}/btn_character.webp`, output: path.join(dir, 'btn_character.webp'), extension: '.webp' },
     { heroId: hero.id, kind: 'portrait_sp', url: `${base}/btn_character_sp.webp`, output: path.join(dir, 'btn_character_sp.webp'), extension: '.webp' },
     { heroId: hero.id, kind: 'portrait_hover', url: `${base}/btn_character_hover.webp`, output: path.join(dir, 'btn_character_hover.webp'), extension: '.webp' },
-    { heroId: hero.id, kind: 'full', url: `${base}/image_character.webp${hero.id === '0039' ? '?v=2' : ''}`, output: path.join(dir, 'image_character.webp'), extension: '.webp' },
+    { heroId: hero.id, kind: 'full', url: `${base}/image_character.webp${HERO_FULL_IMAGE_VERSIONS[hero.id] ? `?v=${HERO_FULL_IMAGE_VERSIONS[hero.id]}` : ''}`, output: path.join(dir, 'image_character.webp'), extension: '.webp' },
   ];
 
   for (const skill of HEROES_DATA[hero.id]?.skills || []) {
